@@ -1,0 +1,47 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:52 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:52	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=V%2f84%2fmain&-out.max=6&-out=PNG%2cRAB1950%2cDEB1950%2cName%2cPK%2cDisc%2cIdents	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_5084
+#Name: V/84
+#Title: Strasbourg-ESO Catalogue of Galactic Planetary Nebulae (Acker+, 1992)
+#INFO	ivoid=ivo://cds.vizier/v/84	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/v/84	    IVOID of underlying data collection
+#INFO	creator=Acker A.	    First author or institution
+#INFO	cites=bibcode:1992ESOPN...1....1A	    Article or Data origin sources
+#INFO	journal=ESOP	    Journal name
+#INFO	original_date=1992	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/V/84	    Dataset landing page
+#INFO	publication_date=2012-11-23	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1950:	eq_FK4 B1950
+#Table	V_84_main:
+#Name: V/84/main
+#Title: Discoverers, Designations, and Positions of True and Possible Planetary Nebulae (1)
+#Column	PNG	(A10)	Designation of the Galactic Planetary Nebula	[ucd=meta.id;meta.main]
+#Column	RAB1950	(A11)	Right Ascension B1950	[ucd=pos.eq.ra;meta.main]
+#Column	DEB1950	(A11)	Declination B1950	[ucd=pos.eq.dec;meta.main]
+#Column	Name	(a13)	Main designation	[ucd=meta.id]
+#Column	PK	(A9)	Designation in PK67	[ucd=meta.id]
+#Column	Disc	(a31)	Discoverer name and publication year	[ucd=meta.id]
+#Column	Idents	(a110)	Other names separated by commas	[ucd=meta.id]
+PNG	RAB1950	DEB1950	Name	PK	Disc	Idents
+ 	"h:m:s"	"d:m:s"	 	 	 	
+----------	-----------	-----------	-------------	---------	-------------------------------	--------------------------------------------------------------------------------------------------------------
+000.0-06.8	18 10 02.00	-32 20 34.0	H 1-62       	359-06 1 	HARO 1952                      	AS 290,ESO 456-76,He 2-367,MHa 77- 52,SaSt 2-19,VV' 368,Wray 16-389
+000.1+02.6	17 32 27.20	-27 22 10.0	Al 2-J       	         	ALLEN  1979                    	
+000.1+04.3	17 26 17.00	-26 23 42.0	H 1-16       	  0+04 2 	HARO 1952                      	ESO 520-02,He 2- 231,Sa 2-206,VV' 201,Wray 16- 276
+000.1+17.2	16 40 54.00	-18 51 00.0	PC 12        	  0+17 1 	MINKOWSKI 1957                 	ESO 586-01,He 2- 180,Sa 2-152
+000.1-01.1	17 47 12.80	-29 24 29.0	M 3-43       	  0-01 1 	MINKOWSKI 1948                 	Bl G,ESO 455-48,VV' 265,19W122
+000.1-02.3	17 52 09.00	-29 57 35.0	Bl 3-10      	  0-02 2 	BLANCO 1964                    	ESO 456-16,Sa 2-265
+

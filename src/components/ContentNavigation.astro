@@ -1,0 +1,55 @@
+---
+import { ArrowLeft, ArrowRight } from "lucide-react";
+
+interface Link {
+    url: string;
+    title: string;
+}
+
+interface Props {
+    prev?: Link | null;
+    next?: Link | null;
+    prevLabel?: string;
+    nextLabel?: string;
+    class?: string;
+}
+
+const { prev, next, prevLabel = "Précédent", nextLabel = "Suivant", class: className = "" } = Astro.props;
+---
+
+<div
+    class:list={[
+        "max-w-none mx-auto pt-12 mb-12 md:mb-20 border-t border-mp-border hidden md:grid md:grid-cols-2 gap-8",
+        className || "mt-16",
+    ]}
+>
+    {/* Previous (Older) */}
+    <div class="flex flex-col items-start">
+        {prev && (
+            <a href={prev.url} class="group flex flex-col items-start no-underline">
+                <span class="text-sm text-mp-text-muted mb-2 font-sans transition-colors flex items-center group-hover:text-mp-accent">
+                    <ArrowLeft className="w-4 h-4 mr-1 nav-arrow-prev group-hover:text-mp-accent" />
+                    {prevLabel}
+                </span>
+                <span class="font-serif text-xl md:text-2xl text-mp-text-primary group-hover:text-mp-accent transition-colors">
+                    {prev.title}
+                </span>
+            </a>
+        )}
+    </div>
+
+    {/* Next (Newer) */}
+    <div class="flex flex-col items-end text-right">
+        {next && (
+            <a href={next.url} class="group flex flex-col items-end no-underline">
+                <span class="text-sm text-mp-text-muted mb-2 font-sans transition-colors flex items-center group-hover:text-mp-accent">
+                    {nextLabel}
+                    <ArrowRight className="w-4 h-4 ml-1 nav-arrow-next group-hover:text-mp-accent" />
+                </span>
+                <span class="font-serif text-xl md:text-2xl text-mp-text-primary group-hover:text-mp-accent transition-colors">
+                    {next.title}
+                </span>
+            </a>
+        )}
+    </div>
+</div>

@@ -1,0 +1,47 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:44 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:44	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f192%2farplist&-out.max=6&-out=Arp%2cName%2cVT%2cdim1%2cdim2%2cMType%2cRAJ2000%2cDEJ2000	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7192
+#Name: VII/192
+#Title: Arp's Peculiar Galaxies (Webb 1996)
+#INFO	ivoid=ivo://cds.vizier/vii/192	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/192	    IVOID of underlying data collection
+#INFO	creator=Webb D.	    First author or institution
+#INFO	cites=bibcode:1996S&T....92...92W	    Article or Data origin sources
+#INFO	journal=S&T	    Journal name
+#INFO	original_date=1996	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/192	    Dataset landing page
+#INFO	publication_date=2017-10-16	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Table	VII_192_arplist:
+#Name: VII/192/arplist
+#Title: list and info for involved galaxies
+#Column	Arp	(I3)	Arp number from original catalog	[ucd=meta.id;meta.main]
+#Column	Name	(a16)	Common name of galaxy	[ucd=meta.id]
+#Column	VT	(F4.1)	?Total V-magnitude	[ucd=phot.mag;em.opt]
+#Column	dim1	(F4.1)	?Larger dimension of galaxy	[ucd=phys.size]
+#Column	dim2	(F4.1)	?Smaller dimension (if differs from dim1)	[ucd=phys.size]
+#Column	MType	(a14)	Morphological Type	[ucd=src.morph.type]
+#Column	RAJ2000	(A10)	Right Ascension J2000	[ucd=pos.eq.ra;meta.main]
+#Column	DEJ2000	(A9)	Declination J2000	[ucd=pos.eq.dec;meta.main]
+Arp	Name	VT	dim1	dim2	MType	RAJ2000	DEJ2000
+ 	 	mag	arcmin	arcmin	 	"h:m:s"	"d:m:s"
+---	----------------	----	----	----	--------------	----------	---------
+249	UGC 12891       	16.2	    	    	              	00 00 19.3	+22 59 26
+249	UGC 12891       	16.2	 1.3	 0.5	              	00 00 21.6	+22 59 42
+112	NGC 7805        	13.3	 1.2	 0.9	SAB0^0: pec   	00 01 26.9	+31 26 02
+112	NGC 7806        	13.5	 1.1	 0.8	SA(rs)bc? pec 	00 01 30.2	+31 26 33
+130	IC 5378         	15.6	 0.5	    	SBc           	00 02 37.7	+16 39 08
+130	IC 5378         	15.3	    	    	E             	00 02 37.8	+16 38 37
+

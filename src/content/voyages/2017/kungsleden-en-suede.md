@@ -1,0 +1,26 @@
+---
+title: "Kungsleden en Suède"
+description: ""
+image: "../../../assets/voyages/2017/kungsleden-en-suede/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-1.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-2.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-3.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-4.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-5.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-6.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-7.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-8.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-9.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-10.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-11.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-12.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-13.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-14.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-15.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-16.jpg"
+  - "../../../assets/voyages/2017/kungsleden-en-suede/img-17.jpg"
+country: "Suède"
+season: "Été"
+year: 2017
+---

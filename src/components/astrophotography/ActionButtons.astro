@@ -1,0 +1,52 @@
+---
+import type { Photo } from "@/lib/photos";
+import PrimaryButton from "../UI/PrimaryButton.astro";
+import { extractCatalogueId } from "@/lib/objects/extract-catalogue-id";
+
+import { Download, ExternalLink, ClipboardList, Telescope } from "lucide-react";
+
+interface Props {
+    photo: Photo;
+    mainImageUrl?: string;
+    annotationUrl?: string;
+}
+
+const { photo, mainImageUrl, annotationUrl } = Astro.props;
+
+const catalogueId = extractCatalogueId(photo.title, ...(photo.objectsInField ?? []));
+const objectsHref = catalogueId ? `/objets?q=${encodeURIComponent(catalogueId)}` : null;
+---
+
+<div class="py-6 space-y-8">
+    <div class="flex flex-row flex-wrap gap-3">
+        {mainImageUrl && (
+            <PrimaryButton href={mainImageUrl} class="flex-1 text-center xs:px-6" download>
+                <Download className="hidden xs:inline-block w-4 h-4 mr-2" strokeWidth={1.5} />
+                <span>Télécharger</span>
+            </PrimaryButton>
+        )}
+        {photo.astrobinUrl && (
+            <PrimaryButton
+                href={photo.astrobinUrl}
+                class="flex-1 text-center xs:px-6"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <ExternalLink className="hidden xs:inline-block w-4 h-4 mr-2" strokeWidth={1.5} />
+                <span>ASTROBIN</span>
+            </PrimaryButton>
+        )}
+        {objectsHref && (
+            <PrimaryButton href={objectsHref} class="flex-1 text-center xs:px-6">
+                <Telescope className="hidden xs:inline-block w-4 h-4 mr-2" strokeWidth={1.5} />
+                <span>Observer</span>
+            </PrimaryButton>
+        )}
+        {annotationUrl && (
+            <PrimaryButton id="toggle-annotation" class="flex-1 text-center xs:px-6">
+                <ClipboardList className="hidden xs:inline-block w-4 h-4 mr-2" strokeWidth={1.5} />
+                <span id="annotation-btn-text">Annotations</span>
+            </PrimaryButton>
+        )}
+    </div>
+</div>

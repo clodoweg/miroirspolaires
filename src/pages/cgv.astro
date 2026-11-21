@@ -1,0 +1,138 @@
+---
+/**
+ * @file src/pages/cgv.astro
+ * @description Conditions Générales de Vente (CGV) pour la boutique en ligne Miroirs Polaires.
+ * Conforme au Code de la consommation français pour la vente à distance de livres.
+ */
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import { isBoutiqueEnabled } from "@/config/shop";
+
+export const prerender = false;
+
+// POURQUOI : Les CGV sont associées à l'activité de la boutique.
+// Si la boutique est inactive, la page CGV redirige vers la page 404.
+if (!isBoutiqueEnabled()) {
+    return Astro.redirect("/404");
+}
+---
+
+<BaseLayout
+    title="Conditions Générales de Vente"
+    description="Conditions Générales de Vente (CGV) du site Miroirs Polaires applicables à l'achat du livre d'art et aux livraisons."
+    breadcrumbLabel="CGV"
+>
+    <main class="container-mp pb-16">
+        <PageHeader title="Conditions Générales de Vente" align="center" />
+
+        <article class="prose prose-lg prose-invert max-w-screen-md mx-auto prose-headings:font-serif prose-headings:font-normal prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-p:text-mp-text-body text-sm sm:text-base leading-relaxed">
+            <p class="text-xs text-mp-text-muted italic">Dernière mise à jour : Octobre 2026</p>
+
+            <h2>Article 1 — Objet et Champ d'application</h2>
+            <p>
+                Les présentes Conditions Générales de Vente (ci-après « CGV ») régissent l'ensemble des ventes conclues
+                sur la boutique en ligne du site <strong>Miroirs Polaires</strong> (
+                <a href="https://www.miroirspolaires.fr">www.miroirspolaires.fr</a>), édité par{" "}
+                <strong>Julien Bourdette</strong>.
+            </p>
+            <p>
+                Toute commande passée sur le site implique l'adhésion pleine et entière du client aux présentes
+                conditions, consultables à tout moment avant la validation du paiement.
+            </p>
+
+            <h2>Article 2 — Produits et Prix (Prix unique du livre)</h2>
+            <p>
+                Les produits proposés à la vente sont décrits et présentés avec la plus grande exactitude possible sur
+                la page boutique.
+            </p>
+            <p>
+                Conformément à la législation française relative au prix unique du livre (Loi n° 81-766 du 10 août 1981
+                dite « Loi Lang »), le prix de vente public du livre est fixé par l'auteur et s'impose à tous les
+                acheteurs.
+            </p>
+            <p>
+                Les prix sont indiqués en Euros TTC (toutes taxes comprises). Les frais d'expédition sont indiqués
+                distinctement avant la validation finale de la commande en fonction du mode de livraison sélectionné.
+            </p>
+
+            <h2>Article 3 — Commande et Paiement</h2>
+            <p>
+                La commande s'effectue en ligne via l'interface de la boutique. L'acheteur valide son panier, choisit
+                son mode de livraison (Mondial Relay ou remise en main propre) et est ensuite redirigé vers la
+                plateforme sécurisée <strong>Stripe Checkout</strong>.
+            </p>
+            <p>Les moyens de paiement acceptés comprennent :</p>
+            <ul>
+                <li>Cartes bancaires (Visa, Mastercard, Cartes Bancaires CB)</li>
+                <li>Apple Pay et Google Pay</li>
+                <li>PayPal (lorsque disponible sur le terminal Stripe)</li>
+            </ul>
+            <p>
+                La transaction est immédiatement débitée après validation par l'établissement bancaire de l'acheteur. Un
+                email de confirmation récapitulant la commande et le reçu de paiement est automatiquement adressé au
+                client.
+            </p>
+
+            <h2>Article 4 — Livraison et Expédition</h2>
+            <p>
+                Les commandes sont préparées et expédiées sous un délai indicatif de <strong>48 heures ouvrées</strong>{" "}
+                suivant la validation du paiement. Chaque exemplaire est conditionné dans un étui cartonné rigide
+                renforcé spécialement conçu pour le transport de livres d'art.
+            </p>
+            <p>Deux modes de livraison sont proposés :</p>
+            <ul>
+                <li>
+                    <strong>Mondial Relay :</strong> livraison en point relais commerçant sélectionné par l'acheteur
+                    lors de la commande (délai indicatif de 3 à 5 jours ouvrés).
+                </li>
+                <li>
+                    <strong>Remise en main propre :</strong> gratuite, réservée aux acheteurs ayant obtenu l'accord
+                    préalable de l'auteur avant la commande. Le lieu et la date sont convenus entre les parties.
+                </li>
+            </ul>
+            <p>
+                Pour Mondial Relay, un numéro de suivi est communiqué dès la prise en charge du colis par le
+                transporteur.
+            </p>
+
+            <h2>Article 5 — Droit de rétractation (14 jours)</h2>
+            <p>
+                Conformément aux dispositions de l'article L. 221-18 du Code de la consommation, l'acheteur dispose d'un
+                délai de <strong>quatorze (14) jours francs</strong> à compter de la réception de son colis pour exercer
+                son droit de rétractation, sans avoir à motiver sa décision.
+            </p>
+            <p>
+                Pour exercer ce droit, le client doit notifier sa demande par écrit via le{" "}
+                <a href="/a-propos#contact">formulaire de contact</a> du site. Le livre doit être retourné complet, dans
+                son état d'origine, neuf et sans trace de manipulation, accompagné de son emballage protecteur.
+            </p>
+            <p>
+                Les frais de renvoi postal sont à la charge de l'acheteur. Le remboursement intégral du prix du livre
+                sera effectué dans un délai maximal de 14 jours suivant la récupération effective du livre par l'auteur.
+            </p>
+
+            <h2>Article 6 — Garanties légales</h2>
+            <p>
+                Tous les produits bénéficient de la garantie légale de conformité (articles L. 217-4 et suivants du Code
+                de la consommation) et de la garantie des vices cachés (articles 1641 et suivants du Code civil). En cas
+                de réception d'un livre endommagé pendant le transport, l'acheteur est invité à prendre contact
+                rapidement avec des photos du colis et du produit pour un échange ou un remboursement.
+            </p>
+
+            <h2>Article 7 — Données personnelles</h2>
+            <p>
+                Les données personnelles collectées lors de la commande (nom, adresse, email, téléphone) sont
+                strictement nécessaires au traitement de la commande, à l'expédition postale et à l'émission de la
+                facture. Elles ne sont en aucun cas cédées ou revendues à des tiers. Les paiements sont traités
+                directement par l'opérateur certifié Stripe sans que le site Miroirs Polaires n'ait accès aux numéros de
+                carte bancaire.
+            </p>
+
+            <h2>Article 8 — Droit applicable et Litiges</h2>
+            <p>
+                Les présentes CGV sont soumises à la loi française. En cas de réclamation ou de litige, l'acheteur
+                s'adressera en priorité à l'auteur pour rechercher une solution amiable.
+            </p>
+        </article>
+    </main>
+</BaseLayout>

@@ -1,0 +1,50 @@
+/* Inter */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/inter/inter-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/fonts/inter/inter-latin-600-normal.woff2') format('woff2');
+}
+
+/* Playfair Display */
+@font-face {
+    font-family: 'Playfair Display';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/playfair-display/playfair-display-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Playfair Display';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/playfair-display/playfair-display-latin-700-normal.woff2') format('woff2');
+}
+/* JetBrains Mono (font-mono) — fichiers woff2 copiés à la main dans public/fonts.
+   POURQUOI pas de preload : elle ne sert qu'aux valeurs techniques (outils, catalogues, admin), jamais au LCP. */
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/jetbrains-mono/jetbrains-mono-latin-400-normal.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/jetbrains-mono/jetbrains-mono-latin-700-normal.woff2') format('woff2');
+}

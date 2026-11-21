@@ -1,0 +1,19 @@
+---
+import { isAdminGranted } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import UpstreamRoutesPanel from "@/components/Admin/UpstreamRoutesPanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+---
+
+<AdminLayout
+    title="Admin · Routes amont"
+    description="Priorité et état des routes vers le CDS de Strasbourg et ses miroirs."
+    active="upstream"
+>
+    <UpstreamRoutesPanel client:only="react" />
+</AdminLayout>

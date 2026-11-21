@@ -1,0 +1,79 @@
+---
+// components/PageHeader.astro
+interface Props {
+    title: string;
+    description?: string; // Kept optional for backward compat (unused)
+    date?: string;
+    categories?: string[];
+    readingTime?: string;
+    align?: "left" | "right" | "center"; // Kept optional for backward compat (unused)
+}
+
+const { title, date, categories, readingTime } = Astro.props;
+const hasMetadataProps = date || (categories && categories.length > 0) || readingTime;
+const hasMetadataSlot = Astro.slots.has("metadata");
+---
+
+<header class="relative w-full pt-0 md:pt-12 pb-0 mb-0 mt-0 md:-mt-20 overflow-hidden bg-transparent">
+    <!-- Atmospheric Background -->
+
+    <div class="container-mp pt-2! md:pt-10! md:pb-10! pb-8!">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-y-6 md:gap-x-12">
+            <!-- Main Column: Title & Metadata (Always Centered) -->
+            <div
+                class:list={[
+                    "self-start flex flex-col js-reveal reveal-hidden items-center text-center md:col-span-12 md:items-center md:text-center",
+                ]}
+            >
+                <h1 class="mb-4 wrap-break-word max-w-full slide-in-from-left" data-delay="0">
+                    {title}
+                </h1>
+
+                {/* Metadata from props (blog style) */}
+                {hasMetadataProps && (
+                    <div
+                        class:list={[
+                            "flex flex-wrap items-center gap-4 text-xs-mobile md:text-xs-tablet lg:text-xs-desktop font-sans uppercase tracking-wider text-mp-text-body/60 justify-center",
+                        ]}
+                    >
+                        {date && (
+                            <span class="flex items-center gap-1">
+                                <span>📅</span>
+                                <time>{date}</time>
+                            </span>
+                        )}
+
+                        {date && categories && categories.length > 0 && <span>•</span>}
+
+                        {categories && categories.length > 0 && (
+                            <span class="flex items-center gap-1">
+                                <span>🏷️</span>
+                                <span>{categories.join(", ")}</span>
+                            </span>
+                        )}
+
+                        {(date || (categories && categories.length > 0)) && readingTime && <span>•</span>}
+
+                        {readingTime && (
+                            <span class="flex items-center gap-1">
+                                <span>⏱️</span>
+                                <span>{readingTime}</span>
+                            </span>
+                        )}
+                    </div>
+                )}
+
+                {/* Metadata from slot (photo style) */}
+                {hasMetadataSlot && (
+                    <div
+                        class:list={[
+                            "flex flex-wrap items-center gap-4 text-xs-mobile md:text-xs-tablet lg:text-xs-desktop font-sans uppercase tracking-wider text-mp-text-body/60 justify-center",
+                        ]}
+                    >
+                        <slot name="metadata" />
+                    </div>
+                )}
+            </div>
+        </div>
+    </div>
+</header>

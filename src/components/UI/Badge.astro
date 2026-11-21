@@ -1,0 +1,73 @@
+---
+import {
+    Calendar,
+    Tag,
+    Clock,
+    Compass,
+    Star,
+    Telescope,
+    Camera,
+    Hourglass,
+    Globe,
+    Film,
+    MapPin,
+    SatelliteDish,
+    Settings,
+    Mountain,
+    FileText,
+    Cpu,
+    Snowflake,
+    Leaf,
+    Sun,
+    Wind,
+} from "lucide-react";
+
+interface Props {
+    label: string;
+    icon?: string;
+    class?: string;
+}
+
+const { label, icon, class: className } = Astro.props;
+
+// Map icon strings to Lucide components
+const IconMap: Record<string, any> = {
+    calendar: Calendar,
+    tag: Tag,
+    clock: Clock,
+    compass: Compass,
+    star: Star,
+    telescope: Telescope,
+    camera: Camera,
+    hourglass: Hourglass,
+    globe: Globe,
+    film: Film,
+    pin: MapPin,
+    dish: SatelliteDish,
+    cog: Settings,
+    mountain: Mountain,
+    "file-text": FileText,
+    cpu: Cpu,
+    snowflake: Snowflake,
+    leaf: Leaf,
+    sun: Sun,
+    wind: Wind,
+};
+
+const IconComponent = icon ? IconMap[icon] : null;
+---
+
+<span
+    class:list={[
+        "flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-mp-text-primary/10 backdrop-blur-xs",
+        className,
+    ]}
+>
+    {IconComponent ? (
+        <IconComponent className="w-3 h-3 opacity-90" strokeWidth={1.5} />
+    ) : icon ? (
+        <span>{icon}</span>
+    ) : null}
+    <span set:html={label} />
+    <slot />
+</span>

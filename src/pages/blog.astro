@@ -1,0 +1,273 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import BlogCard from "@/components/BlogCard.astro";
+import ContentGrid from "@/components/ContentGrid.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import UniversalFilterBar from "@/components/Filters/UniversalFilterBar";
+import { resolveImage, toThumbUrl } from "@/utils/imageService";
+import { getCategoryIcon } from "@/utils/constants";
+import { getCollection } from "astro:content";
+import seoData from "@/data/seo.json";
+
+import fs from "node:fs";
+import path from "node:path";
+
+const allPosts = (await getCollection("blog")).filter((post) => !post.data.draft);
+
+// Load reading time data
+let blogData: Record<string, any> = {};
+try {
+    const blogDataPath = path.join(process.cwd(), "src/data/blog.json");
+    if (fs.existsSync(blogDataPath)) {
+        blogData = JSON.parse(fs.readFileSync(blogDataPath, "utf8"));
+    }
+} catch (e) {
+    console.error("Error reading blog.json:", e);
+}
+
+// Calculate unique years and categories
+const allCategories = [...new Set(allPosts.flatMap((post) => post.data.categories))].sort();
+const allYears = [
+    ...new Set(
+        allPosts.map((post) => {
+            const year = new Date(post.data.date).getFullYear();
+            return year;
+        }),
+    ),
+].sort((a, b) => b - a);
+
+// Sort posts by date (descending)
+// Date format is YYYY-MM-DD, which is lexicographically sortable, or use Date object
+const sortedPosts = allPosts.sort((a, b) => {
+    return new Date(b.data.date).getTime() - new Date(a.data.date).getTime();
+});
+
+const categoryCounts = allPosts.reduce(
+    (acc, post) => {
+        post.data.categories.forEach((category) => {
+            acc[category] = (acc[category] || 0) + 1;
+        });
+        return acc;
+    },
+    {} as Record<string, number>,
+);
+
+const categoryStats = Object.entries(categoryCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([category, count]) => {
+        let suffix = category;
+        let label = "";
+
+        if (category.startsWith("Récits de voyage")) {
+            suffix = "Récits";
+            label = category.replace("Récits ", "");
+        } else if (category === "Publications d'astronomie") {
+            suffix = "Publications";
+            label = "d'astronomie";
+        }
+
+        return {
+            icon: getCategoryIcon(category),
+            value: count,
+            suffix,
+            label,
+            key: category,
+            id: `stat-val-${category.replace(/\s+/g, "-")}`,
+        };
+    }) as {
+    icon: string;
+    value: string | number;
+    label: string;
+    id: string;
+}[];
+
+// Calculate total reading time
+let totalMinutes = 0;
+allPosts.forEach((post) => {
+    const timeStr = blogData[post.id]?.readingTime;
+    if (timeStr) {
+        const minutes = parseInt(timeStr, 10);
+        if (!isNaN(minutes)) {
+            totalMinutes += minutes;
+        }
+    }
+});
+
+if (totalMinutes > 0) {
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    const timeLabel = hours > 0 ? `${hours}h${mins.toString().padStart(2, "0")}` : `${mins} min`;
+
+    categoryStats.push({
+        icon: "⏱️",
+        value: timeLabel,
+        label: "de lecture",
+        id: "stat-val-reading-time",
+    });
+}
+
+const filterConfig = [
+    { key: "year", label: "Année", options: allYears },
+    { key: "categories", label: "Catégorie", options: allCategories },
+];
+
+const title = "Blog et publications";
+const seoDescription =
+    seoData["blog/index"] ||
+    "Mes récits de voyages, comptes rendus de mes observations astronomiques, dernières astrophotographies ou simplement l’envie de vous parler de mes aventures.";
+
+const firstPostImage = sortedPosts.length > 0 ? resolveImage(sortedPosts[0].data.image) : undefined;
+
+// POURQUOI : précharger exactement l'image de la première carte (sa miniature `-thumb.jpg`),
+// pas `w_1000` de l'original, que le worker renvoie entier au-delà de 500 Ko.
+const firstCardImage = firstPostImage ? toThumbUrl(firstPostImage) : undefined;
+const lcpPreloadUrl = (typeof firstCardImage === "string" ? firstCardImage : firstCardImage?.src) ?? null;
+---
+
+<BaseLayout title={title} description={seoDescription} image={firstPostImage} breadcrumbLabel="Blog">
+    {lcpPreloadUrl && (
+        <Fragment slot="head">
+            <link rel="preload" as="image" href={lcpPreloadUrl} fetchpriority="high" />
+        </Fragment>
+    )}
+    <PageHeader title={title}>
+        <Fragment slot="metadata">
+            <StatsMetadata stats={categoryStats} />
+        </Fragment>
+        <p class="mt-4">
+            <i>
+                « Je voyage non pour aller quelque part, mais pour marcher. Je voyage pour le plaisir de voyager.
+                L'important est de bouger, d'éprouver de plus près les nécessités et les embarras de la vie, de quitter
+                le lit douillet de la civilisation, de sentir sous mes pieds le granit terrestre et les silex épars avec
+                leurs coupants.&nbsp;»
+            </i>
+            <br />
+            Robert Louis Stevenson (1850-1894)
+        </p>
+    </PageHeader>
+
+    <UniversalFilterBar client:visible filters={filterConfig} dataSelector="[data-year]" />
+
+    <main class="container-mp">
+        <ContentGrid class="gap-y-8 md:gap-y-20">
+            {sortedPosts.map((post, index) => {
+                const year = new Date(post.data.date).getFullYear();
+                const readingTime = blogData[post.id]?.readingTime;
+                // Extract minutes for data attribute
+                const readingMinutes = readingTime ? parseInt(readingTime, 10) : 0;
+                return (
+                    <div
+                        class="contents"
+                        data-year={year}
+                        data-categories={post.data.categories.join(",")}
+                        data-reading-time={readingMinutes}
+                    >
+                        <BlogCard
+                            title={post.data.title}
+                            date={post.data.date}
+                            categories={post.data.categories}
+                            description={post.data.description}
+                            image={toThumbUrl(resolveImage(post.data.image))}
+                            href={`/blog/${post.id}`}
+                            readingTime={readingTime}
+                            variant="vertical"
+                            mobileLayout={index === 0 ? "vertical" : "horizontal"}
+                            loading={index < 2 ? "eager" : "lazy"}
+                            sizes={
+                                index === 0
+                                    ? "(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                                    : "(max-width: 767px) 33vw, (max-width: 1023px) 50vw, 33vw"
+                            }
+                        />
+                    </div>
+                );
+            })}
+        </ContentGrid>
+    </main>
+
+    <script>
+        function updateStats() {
+            const elements = document.querySelectorAll("[data-year]");
+
+            let totalReadingMinutes = 0;
+            const currentCounts: Record<string, number> = {};
+
+            elements.forEach((el) => {
+                // Determine visibility:
+                // UniversalFilterBar sets inline style "display: none" to hide elements.
+                // We cannot use offsetParent because elements have "display: contents",
+                // which always results in offsetParent being null.
+                const element = el as HTMLElement;
+                const isHidden = element.style.display === "none";
+                if (isHidden) return;
+
+                // Reading Time
+                const mins = parseInt(el.getAttribute("data-reading-time") || "0", 10);
+                if (!isNaN(mins)) totalReadingMinutes += mins;
+
+                // Categories
+                const cats = (el.getAttribute("data-categories") || "").split(",");
+                cats.forEach((c) => {
+                    const clean = c.trim();
+                    if (clean) currentCounts[clean] = (currentCounts[clean] || 0) + 1;
+                });
+            });
+
+            // Update Reading Time DOM
+            const timeEl = document.getElementById("stat-val-reading-time");
+            if (timeEl) {
+                const hours = Math.floor(totalReadingMinutes / 60);
+                const mins = totalReadingMinutes % 60;
+                timeEl.textContent = hours > 0 ? `${hours}h${mins.toString().padStart(2, "0")}` : `${mins} min`;
+            }
+
+            // Update Categories DOM
+            const allStatEls = document.querySelectorAll('[id^="stat-val-"]:not(#stat-val-reading-time)');
+            allStatEls.forEach((el) => {
+                let key = el.getAttribute("data-key");
+                // Fallback for legacy support or if key is missing (though it shouldn't be)
+                if (!key) {
+                    const labelNode = el.nextElementSibling;
+                    if (labelNode && labelNode.textContent) {
+                        key = labelNode.textContent.trim();
+                    }
+                }
+
+                if (key) {
+                    const count = currentCounts[key] || 0;
+                    el.textContent = String(count);
+                }
+            });
+        }
+
+        const gridContainer = document.querySelector("main");
+
+        if (gridContainer) {
+            const observer = new MutationObserver((mutations) => {
+                let shouldUpdate = false;
+                mutations.forEach((mutation) => {
+                    if (mutation.type === "attributes" && mutation.attributeName === "style") {
+                        shouldUpdate = true;
+                    }
+                });
+                if (shouldUpdate) {
+                    setTimeout(updateStats, 10);
+                }
+            });
+
+            observer.observe(gridContainer, {
+                attributes: true,
+                subtree: true,
+                attributeFilter: ["style"],
+            });
+
+            // Multiple checks to handle React hydration timing race conditions
+            updateStats();
+            setTimeout(updateStats, 50);
+            setTimeout(updateStats, 200);
+            setTimeout(updateStats, 500);
+            setTimeout(updateStats, 1000); // Late safety net
+        }
+    </script>
+</BaseLayout>

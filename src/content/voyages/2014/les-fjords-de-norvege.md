@@ -1,0 +1,28 @@
+---
+title: "Les fjords de Norvège"
+description: ""
+image: "../../../assets/voyages/2014/les-fjords-de-norvege/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-1.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-2.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-3.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-4.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-5.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-6.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-7.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-8.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-9.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-10.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-11.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-12.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-13.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-14.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-15.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-16.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-17.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-18.jpg"
+  - "../../../assets/voyages/2014/les-fjords-de-norvege/img-19.jpg"
+country: "Norvège"
+season: "Été"
+year: 2014
+---

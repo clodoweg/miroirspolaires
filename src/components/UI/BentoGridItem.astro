@@ -1,0 +1,136 @@
+---
+import type { ImageMetadata } from "astro";
+import AppImage from "@/components/UI/AppImage.astro";
+
+interface Props {
+    index: number;
+    image: ImageMetadata | string;
+    href: string;
+    title?: string;
+    /**
+     * Visual variant for different contexts:
+     * - "dark": Deep space theme, no border (for astrophotography)
+     * - "light": Ice theme with shadow/border (for voyages on light bg)
+     */
+    variant?: "dark" | "light";
+    /**
+     * Mobile layout variant:
+     * - "stacked": Text below image (default, for most grids)
+     * - "overlay": Text over image like desktop (for featured items)
+     */
+    mobileVariant?: "stacked" | "overlay";
+    class?: string;
+}
+
+const { index, image, href, title, variant = "dark", mobileVariant = "stacked", class: className = "" } = Astro.props;
+
+// Determine grid span and aspect ratio based on index (3-item bento layout)
+// Astro (variant="light"): Main image Right
+// Voyage (variant="dark"): Main image Left
+const gridPositionClasses =
+    variant === "light"
+        ? // Main Right Layout
+          index === 0
+            ? "col-span-2 md:col-start-3 md:col-span-4 md:row-span-2 md:row-start-1"
+            : index === 1
+              ? "md:col-start-1 md:col-span-2 md:row-start-1"
+              : index === 2
+                ? "md:col-start-1 md:col-span-2 md:row-start-2"
+                : "md:col-span-3"
+        : // Main Left Layout
+          index === 0
+          ? "col-span-2 md:col-start-1 md:col-span-4 md:row-span-2 md:row-start-1"
+          : index === 1
+            ? "md:col-start-5 md:col-span-2 md:row-start-1"
+            : index === 2
+              ? "md:col-start-5 md:col-span-2 md:row-start-2"
+              : "md:col-span-3";
+
+const desktopAspectClasses =
+    index === 0 ? "md:aspect-5/3" : index >= 1 && index <= 2 ? "md:aspect-5/3" : "md:aspect-auto";
+
+const mobileAspectClasses = index === 0 ? "aspect-4/3" : "aspect-3/2";
+
+const themeClasses = variant === "light" ? "shadow-lg hover:shadow-xl" : "ring-0";
+
+// Text color based on variant
+const mobileTextColor =
+    mobileVariant === "overlay"
+        ? "text-mp-text-primary"
+        : variant === "dark"
+          ? "text-mp-text-primary"
+          : "text-mp-text-heading";
+
+// Optimize sizes based on grid position
+// Index 0: 66vw on desktop (2 columns), 100vw on mobile
+// Others: 33vw on desktop (1 column), 100vw on mobile
+const sizes =
+    index === 0
+        ? "(max-width: 767px) calc(100vw - 2rem), (min-width: 1400px) 933px, 66vw"
+        : "(max-width: 767px) 50vw, (min-width: 1400px) 466px, 33vw";
+---
+
+<a
+    href={href}
+    class={`group relative block w-full h-auto md:h-full ${gridPositionClasses} ${desktopAspectClasses} ${className}`}
+>
+    <!-- Image Container -->
+    <div
+        class={`relative w-full overflow-hidden rounded-lg ${mobileAspectClasses} md:aspect-auto md:h-full ${themeClasses}`}
+    >
+        <!-- Image -->
+        <AppImage
+            src={image}
+            alt={title || `Image ${index + 1}`}
+            width={1200}
+            class="w-full h-full object-cover transition-image-zoom group-hover:scale-card-hover"
+            sizes={sizes}
+        />
+
+        <!-- Internal Glow Effect -->
+        <div class="card-glow"></div>
+
+        <!-- Desktop Overlay & Content -->
+        {(title || Astro.slots.has("default")) && (
+            <div class="absolute inset-0 p-4 md:p-6 flex-col justify-end z-20 bg-gradient-overlay hidden md:flex">
+                <!-- Metadata (slides up on hover) -->
+                <div class="opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-reveal text-mp-text-primary text-xs font-sans uppercase tracking-wider flex flex-wrap gap-2 mb-2">
+                    <slot />
+                </div>
+
+                <!-- Title -->
+                {title && (
+                    <h4 class="font-serif font-light tracking-wide leading-tight text-white text-2xl transition-colors duration-300 group-hover:text-mp-accent">
+                        {title}
+                    </h4>
+                )}
+            </div>
+        )}
+
+        <!-- Mobile Overlay (only for mobileVariant="overlay") -->
+        {mobileVariant === "overlay" && (title || Astro.slots.has("default")) && (
+            <div class="absolute inset-0 p-4 md:p-6 flex flex-col justify-end z-20 bg-gradient-overlay md:hidden">
+                {title && (
+                    <h4
+                        class:list={[
+                            "font-serif font-light tracking-wide leading-tight text-white text-2xl transition-colors duration-300 group-hover:text-mp-accent",
+                            index === 0 ? "text-xl" : "text-sm! leading-snug",
+                        ]}
+                    >
+                        {title}
+                    </h4>
+                )}
+            </div>
+        )}
+    </div>
+
+    <!-- Mobile Content (only for mobileVariant="stacked") -->
+    {mobileVariant === "stacked" && (
+        <div class={`md:hidden mt-3 flex flex-col items-start ${mobileTextColor}`}>
+            {title && <h4 class="text-xl mb-4 group-hover:text-mp-accent transition-title">{title}</h4>}
+            <div class="text-xs font-sans uppercase tracking-wider flex flex-wrap gap-2 opacity-80">
+                <slot />
+            </div>
+        </div>
+    )}
+</a>

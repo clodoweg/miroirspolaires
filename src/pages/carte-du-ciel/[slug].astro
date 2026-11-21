@@ -1,0 +1,16 @@
+---
+import { CATALOGUES, getCatalogue } from "@/lib/catalogues/registry";
+
+export async function getStaticPaths() {
+    return CATALOGUES.map((c) => ({ params: { slug: c.slug } }));
+}
+
+const { slug } = Astro.params;
+const catalogue = getCatalogue(slug ?? "");
+
+// Legacy route — the unified /carte-du-ciel handles every mode now.
+const target = catalogue
+    ? `/carte-du-ciel?mode=catalogue&catalogue=${encodeURIComponent(catalogue.shortName)}`
+    : "/carte-du-ciel";
+return Astro.redirect(target);
+---

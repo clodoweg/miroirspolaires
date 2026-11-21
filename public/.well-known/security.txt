@@ -1,0 +1,6 @@
+Contact: mailto:clodoweg@miroirspolaires.fr
+Expires: 2027-02-15T10:00:00.000Z
+Preferred-Languages: fr, en
+Canonical: https://miroirspolaires.fr/.well-known/security.txt
+Policy: https://miroirspolaires.fr/security-policy
+# Si vous trouvez une faille de sécurité, merci de me contacter directement par email.

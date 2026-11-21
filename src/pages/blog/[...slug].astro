@@ -1,0 +1,200 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import { resolveImage } from "@/utils/imageService";
+import AppImage from "@/components/UI/AppImage.astro";
+import MobileFloatingMenu from "@/components/MobileFloatingMenu.astro";
+import Lightbox from "@/components/UI/Lightbox.astro";
+
+import fs from "node:fs";
+import path from "node:path";
+import { getCategoryIcon } from "@/utils/constants";
+
+export async function getStaticPaths() {
+    const blogEntries = (await getCollection("blog")).filter((post) => !post.data.draft);
+
+    // Load reading time data
+    let blogData: Record<string, any> = {};
+    try {
+        const blogDataPath = path.join(process.cwd(), "src/data/blog.json");
+        if (fs.existsSync(blogDataPath)) {
+            blogData = JSON.parse(fs.readFileSync(blogDataPath, "utf8"));
+        }
+    } catch (e) {
+        console.error("Error reading blog.json:", e);
+    }
+
+    // Sort posts by date descending (same as blog index)
+    blogEntries.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+    return blogEntries.map((entry, index) => ({
+        params: { slug: entry.id },
+        props: {
+            entry,
+            readingTime: blogData[entry.id]?.readingTime || null,
+            prevPost: index + 1 < blogEntries.length ? blogEntries[index + 1] : null,
+            nextPost: index - 1 >= 0 ? blogEntries[index - 1] : null,
+        },
+    }));
+}
+
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import ContentNavigation from "@/components/ContentNavigation.astro";
+import { generateBlogSchema } from "@/utils/seo";
+
+// ... existing imports
+
+const { entry, prevPost, nextPost, readingTime } = Astro.props;
+const { Content } = await render(entry);
+
+const dateObj = new Date(entry.data.date.split("/").reverse().join("-"));
+
+const formattedDate = dateObj.toLocaleDateString("fr-FR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+});
+
+const mobileFormattedDate = dateObj.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+});
+
+const resolvedImage = resolveImage(entry.data.image);
+const imageSrc = typeof resolvedImage === "string" ? resolvedImage : resolvedImage?.src;
+
+const schema = generateBlogSchema(entry, imageSrc);
+
+const seoDescription = entry.data.seoDescription || entry.data.description;
+
+const publishedIso = new Date(entry.data.date).toISOString();
+
+// Stats for Header
+const headerStats = [
+    {
+        icon: "calendar",
+        value: { mobile: mobileFormattedDate, desktop: formattedDate },
+        label: "Publié le",
+    },
+    ...(entry.data.categories || []).map((c: string) => {
+        let value = c;
+        let label = "Catégorie";
+
+        if (c.startsWith("Récits de voyage")) {
+            value = "Récits";
+            label = c.replace("Récits ", "");
+        } else if (c === "Publications d'astronomie") {
+            value = "Publications";
+            label = "d'astronomie";
+        }
+
+        return {
+            icon: getCategoryIcon(c),
+            value,
+            label,
+        };
+    }),
+];
+if (readingTime) {
+    headerStats.push({
+        icon: "clock",
+        value: readingTime,
+        label: "Lecture",
+    });
+}
+---
+
+<BaseLayout
+    title={entry.data.title}
+    description={seoDescription}
+    image={resolvedImage}
+    ogType="article"
+    publishedTime={publishedIso}
+    modifiedTime={publishedIso}
+    articleTags={entry.data.categories}
+    breadcrumbLabel={entry.data.title}
+    hasFloatingMenu={true}
+>
+    <Fragment slot="head">
+        <script type="application/ld+json" set:html={schema} />
+        {/* POURQUOI pas de preload : l'image héros, en tête de page, porte déjà fetchpriority="high".
+            L'ancien preload demandait w_600/w_1000, absents de son srcset : double téléchargement. */}
+    </Fragment>
+
+    <PageHeader title={entry.data.title} align="center">
+        <Fragment slot="metadata">
+            <StatsMetadata stats={headerStats} />
+        </Fragment>
+    </PageHeader>
+
+    <article class="container-mp pb-6 md:pb-0 pt-0 -mt-2">
+        {entry.data.showImage !== false && (
+            <div class="w-full mb-12 max-w-screen-lg mx-auto">
+                <AppImage
+                    src={resolveImage(entry.data.image)}
+                    alt={entry.data.title}
+                    class="w-full h-auto object-cover rounded-lg shadow-lg"
+                    loading="eager"
+                    fetchpriority="high"
+                    zoomable={true}
+                    caption={entry.data.title}
+                    aspectRatio="3/2"
+                />
+            </div>
+        )}
+
+        <div class="prose prose-lg prose-slate prose-headings:text-mp-text-heading prose-strong:text-mp-text-heading max-w-screen-lg mx-auto mb-0 prose-headings:font-serif prose-headings:font-normal prose-h2:text-3xl md:prose-h2:text-4xl prose-h2:mt-12 prose-h2:mb-6 prose-img:rounded-lg prose-p:text-mp-text-body prose-img:max-h-[theme('component.blog.imageMaxHeight')] prose-img:w-auto prose-img:max-w-full prose-img:mx-auto">
+            <Content />
+        </div>
+
+        <script>
+            import { initAllPhotoSpheres } from "@/scripts/photo-sphere";
+
+            (() => {
+                // Initialisation automatique des photosphères 360° immersives (style Facebook 360)
+                initAllPhotoSpheres();
+
+                const proseImages = document.querySelectorAll<HTMLImageElement>(".prose img");
+                if (!proseImages.length) return;
+
+                const R2_URL = "pub-r2.miroirspolaires.fr";
+                const WORKER_URL = "images.miroirspolaires.fr";
+
+                proseImages.forEach((img, idx) => {
+                    // POURQUOI : la première image est déjà en cours de chargement (eager) ;
+                    // changer sa source la ferait télécharger une seconde fois.
+                    if (idx === 0) return;
+                    img.loading = "lazy";
+                    img.decoding = "async";
+
+                    const rawSrc = img.src || img.getAttribute("src") || "";
+                    if (rawSrc.includes(R2_URL) && !rawSrc.includes(WORKER_URL)) {
+                        const pathTail = rawSrc.split(R2_URL)[1];
+                        if (pathTail) {
+                            img.src = `https://${WORKER_URL}/w_1200,q_80,f_jpeg${pathTail}`;
+                        }
+                    }
+                });
+            })();
+
+            document.addEventListener("astro:page-load", () => {
+                initAllPhotoSpheres();
+            });
+        </script>
+
+        <ContentNavigation
+            prev={prevPost ? { url: `/blog/${prevPost.id}`, title: prevPost.data.title } : undefined}
+            next={nextPost ? { url: `/blog/${nextPost.id}`, title: nextPost.data.title } : undefined}
+            prevLabel="Article précédent"
+            nextLabel="Article suivant"
+        />
+    </article>
+    <MobileFloatingMenu
+        prevUrl={prevPost ? `/blog/${prevPost.id}` : undefined}
+        nextUrl={nextPost ? `/blog/${nextPost.id}` : undefined}
+        galleryUrl="/blog"
+    />
+    <Lightbox defaultCaption={entry.data.title} />
+</BaseLayout>

@@ -1,0 +1,28 @@
+---
+title: "Parc de Hossa en Finlande"
+description: ""
+image: "../../../assets/voyages/2018/parc-de-hossa-en-finlande/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-1.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-2.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-3.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-4.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-5.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-6.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-7.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-8.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-9.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-10.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-11.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-12.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-13.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-14.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-15.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-16.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-17.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-18.jpg"
+  - "../../../assets/voyages/2018/parc-de-hossa-en-finlande/img-19.jpg"
+country: "Finlande"
+season: "Hiver"
+year: 2018
+---

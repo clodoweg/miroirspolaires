@@ -1,0 +1,28 @@
+---
+title: "La région de l'Everest"
+description: ""
+image: "../../../assets/voyages/2011/la-region-de-leverest/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-1.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-2.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-3.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-4.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-5.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-6.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-7.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-8.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-9.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-10.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-11.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-12.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-13.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-14.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-15.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-16.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-17.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-18.jpg"
+  - "../../../assets/voyages/2011/la-region-de-leverest/img-19.jpg"
+country: "Népal"
+season: "Automne"
+year: 2011
+---

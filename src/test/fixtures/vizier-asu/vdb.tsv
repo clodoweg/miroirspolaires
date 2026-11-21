@@ -1,0 +1,48 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:46 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:46	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f21%2fcatalog&-out.max=6&-out=VdB%2c_RA%2c_DE%2cVmag%2cType%2cBRadMax%2cSpType%2cDM	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7021
+#Name: VII/21
+#Title: Catalogue of Reflection Nebulae (Van den Bergh, 1966)
+#INFO	ivoid=ivo://cds.vizier/vii/21	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/21	    IVOID of underlying data collection
+#INFO	creator=Van den Bergh S.	    First author or institution
+#INFO	cites=bibcode:1966AJ.....71..990V	    Article or Data origin sources
+#INFO	journal=AJ	    Journal name
+#INFO	original_date=1966	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/21	    Dataset landing page
+#INFO	publication_date=2022-11-13	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	J2000_2000.000:	eq_FK5 J2000
+#Table	VII_21_catalog:
+#Name: VII/21/catalog
+#Title: The catalogue (Table I of publication) (corrected version, 13-Nov-2022)
+#Column	VdB	(I3)	[1-158]+ van den Bergh catalog number (1)	[ucd=meta.id;meta.main]
+#Column	_RA	(F9.5)	Right Ascension (J2000) from SIMBAD (not part of the original data)	[ucd=pos.eq.ra;meta.main]
+#Column	_DE	(F9.5)	Declination (J2000) from SIMBAD (not part of the original data)	[ucd=pos.eq.dec;meta.main]
+#Column	Vmag	(F5.2)	? V magnitude	[ucd=phot.mag;em.opt.V]
+#Column	Type	(a6)	Type of nebula, see Note (2)	[ucd=src.class]
+#Column	BRadMax	(F5.1)	? Maximum radii observed on blue PSS prints	[ucd=phys.angSize]
+#Column	SpType	(a9)	Spectral type	[ucd=src.spType]
+#Column	DM	(A10)	Durchmusterung (BD, CD or CP) designation	[ucd=meta.id]
+VdB	_RA	_DE	Vmag	Type	BRadMax	SpType	DM
+ 	deg	deg	mag	 	arcmin	 	
+---	---------	---------	-----	------	-----	---------	----------
+  1	002.69319	+58.76952	 8.60	I     	  4.3	A        	BD+57   22
+  2	003.35083	+65.61346	 9.50	I     	  1.7	B5       	BD+64   13
+  3	008.65570	+69.43461	 8.50	I     	  0.9	K0       	BD+68   34
+  4	010.82607	+61.91115	 9.50	I-II  	  4.2	Beq      	BD+61  154
+  5	014.17721	+60.71674	 2.57	II    	 60.0	B0IV:e   	BD+59  144
+  6	025.93068	+61.83432	 9.20	II    	  0.9	B8Ib     	BD+61  315
+

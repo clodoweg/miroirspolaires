@@ -1,0 +1,39 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:48:55 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:48:55	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f118%2fngc2000&-out.max=2&-out=Name%2cType%2cmag%2csize%2cConst%2cDesc&Name=I+434	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7118
+#Name: VII/118
+#Title: NGC 2000.0 (Sky Publishing, ed. Sinnott 1988)
+#INFO	ivoid=ivo://cds.vizier/vii/118	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/118	    IVOID of underlying data collection
+#INFO	creator=Sinnott	    First author or institution
+#INFO	cites=1988cngc.book.....S	    Article or Data origin sources
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/118	    Dataset landing page
+#INFO	publication_date=2022-10-27	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B2000:	eq_FK4 B2000
+#Table	VII_118_ngc2000:
+#Name: VII/118/ngc2000
+#Title: The NGC 2000.0 Catalogue
+#Column	Name	(A5)	NGC or IC designation (preceded by I)	[ucd=meta.id;meta.main]
+#Column	Type	(A3)	Object classification (1)	[ucd=src.class]
+#Column	mag	(F4.1)	? Integrated magnitude, visual or photographic (see n_mag)	[ucd=phot.mag;em.opt]
+#Column	size	(F5.1)	? Largest dimension	[ucd=phys.angSize]
+#Column	Const	(A3)	Constellation	[ucd=meta.id]
+#Column	Desc	(a53)	Description of the object (3)	[ucd=meta.note]
+Name	Type	mag	size	Const	Desc
+ 	 	mag	arcmin	 	
+-----	---	----	-----	---	-----------------------------------------------------
+I 434	 Nb	    	 60.0	Ori	neb, 60' l, south from zeta Ori
+

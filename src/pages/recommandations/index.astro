@@ -1,0 +1,85 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import RecommendationsViewer from "@/components/Recommendations/RecommendationsViewer";
+import seoData from "@/data/seo.json";
+import { buildRecommendations } from "@/lib/recommendations/score";
+import { recommendationsCacheControl } from "@/lib/recommendations/query";
+import { DEFAULT_LOCATION } from "@/lib/objects/observation";
+
+// SSR so we can pre-compute the default-location recommendations server-side.
+// Without this, <RecommendationsViewer> renders an empty wrapper,
+// then injects ~1700 px of content after the API fetch — CLS 0.55 (measured
+// 2026-05-25, §15.3 of docs/audits/2026-05-performance-audit.md). With SSR, first paint already
+// has the table populated, CLS drops to ~0.
+//
+// Trade-off: users with a custom location stored in localStorage will see
+// a brief default-location result before the client useEffect re-fetches
+// with their location. Acceptable because (a) most users don't override
+// the default, (b) the table shape is similar, (c) the previous behaviour
+// was strictly worse (blank → full).
+export const prerender = false;
+
+const refDate = new Date();
+let initialData: Awaited<ReturnType<typeof buildRecommendations>> | null = null;
+try {
+    initialData = await buildRecommendations({
+        location: DEFAULT_LOCATION,
+        date: refDate,
+        minAltDeg: 30,
+    });
+} catch (e) {
+    // SSR failure shouldn't break the page — client will fetch as fallback.
+    console.error("[recommandations SSR] buildRecommendations failed:", e);
+}
+
+// Match the /api/recommendations Cache-Control so SSR pages benefit from
+// the same CDN caching strategy.
+// POURQUOI : no-store après un échec, sinon le CDN resservirait une page sans données pendant 24 h.
+Astro.response.headers.set(
+    "Cache-Control",
+    initialData ? recommendationsCacheControl(initialData.poolComplete) : "no-store",
+);
+
+const headerStats = [
+    { icon: "sun", value: "≤ -12°", label: "Soleil (nuit astro)" },
+    { icon: "mountain", value: "≥ 30°", label: "Hauteur min." },
+];
+
+const description =
+    (seoData as Record<string, string>)["recommandations/index"] ||
+    "Recommandations d'observation du ciel profond ce mois ci";
+
+// referenceMonthStart is typed as Date in buildRecommendations() but as string
+// in the React InitialPayload — Astro serializes Date → ISO at the prop
+// boundary, so we make that conversion explicit here for astro check.
+// (Recommendation.peakMonthStart values are also Date → string at runtime, but
+// items keeps its Recommendation[] type on both sides so TS doesn't flag it.)
+const initialPayload = initialData
+    ? {
+          referenceMonthStart: initialData.referenceMonthStart.toISOString(),
+          items: initialData.items,
+          poolSize: initialData.poolSize,
+          location: DEFAULT_LOCATION,
+      }
+    : null;
+---
+
+<BaseLayout title="Recommandations d'observation" description={description} breadcrumbLabel="Recommandations">
+    <main class="container-mp pb-16">
+        <PageHeader title="Recommandations d'observation">
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <RecommendationsViewer client:idle initialData={initialPayload} initialDate={refDate.toISOString()} />
+
+        <p class="mt-12 text-xs text-mp-text-muted border-t border-mp-glass-border pt-6">
+            Méthode : pour chaque objet du pool (Messier + Caldwell + NGC brillants), on échantillonne le 15 du mois sur
+            24 heures et on retient la hauteur maximale atteinte sous le soleil ≤ -12°. Le mois de pic est celui où
+            cette valeur est la plus élevée parmi le mois précédent / actuel / suivant.
+        </p>
+    </main>
+</BaseLayout>

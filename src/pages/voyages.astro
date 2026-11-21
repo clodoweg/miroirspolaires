@@ -1,0 +1,214 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import BlogCard from "@/components/BlogCard.astro";
+import ContentGrid from "@/components/ContentGrid.astro";
+import { EAGER_LOAD_COUNT } from "@/utils/constants";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import UniversalFilterBar from "@/components/Filters/UniversalFilterBar";
+import { resolveImage, toThumbUrl } from "@/utils/imageService";
+import { getSeasonIcon } from "@/utils/constants";
+import { normalizeCountries } from "@/utils/data";
+import { getCollection } from "astro:content";
+import seoData from "@/data/seo.json";
+
+const voyages = (await getCollection("voyages")).filter((v) => !v.data.draft);
+
+// Calculate unique values for filters
+
+const allCountries = [...new Set(voyages.flatMap((v) => normalizeCountries(v.data.country)))].sort();
+const allSeasons = [...new Set(voyages.map((v) => v.data.season).filter((s) => !!s))].sort();
+const allYears = [...new Set(voyages.map((v) => v.data.year).filter((y): y is number => !!y))].sort((a, b) => b - a); // Descending
+
+// Sort voyages by year (descending), then title
+const sortedVoyages = voyages.sort((a, b) => {
+    const yearA = a.data.year || 0;
+    const yearB = b.data.year || 0;
+    if (yearA !== yearB) return yearB - yearA;
+    return a.data.title.localeCompare(b.data.title);
+});
+
+const uniqueCountriesCount = allCountries.length;
+const minYear = Math.min(...allYears);
+const maxYear = Math.max(...allYears);
+const yearsCount = maxYear - minYear + 1;
+
+const totalPhotos = sortedVoyages.reduce((acc, v) => acc + (v.data.gallery?.length || 0), 0);
+
+const voyageStats = [
+    {
+        icon: "globe",
+        value: uniqueCountriesCount,
+        label: "Pays",
+        id: "stat-val-countries",
+    },
+    {
+        icon: "camera",
+        value: totalPhotos,
+        label: "Photos",
+        id: "stat-val-photos",
+    },
+    {
+        icon: "calendar",
+        value: yearsCount,
+        label: "Années",
+    },
+];
+
+const filterConfig = [
+    { key: "country", label: "Pays", options: allCountries },
+    { key: "season", label: "Saison", options: allSeasons as string[] },
+    { key: "year", label: "Année", options: allYears as number[] },
+];
+
+const title = "Photos de voyage";
+const description =
+    "Depuis plus de vingt ans, mes voyages m'ont conduit des sommets de l'Himalaya aux étendues glacées du Grand Nord, à travers road-trips et expéditions, en été comme en hiver.";
+const seoDescription =
+    seoData["voyages/index"] ||
+    "Photographies de mes expéditions, entre paysages polaires et des hauteurs himalayennes, entre glaciers, banquise, toundra, et montagnes défiants les cieux.";
+
+const firstVoyageRaw = sortedVoyages.length > 0 ? sortedVoyages[0].data.image : undefined;
+const firstVoyageImage = firstVoyageRaw ? resolveImage(firstVoyageRaw) : undefined;
+---
+
+<BaseLayout title={title} description={seoDescription} image={firstVoyageImage} breadcrumbLabel="Voyages">
+    <PageHeader title={title} description={description}>
+        <Fragment slot="metadata">
+            <StatsMetadata stats={voyageStats} />
+        </Fragment>
+    </PageHeader>
+
+    <UniversalFilterBar client:visible filters={filterConfig} dataSelector="[data-country]" />
+
+    <main class="container-mp">
+        <ContentGrid>
+            {sortedVoyages.map((voyage, index) => {
+                const countries = normalizeCountries(voyage.data.country).filter((c) => c !== "Inconnu");
+                const photoCount = voyage.data.gallery?.length || 0;
+                return (
+                    <div
+                        class={`contents ${index < EAGER_LOAD_COUNT ? "" : "js-reveal reveal-hidden"}`}
+                        data-country={normalizeCountries(voyage.data.country).join(",")}
+                        data-season={voyage.data.season}
+                        data-year={voyage.data.year}
+                        data-photos={photoCount}
+                        data-delay={Math.min(index * 30, 300)}
+                    >
+                        <BlogCard
+                            title={voyage.data.title}
+                            date={voyage.data.year?.toString() || ""}
+                            categories={
+                                [
+                                    ...countries.map((c) => ({
+                                        label: c,
+                                        icon: "globe",
+                                    })),
+                                    voyage.data.season
+                                        ? {
+                                              label: voyage.data.season,
+                                              icon: getSeasonIcon(voyage.data.season),
+                                          }
+                                        : null,
+                                ].filter(Boolean) as {
+                                    label: string;
+                                    icon: string;
+                                }[]
+                            }
+                            description={voyage.data.description || ""}
+                            image={toThumbUrl(resolveImage(voyage.data.image))}
+                            href={`/voyages/${voyage.id}`}
+                            datePosition="end"
+                            categoryIcon=""
+                            variant="hybrid"
+                            mobileVariant="overlay"
+                            sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                            overlayCompact={true}
+                            cardStyle="stacked"
+                            showMetadata={false}
+                            loading={index < 3 ? "eager" : "lazy"}
+                        />
+                    </div>
+                );
+            })}
+        </ContentGrid>
+    </main>
+
+    <script>
+        function updateStats() {
+            const elements = document.querySelectorAll("[data-country]"); // Select all voyage items
+            const visibleElements: HTMLElement[] = [];
+
+            elements.forEach((el) => {
+                const element = el as HTMLElement;
+                // Check if element is hidden by UniversalFilterBar (which sets style.display = 'none')
+                // Note: element likely has display: contents, so offsetParent check is unreliable.
+                // Checking inline style is the robust method here.
+                if (element.style.display !== "none") {
+                    visibleElements.push(element);
+                }
+            });
+
+            // Update Photo Count
+            let totalPhotos = 0;
+            visibleElements.forEach((el) => {
+                const photos = parseInt(el.getAttribute("data-photos") || "0");
+                totalPhotos += photos;
+            });
+
+            const photosEl = document.getElementById("stat-val-photos");
+            if (photosEl) {
+                // Animate count if different
+                const currentVal = parseInt(photosEl.innerText.replace(/\D/g, ""));
+                if (currentVal !== totalPhotos) {
+                    photosEl.innerText = totalPhotos.toString();
+                }
+            }
+
+            // Update Counts (Countries/Seasons) based on visible items
+            // Re-calculating unique countries and seasons from visible items
+            const visibleCountries = new Set<string>();
+
+            visibleElements.forEach((el) => {
+                const countries = (el.getAttribute("data-country") || "").split(",");
+                countries.forEach((c) => {
+                    if (c && c !== "Inconnu") visibleCountries.add(c);
+                });
+            });
+
+            const countriesEl = document.getElementById("stat-val-countries");
+            if (countriesEl) countriesEl.innerText = visibleCountries.size.toString();
+        }
+
+        // Observer approach like in blog.astro
+        const mainContainer = document.querySelector("main");
+        if (mainContainer) {
+            let timeout: NodeJS.Timeout;
+            const observer = new MutationObserver((mutations) => {
+                let shouldUpdate = false;
+                for (const mutation of mutations) {
+                    if (mutation.type === "attributes" && mutation.attributeName === "style") {
+                        shouldUpdate = true;
+                        break;
+                    }
+                }
+
+                if (shouldUpdate) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(updateStats, 10);
+                }
+            });
+
+            observer.observe(mainContainer, {
+                attributes: true,
+                subtree: true,
+                attributeFilter: ["style"],
+            });
+
+            // Initial updates to catch hydration / initial load
+            updateStats();
+            setTimeout(updateStats, 50);
+            setTimeout(updateStats, 200);
+        }
+    </script>
+</BaseLayout>

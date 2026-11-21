@@ -1,0 +1,28 @@
+---
+title: "La côte sud de l'Islande"
+description: ""
+image: "../../../assets/voyages/2009/la-cote-sud-de-lislande/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-1.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-2.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-3.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-4.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-5.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-6.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-7.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-8.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-9.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-10.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-11.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-12.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-13.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-14.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-15.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-16.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-17.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-18.jpg"
+  - "../../../assets/voyages/2009/la-cote-sud-de-lislande/img-19.jpg"
+country: "Islande"
+season: "Été"
+year: 2009
+---

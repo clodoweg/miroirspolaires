@@ -1,0 +1,89 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import StellariumMapContainer from "../components/SkyMap/StellariumMapContainer";
+import {
+    photos,
+    getUniqueConstellations,
+    getUniqueYears,
+    getUniqueTelescopes,
+    getUniqueTypes,
+    getUniqueLocations,
+    getUniqueCameras,
+    getUniqueObservatories,
+} from "../lib/photos";
+import { CATALOGUES } from "@/lib/catalogues/registry";
+import { getWebImageSet } from "@/utils/imageService";
+import { fetchAllCataloguesAsPhotos } from "@/lib/sky-map/all-catalogues";
+
+// Personal photos with valid coordinates.
+// POURQUOI : les marqueurs demandent sinon la mini/ au worker, qui la sert entière (~380 Ko) même en
+// w_150 ; la version web de 400 px, quand elle existe, pèse une dizaine de fois moins.
+const mappedPhotos = photos
+    .filter((p) => p.raVal !== null && p.decVal !== null)
+    .map((p) => {
+        const webImageSet = getWebImageSet(`astrophotographies/mini/${p.imagePath}`);
+        return webImageSet ? { ...p, thumbnailUrl: webImageSet.pick(400) } : p;
+    });
+
+// Catalogue dataset (built once at compile time).
+const { photos: cataloguePhotos } = await fetchAllCataloguesAsPhotos();
+
+const personalFilterConfig = [
+    { key: "type", label: "Type", options: getUniqueTypes() },
+    {
+        key: "constellation",
+        label: "Constellation",
+        options: getUniqueConstellations(),
+    },
+    {
+        key: "observatories",
+        label: "Observatoire",
+        options: getUniqueObservatories(),
+    },
+    { key: "locations", label: "Lieu", options: getUniqueLocations() },
+    { key: "telescope", label: "Télescope", options: getUniqueTelescopes() },
+    { key: "camera", label: "Caméra", options: getUniqueCameras() },
+    { key: "year", label: "Année", options: getUniqueYears() },
+];
+
+// Catalogue mode filters: broad category, constellation, source catalogue,
+// magnitude max (default ≤ 8 to keep the map readable).
+const catalogueCategories = [...new Set(cataloguePhotos.map((p) => p.type).filter(Boolean))].sort();
+const catalogueConstellations = [...new Set(cataloguePhotos.map((p) => p.constellation).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "fr"),
+);
+const catalogueSources = CATALOGUES.map((c) => c.shortName);
+
+const catalogueFilterConfig = [
+    { key: "type", label: "Catégorie", options: catalogueCategories },
+    {
+        key: "constellation",
+        label: "Constellation",
+        options: catalogueConstellations,
+    },
+    { key: "catalogue", label: "Catalogue", options: catalogueSources },
+    {
+        key: "mag",
+        label: "Magnitude max",
+        options: ["4", "6", "8", "10", "12"],
+        type: "numericMax" as const,
+    },
+];
+---
+
+<BaseLayout
+    title="Carte du Ciel"
+    description="Exploration interactive du ciel avec mes astrophotographies et les grands catalogues d'objets du ciel profond."
+    breadcrumbLabel="Carte du Ciel"
+    contentPaddingBottom={false}
+>
+    <main class="w-full min-h-0 bg-mp-ui-black flex flex-col overflow-hidden touch-none touch-action-none h-dvh max-h-dvh">
+        <StellariumMapContainer
+            client:idle
+            photos={mappedPhotos}
+            cataloguePhotos={cataloguePhotos}
+            filterConfig={personalFilterConfig}
+            catalogueFilterConfig={catalogueFilterConfig}
+        />
+    </main>
+</BaseLayout>

@@ -1,0 +1,11 @@
+---
+/**
+ * Umami Analytics Script
+ */
+const scriptUrl = import.meta.env.PUBLIC_UMAMI_SCRIPT_URL;
+const websiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID;
+---
+
+{scriptUrl && websiteId && (
+    <script defer src={scriptUrl} data-website-id={websiteId} data-domains="www.miroirspolaires.fr" />
+)}

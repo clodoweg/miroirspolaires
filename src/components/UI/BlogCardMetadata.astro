@@ -1,0 +1,30 @@
+---
+import MetadataItem from "./MetadataItem.astro";
+import Badge from "./Badge.astro";
+
+interface Props {
+    date: string;
+    categories: (string | { label: string; icon?: string })[];
+    readingTime?: string;
+    datePosition?: "start" | "end";
+    categoryIcon?: string;
+    badgeClass?: string;
+}
+
+const { date, categories, readingTime, datePosition = "start", categoryIcon = "tag", badgeClass = "" } = Astro.props;
+---
+
+<div class="flex flex-wrap gap-2 text-xs font-sans uppercase tracking-wider">
+    {datePosition === "start" && <MetadataItem icon="calendar" label={date} />}
+    <div class="flex flex-wrap gap-2">
+        {categories.map((cat) => (
+            <Badge
+                icon={typeof cat === "string" ? categoryIcon : cat.icon}
+                label={typeof cat === "string" ? cat : cat.label}
+                class={badgeClass}
+            />
+        ))}
+    </div>
+    {datePosition === "end" && <MetadataItem icon="calendar" label={date} />}
+    {readingTime && <MetadataItem icon="clock" label={readingTime} />}
+</div>

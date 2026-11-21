@@ -1,0 +1,248 @@
+---
+/**
+ * AdminLayout - shared shell for every page under /admin.
+ *
+ * Wraps BaseLayout. Pages just provide their
+ * content via the default slot; the rest (container width, header offset,
+ * footer/breadcrumb suppression) is handled here so every admin page stays
+ * visually consistent.
+ *
+ * Usage:
+ *   <AdminLayout active="blog" title="Éditeur blog" description="...">
+ *     <BlogEditor client:only="react" />
+ *   </AdminLayout>
+ */
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import Papa from "papaparse";
+import { createUniqueHeaderTransform } from "@/lib/admin/shared";
+import { countMarkdownEntries } from "@/lib/admin/content-files";
+import { getContentReader } from "@/lib/admin/stores/content-reader";
+import { getRemoteAdminConfig } from "@/lib/admin/auth/config";
+
+interface Props {
+    title: string;
+    description: string;
+    active?:
+        | "dashboard"
+        | "blog"
+        | "voyages"
+        | "astrophotos"
+        | "scripts"
+        | "lighthouse"
+        | "seo"
+        | "r2"
+        | "cache"
+        | "database"
+        | "upstream"
+        | "diagnostic"
+        | "publication"
+        | "journal";
+    /** Full-width content (no inner container). Useful for editors with their own layout. */
+    bleed?: boolean;
+}
+
+const { title, description, active = "dashboard", bleed = false } = Astro.props;
+
+// 1. Récupération dynamique des statistiques du site côté serveur.
+// POURQUOI getContentReader() : disque en dev, branche de contenu (API GitHub) sur l'admin distant.
+const CSV_PATH = "data/astrobin_clodoweg_gallery_python.csv";
+const contentReader = getContentReader();
+const adminAccess = Astro.locals.adminAccess;
+const remoteSession = adminAccess?.mode === "remote" ? adminAccess.session : null;
+const contentBranch = remoteSession ? getRemoteAdminConfig().contentBranch : null;
+// POURQUOI : pages dont les panneaux ne savent pas encore fonctionner sans disque ni spawn (voir
+// remote-capabilities.ts) ; à distance, on les remplace par une explication plutôt que par des erreurs 501.
+const REMOTE_READY_PAGES = new Set([
+    "dashboard",
+    "blog",
+    "voyages",
+    "lighthouse",
+    "upstream",
+    "cache",
+    "diagnostic",
+    "publication",
+    "journal",
+    "scripts",
+]);
+const isUnavailableRemotely = remoteSession !== null && !REMOTE_READY_PAGES.has(active);
+
+// POURQUOI : à distance, une lecture GitHub refusée laisserait des compteurs à 0 sans explication.
+let contentReadFailed = false;
+let blogCount = 0;
+let voyageCount = 0;
+let photoCount = 0;
+
+try {
+    blogCount = await countMarkdownEntries(contentReader, "src/content/blog");
+} catch (e) {
+    console.error("Impossible de récupérer le nombre d'articles de blog :", e);
+    contentReadFailed = true;
+}
+
+try {
+    voyageCount = await countMarkdownEntries(contentReader, "src/content/voyages");
+} catch (e) {
+    console.error("Impossible de récupérer le nombre de voyages :", e);
+    contentReadFailed = true;
+}
+
+try {
+    const content = (await contentReader.readText(CSV_PATH)) ?? "";
+    const parsed = Papa.parse<Record<string, string>>(content, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: createUniqueHeaderTransform(),
+    });
+    photoCount = (parsed.data ?? []).filter((r) => r.ID).length;
+} catch (e) {
+    console.error("Impossible de récupérer le nombre d'astrophotographies :", e);
+    contentReadFailed = true;
+}
+
+// 2. Formatage des statistiques pour StatsMetadata
+const stats = [
+    {
+        icon: "file-text",
+        value: blogCount,
+        suffix: "Articles",
+        label: "Blog",
+    },
+    {
+        icon: "compass",
+        value: voyageCount,
+        suffix: "Albums",
+        label: "Voyages",
+    },
+    {
+        icon: "camera",
+        value: photoCount,
+        suffix: "Photos",
+        label: "Astrophotographie",
+    },
+];
+
+// 3. Mappage des titres d'administration pour correspondre au style épuré du site public
+const cleanTitleMap: Record<string, string> = {
+    dashboard: "Console d'administration",
+    blog: "Éditeur de Blog",
+    voyages: "Éditeur de Voyages",
+    astrophotos: "Pipeline Astrophotographies",
+    scripts: "Exécution des Scripts",
+    lighthouse: "Audit de Performance Web",
+    seo: "Optimisation & Référencement",
+    r2: "Gestion Cloudflare R2 & Assets",
+    cache: "Gestion du Cache CDN & Worker",
+    database: "Supervision de la Base de Données",
+    upstream: "Routes amont",
+    diagnostic: "Diagnostic",
+    publication: "Mise en production",
+    journal: "Journal des écritures",
+};
+
+const displayTitle = cleanTitleMap[active] || title;
+---
+
+<BaseLayout title={displayTitle} description={description} breadcrumbLabel={displayTitle}>
+    <!-- 
+      POURQUOI: En utilisant le composant public <PageHeader>, nous appliquons le même en-tête
+      centré et le même arrière-plan atmosphérique que sur les pages normales de Blog ou de Vidéos,
+      tout en injectant un bandeau de statistiques en temps réel (<StatsMetadata>).
+    -->
+    <PageHeader title={displayTitle}>
+        <Fragment slot="metadata">
+            <StatsMetadata stats={stats} />
+        </Fragment>
+    </PageHeader>
+
+    {remoteSession && (
+        <div class="container-mp pt-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-mp-border-accent bg-mp-accent/10 px-4 py-3 text-sm text-mp-text-body">
+                <p>
+                    Admin distant : chaque enregistrement est un commit sur la branche <code>{contentBranch}</code>,
+                    visible sur cette Preview après son redéploiement (2 à 3 min). Les photos partent directement sur R2
+                    ; les scripts tournent dans GitHub Actions.{" "}
+                    <a href="/admin/diagnostic" class="text-mp-accent underline">
+                        Diagnostic GitHub
+                    </a>
+                </p>
+                {contentReadFailed && (
+                    <p class="w-full text-mp-astro-red">
+                        La lecture de la branche a échoué : ouvrir le diagnostic GitHub pour savoir quoi corriger.
+                    </p>
+                )}
+                <form method="post" action="/api/auth/github/logout" class="flex items-center gap-3">
+                    <span class="text-mp-text-muted">@{remoteSession.login}</span>
+                    <button type="submit" class="min-h-touch rounded-md px-3 text-mp-accent underline">
+                        Se déconnecter
+                    </button>
+                </form>
+            </div>
+        </div>
+    )}
+
+    <main class={bleed && !isUnavailableRemotely ? "admin-main" : "admin-main container-mp py-6"}>
+        {isUnavailableRemotely ? (
+            <p class="rounded-md border border-mp-border px-4 py-6 text-center text-mp-text-muted">
+                Cette page n’est pas encore disponible sur l’admin distant. Elle reste utilisable en{" "}
+                <code>npm run dev</code>.
+            </p>
+        ) : (
+            <slot />
+        )}
+    </main>
+</BaseLayout>
+
+<style is:global>
+    /* POURQUOI : en Tailwind 4, un bloc <style> ne voit les tokens et variantes qu'avec @reference. */
+    @reference "../styles/base.css";
+
+    /* Les styles généraux des éditeurs d'administration sont conservés pour assurer l'homogénéité des champs et des barres de défilement. */
+
+    /* Form inputs shared by admin editors. */
+    .admin-input {
+        @apply w-full rounded-md border border-mp-glass-border bg-mp-ui-black/40 px-2.5 py-2 text-sm text-mp-text-primary;
+    }
+    .admin-input:focus {
+        @apply border-mp-accent/50 outline-hidden;
+    }
+    .admin-input:disabled {
+        @apply opacity-50;
+    }
+
+    /* Éditeur WYSIWYG des articles (Tiptap, src/components/Admin/editor/rich/). */
+    .rich-editor .is-empty::before {
+        @apply pointer-events-none float-left h-0 text-mp-text-muted/60 italic;
+        content: attr(data-placeholder);
+    }
+    .rich-editor .ProseMirror-selectednode > [data-node-view-wrapper] {
+        @apply border-mp-accent;
+    }
+    .rich-editor .ProseMirror-gapcursor::after {
+        @apply border-t-2 border-mp-accent;
+    }
+    .rich-editor a {
+        @apply cursor-text;
+    }
+
+    /* Custom scrollbar inside admin shells. */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(212, 180, 131, 0.4);
+    }
+</style>

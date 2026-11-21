@@ -1,0 +1,45 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:50 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:50	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f231%2fcatalog&-out.max=6&-out=Ced%2cm_Ced%2cName%2cRA1900%2cDE1900%2cStar%2cpmag	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7231
+#Name: VII/231
+#Title: Catalog of bright diffuse Galactic nebulae (Cederblad, 1946)
+#INFO	ivoid=ivo://cds.vizier/vii/231	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/231	    IVOID of underlying data collection
+#INFO	creator=Cederblad S.	    First author or institution
+#INFO	cites=1946MeLu2.119....1C	    Article or Data origin sources
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/231	    Dataset landing page
+#INFO	publication_date=2012-11-13	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1900:	eq_FK4 B1900
+#Table	VII_231_catalog:
+#Name: VII/231/catalog
+#Title: Catalog of bright diffuse Galactic nebulae
+#Column	Ced	(I3)	[1/215] Sequential number (Ced NNNa in Simbad)	[ucd=meta.id;meta.main]
+#Column	m_Ced	(A1)	[a-z] Subdivision letter	[ucd=meta.code.multip]
+#Column	Name	(a11)	Other name of the nebula	[ucd=meta.id]
+#Column	RA1900	(A7)	Right ascension (1900)	[ucd=pos.eq.ra;meta.main]
+#Column	DE1900	(A6)	Declination (1900)	[ucd=pos.eq.dec;meta.main]
+#Column	Star	(a12)	Star name	[ucd=meta.id.assoc]
+#Column	pmag	(F5.2)	? Photographic magnitude of the star	[ucd=phot.mag;em.opt.B]
+Ced	m_Ced	Name	RA1900	DE1900	Star	pmag
+ 	 	 	"h:m:s"	"d:m:s"	 	mag
+---	-	-----------	-------	------	------------	-----
+  1	 	+64 13     	00 08.0	+65 03	+64 13      	10.40
+  2	 	IC 11      	00 15.0	+56 02	?           	
+  3	 	NGC 281    	00 47.4	+56 03	+55 191     	 7.70
+  4	a	IC 59      	00 51.4	+60 33	+59 144     	 2.15
+  4	b	IC 63      	00 54.2	+60 18	+59 144     	 2.15
+  5	 	IC 155     	01 40.7	+59 17	?           	
+

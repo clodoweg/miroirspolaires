@@ -1,0 +1,77 @@
+---
+/**
+ * Aperçu réel d'un article non enregistré (blog ou voyage), en dev uniquement.
+ *
+ * Le brouillon est déposé par `POST /api/admin/preview` (protégé contre les requêtes inter-sites)
+ * et rendu avec les plugins rehype du site ; les images pointent vers `src/assets` via les routes admin.
+ */
+import { isAdminGranted } from "@/lib/admin/auth/access";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import Lightbox from "@/components/UI/Lightbox.astro";
+import { getPreviewDraft, renderArticlePreview, toLocalPreviewImageUrl } from "@/lib/admin/article-preview";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+
+const id = Astro.url.searchParams.get("id") ?? "";
+const draft = id ? getPreviewDraft(id) : undefined;
+const html = draft ? await renderArticlePreview(draft) : "";
+const fm = draft?.frontmatter ?? {};
+const title = typeof fm.title === "string" && fm.title.trim() ? fm.title : "Sans titre";
+const cover = typeof fm.image === "string" ? toLocalPreviewImageUrl(fm.image) : null;
+const showCover = draft?.section === "voyages" || fm.showImage !== false;
+const dateLabel =
+    typeof fm.date === "string" && fm.date
+        ? new Date(fm.date).toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })
+        : null;
+---
+
+<BaseLayout title={`Aperçu · ${title}`} description="Aperçu d'un article non enregistré." breadcrumbLabel="Aperçu">
+    <Fragment slot="head">
+        <meta name="robots" content="noindex" />
+    </Fragment>
+
+    <div class="sticky top-header-offset z-30 bg-mp-accent px-4 py-2 text-center text-sm font-semibold text-mp-bg">
+        Aperçu non enregistré — {draft ? `${draft.section}/${draft.year}/${draft.slug || "nouveau"}` : "introuvable"} ·
+        rendu avec les plugins du site, images servies depuis src/assets
+    </div>
+
+    {!draft ? (
+        <div class="container-mp py-20 text-center text-mp-text-muted">
+            Aperçu introuvable ou expiré (le serveur de dev a peut-être redémarré). Relance l'aperçu depuis l'éditeur.
+        </div>
+    ) : (
+        <>
+            <PageHeader title={title} align="center">
+                <Fragment slot="metadata">
+                    {dateLabel && <p class="text-sm tracking-wide text-mp-text-muted uppercase">{dateLabel}</p>}
+                </Fragment>
+            </PageHeader>
+
+            <article class="container-mp -mt-2 pt-0 pb-12">
+                {cover && showCover && (
+                    <div class="mx-auto mb-12 w-full max-w-screen-lg">
+                        <img src={cover} alt={title} class="h-auto w-full rounded-lg object-cover shadow-lg" />
+                    </div>
+                )}
+
+                <div
+                    class="prose prose-lg prose-slate prose-headings:text-mp-text-heading prose-strong:text-mp-text-heading max-w-screen-lg mx-auto mb-0 prose-headings:font-serif prose-headings:font-normal prose-h2:text-3xl md:prose-h2:text-4xl prose-h2:mt-12 prose-h2:mb-6 prose-img:rounded-lg prose-p:text-mp-text-body prose-img:max-h-[theme('component.blog.imageMaxHeight')] prose-img:w-auto prose-img:max-w-full prose-img:mx-auto"
+                    set:html={html}
+                />
+            </article>
+            <Lightbox defaultCaption={title} />
+        </>
+    )}
+
+    <script>
+        import { initAllPhotoSpheres } from "@/scripts/photo-sphere";
+
+        initAllPhotoSpheres();
+        document.addEventListener("astro:page-load", () => initAllPhotoSpheres());
+    </script>
+</BaseLayout>

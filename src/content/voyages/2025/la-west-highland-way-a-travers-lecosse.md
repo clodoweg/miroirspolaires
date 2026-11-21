@@ -1,0 +1,28 @@
+---
+title: "La West Highland Way à travers l'Ecosse"
+description: ""
+image: "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-1.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-2.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-3.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-4.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-5.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-6.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-7.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-8.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-9.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-10.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-11.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-12.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-13.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-14.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-15.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-16.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-17.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-18.jpg"
+  - "../../../assets/voyages/2025/la-west-highland-way-a-travers-lecosse/img-19.jpg"
+country: "Écosse"
+season: "Été"
+year: 2025
+---

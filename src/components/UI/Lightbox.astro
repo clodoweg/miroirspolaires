@@ -1,0 +1,249 @@
+---
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
+
+interface Props {
+    defaultCaption?: string;
+}
+
+const { defaultCaption } = Astro.props;
+---
+
+<dialog
+    id="lightbox"
+    class="backdrop:bg-mp-ui-black/90 bg-transparent p-0 overflow-hidden w-screen h-screen max-w-none max-h-none"
+    data-default-caption={defaultCaption}
+>
+    <div class="relative w-full h-full flex items-center justify-center">
+        <!-- Prev button -->
+        <button
+            id="lightbox-prev"
+            class="text-mp-text-primary/70 hover:text-mp-text-primary z-50 p-2 focus:outline-hidden transition-colors absolute left-4 hidden md:block"
+        >
+            <ChevronLeft className="h-12 w-12" />
+        </button>
+
+        <!-- Image Container -->
+        <div
+            class="w-full h-full flex flex-col items-center justify-center p-4 md:p-12 relative touch-none"
+            id="lightbox-backdrop"
+        >
+            <!-- Image wrapper for positioning close button -->
+            <div class="relative">
+                <!-- Close button - positioned above image -->
+                <button
+                    id="lightbox-close"
+                    class="text-mp-text-primary/70 hover:text-mp-text-primary z-50 p-2 focus:outline-hidden transition-colors absolute -top-12 right-0"
+                >
+                    <X className="h-8 w-8" />
+                </button>
+                <img
+                    id="lightbox-img"
+                    src=""
+                    alt="Agrandissement"
+                    class="max-w-full max-h-[80vh] w-auto h-auto object-contain rounded-sm shadow-2xl"
+                />
+            </div>
+            <p
+                id="lightbox-caption"
+                class="mt-2 w-full text-center text-mp-text-primary text-sm md:text-base hidden [&_a]:text-mp-text-link [&_a]:hover:text-mp-text-link-hover [&_a]:underline"
+            ></p>
+        </div>
+
+        <!-- Next button -->
+        <button
+            id="lightbox-next"
+            class="text-mp-text-primary/70 hover:text-mp-text-primary z-50 p-2 focus:outline-hidden transition-colors absolute right-4 hidden md:block"
+        >
+            <ChevronRight className="h-12 w-12" />
+        </button>
+    </div>
+</dialog>
+
+<script>
+    const GALLERY_IMAGE_SELECTOR =
+        ".prose figure img, .prose > p > img, .prose picture img, .prose img, .gallery-image, img[data-full-src]";
+
+    /**
+     * Récupère la liste dynamique de toutes les images éligibles à la Lightbox dans la page.
+     * @returns {HTMLImageElement[]} Liste ordonnée des éléments <img> de la galerie
+     */
+    function getEligibleImages(): HTMLImageElement[] {
+        const rawList = Array.from(document.querySelectorAll<HTMLElement>(GALLERY_IMAGE_SELECTOR));
+        const images: HTMLImageElement[] = [];
+
+        for (const el of rawList) {
+            const img = el instanceof HTMLImageElement ? el : el.querySelector("img");
+            if (
+                img instanceof HTMLImageElement &&
+                img.id !== "lightbox-img" &&
+                !img.closest("#lightbox") &&
+                !images.includes(img)
+            ) {
+                images.push(img);
+            }
+        }
+        return images;
+    }
+
+    let cleanupCurrentLightbox: (() => void) | null = null;
+
+    /**
+     * Initialise la Lightbox et attache les gestionnaires d'événements.
+     */
+    function initLightbox() {
+        if (cleanupCurrentLightbox) {
+            cleanupCurrentLightbox();
+            cleanupCurrentLightbox = null;
+        }
+
+        const lightbox = document.getElementById("lightbox") as HTMLDialogElement | null;
+        const lightboxImg = document.getElementById("lightbox-img") as HTMLImageElement | null;
+        const lightboxCaption = document.getElementById("lightbox-caption");
+        const lightboxBackdrop = document.getElementById("lightbox-backdrop");
+        const closeBtn = document.getElementById("lightbox-close");
+        const prevBtn = document.getElementById("lightbox-prev");
+        const nextBtn = document.getElementById("lightbox-next");
+
+        if (!lightbox || !lightboxImg) return;
+
+        let currentIndex = 0;
+        let activeImages: HTMLImageElement[] = [];
+
+        function showImage(index: number) {
+            activeImages = getEligibleImages();
+            if (!activeImages.length) return;
+
+            if (index < 0) index = activeImages.length - 1;
+            if (index >= activeImages.length) index = 0;
+
+            currentIndex = index;
+            const img = activeImages[currentIndex];
+
+            if (img && lightboxImg instanceof HTMLImageElement) {
+                // Préchargement de l'image suivante pour fluidité
+                const nextIndex = (currentIndex + 1) % activeImages.length;
+                const nextImg = activeImages[nextIndex];
+                if (nextImg instanceof HTMLImageElement) {
+                    const preload = new Image();
+                    preload.src = nextImg.dataset.fullSrc || nextImg.currentSrc || nextImg.src;
+                }
+
+                lightboxImg.src = img.dataset.fullSrc || img.currentSrc || img.src;
+                lightboxImg.alt = img.alt || "";
+
+                // Mise à jour de la légende
+                const rawCaptionHtml = img.dataset.captionSafeMarkup || img.getAttribute("data-caption-safe-markup");
+                const captionHtml = rawCaptionHtml ? decodeURIComponent(rawCaptionHtml) : null;
+                const caption =
+                    img.dataset.caption || img.getAttribute("data-caption") || lightbox?.dataset.defaultCaption;
+
+                if (captionHtml && lightboxCaption) {
+                    lightboxCaption.innerHTML = captionHtml;
+                    lightboxCaption.classList.remove("hidden");
+                } else if (caption && lightboxCaption) {
+                    lightboxCaption.textContent = caption;
+                    lightboxCaption.classList.remove("hidden");
+                } else if (lightboxCaption) {
+                    lightboxCaption.classList.add("hidden");
+                }
+            }
+        }
+
+        // Fermeture de la lightbox
+        const closeLightbox = () => {
+            if (lightbox.open) {
+                lightbox.close();
+            }
+        };
+
+        // Gestionnaire de clic délégué pour ouvrir la lightbox
+        const handleImageClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement | null;
+            if (!target) return;
+
+            // Ignorer les clics à l'intérieur de la lightbox ouverte
+            if (target.closest("#lightbox")) return;
+
+            // Détection si l'élément cliqué correspond à une image de galerie
+            const matchedContainer = target.closest(GALLERY_IMAGE_SELECTOR);
+            if (!matchedContainer) return;
+
+            const img =
+                matchedContainer instanceof HTMLImageElement ? matchedContainer : matchedContainer.querySelector("img");
+
+            if (!img || img.id === "lightbox-img") return;
+
+            activeImages = getEligibleImages();
+            const index = activeImages.indexOf(img);
+            if (index !== -1) {
+                e.preventDefault();
+                showImage(index);
+                lightbox.showModal();
+            }
+        };
+
+        const handleBackdropClick = (e: MouseEvent) => {
+            if (e.target === lightboxBackdrop) closeLightbox();
+        };
+
+        const handlePrevClick = (e: MouseEvent) => {
+            e.stopPropagation();
+            showImage(currentIndex - 1);
+        };
+
+        const handleNextClick = (e: MouseEvent) => {
+            e.stopPropagation();
+            showImage(currentIndex + 1);
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") closeLightbox();
+            if (e.key === "ArrowLeft") showImage(currentIndex - 1);
+            if (e.key === "ArrowRight") showImage(currentIndex + 1);
+        };
+
+        // Gestes tactiles
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const minSwipeDistance = 50;
+
+        const handleTouchStart = (e: TouchEvent) => {
+            touchStartX = e.changedTouches[0].screenX;
+        };
+
+        const handleTouchEnd = (e: TouchEvent) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const swipeDistance = touchEndX - touchStartX;
+            if (Math.abs(swipeDistance) > minSwipeDistance) {
+                if (swipeDistance > 0) {
+                    showImage(currentIndex - 1);
+                } else {
+                    showImage(currentIndex + 1);
+                }
+            }
+        };
+
+        document.addEventListener("click", handleImageClick);
+        closeBtn?.addEventListener("click", closeLightbox);
+        lightboxBackdrop?.addEventListener("click", handleBackdropClick);
+        prevBtn?.addEventListener("click", handlePrevClick);
+        nextBtn?.addEventListener("click", handleNextClick);
+        lightbox.addEventListener("keydown", handleKeyDown);
+        lightbox.addEventListener("touchstart", handleTouchStart, { passive: true });
+        lightbox.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+        cleanupCurrentLightbox = () => {
+            document.removeEventListener("click", handleImageClick);
+            closeBtn?.removeEventListener("click", closeLightbox);
+            lightboxBackdrop?.removeEventListener("click", handleBackdropClick);
+            prevBtn?.removeEventListener("click", handlePrevClick);
+            nextBtn?.removeEventListener("click", handleNextClick);
+            lightbox.removeEventListener("keydown", handleKeyDown);
+            lightbox.removeEventListener("touchstart", handleTouchStart);
+            lightbox.removeEventListener("touchend", handleTouchEnd);
+        };
+    }
+
+    // Exécution initiale et à chaque navigation SPA Astro
+    document.addEventListener("astro:page-load", initLightbox);
+</script>

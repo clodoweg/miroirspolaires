@@ -1,0 +1,15 @@
+---
+/**
+ * TechIcon - Wrapper component for technical detail icons
+ * Provides consistent styling for all icons in TechnicalDetails.astro
+ */
+import type { LucideIcon } from "lucide-react";
+
+interface Props {
+    icon: LucideIcon;
+}
+
+const { icon: IconComponent } = Astro.props;
+---
+
+<IconComponent className="w-4 h-4 text-mp-text-muted shrink-0" strokeWidth={1.5} />

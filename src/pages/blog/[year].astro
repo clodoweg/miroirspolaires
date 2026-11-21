@@ -1,0 +1,113 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import BlogCard from "@/components/BlogCard.astro";
+import ContentGrid from "@/components/ContentGrid.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import UniversalFilterBar from "@/components/Filters/UniversalFilterBar";
+import { resolveImage, toThumbUrl } from "@/utils/imageService";
+import { getCategoryIcon, EAGER_LOAD_COUNT } from "@/utils/constants";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+    const allPosts = (await getCollection("blog")).filter((post) => !post.data.draft);
+
+    // Extract unique years from posts (dates are ISO: YYYY-MM-DD)
+    const years = [
+        ...new Set(
+            allPosts
+                .map((post) => {
+                    const year = new Date(post.data.date).getFullYear();
+                    return Number.isFinite(year) ? String(year) : null;
+                })
+                .filter((y): y is string => !!y),
+        ),
+    ];
+
+    return years.map((year) => ({
+        params: { year },
+        props: { year },
+    }));
+}
+
+const { year } = Astro.props;
+
+// Server-side filter: only the current year. Previously this page rendered
+// every blog post (15 cards) and the year filter ran client-side via
+// UniversalFilterBar — but the 6 eager-loaded covers were the 6 most recent
+// posts overall, which on /blog/2024 meant 2025/2026/2023 hero images
+// downloaded (~3 MB of out-of-year content). Filtering here cuts that to
+// just the year's posts. Cross-year navigation happens via the year nav
+// in PageHeader (or by visiting /blog), not via the in-page filter bar.
+// Cf. docs/audits/2026-05-performance-audit.md §17.4.4.
+const allPosts = (await getCollection("blog")).filter((post) => !post.data.draft);
+const yearPosts = allPosts.filter((p) => String(new Date(p.data.date).getFullYear()) === String(year));
+
+// Stats are computed on the year subset so headers reflect the page content.
+const allCategories = [...new Set(yearPosts.flatMap((post) => post.data.categories))].sort();
+
+// Sort posts by date (descending)
+const sortedPosts = yearPosts.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+const categoryCounts = yearPosts.reduce(
+    (acc, post) => {
+        post.data.categories.forEach((category) => {
+            acc[category] = (acc[category] || 0) + 1;
+        });
+        return acc;
+    },
+    {} as Record<string, number>,
+);
+
+const categoryStats = Object.entries(categoryCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([category, count]) => ({
+        icon: getCategoryIcon(category),
+        value: count,
+        label: category,
+    }));
+
+// Only category filter — the year is fixed by the URL and the year selector
+// has been removed since posts of other years are no longer in the DOM.
+const filterConfig = [{ key: "categories", label: "Catégorie", options: allCategories }];
+
+// Title & Desc for the Year page
+const title = `Archives ${year}`;
+const description = `Articles de blog et publications de l'année ${year}.`;
+---
+
+<BaseLayout title={title} description={description} breadcrumbLabel={year}>
+    <PageHeader title={title} description={description}>
+        <Fragment slot="metadata">
+            <StatsMetadata stats={categoryStats} />
+        </Fragment>
+    </PageHeader>
+
+    <UniversalFilterBar client:visible filters={filterConfig} dataSelector="[data-year]" />
+
+    <main class="container-mp">
+        <ContentGrid>
+            {sortedPosts.map((post, index) => {
+                const postYear = new Date(post.data.date).getFullYear();
+                return (
+                    <div class="contents" data-year={postYear} data-categories={post.data.categories.join(",")}>
+                        <BlogCard
+                            title={post.data.title}
+                            date={post.data.date}
+                            categories={post.data.categories}
+                            description={post.data.description}
+                            image={toThumbUrl(resolveImage(post.data.image))}
+                            href={`/blog/${post.id}`}
+                            loading={index < EAGER_LOAD_COUNT ? "eager" : "lazy"}
+                            sizes={
+                                index === 0
+                                    ? "(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                                    : "(max-width: 767px) 33vw, (max-width: 1023px) 50vw, 33vw"
+                            }
+                        />
+                    </div>
+                );
+            })}
+        </ContentGrid>
+    </main>
+</BaseLayout>

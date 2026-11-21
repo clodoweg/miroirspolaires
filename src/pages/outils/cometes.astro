@@ -1,0 +1,49 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import CometsViewer from "@/components/Objects/CometsViewer";
+import { db } from "@/lib/db";
+
+// POURQUOI: Calcule dynamiquement les statistiques des comètes à partir de la base de données
+// pour l'affichage de l'en-tête de page au moment du build.
+// POURQUOI : une seule passe sur la table au lieu de trois requêtes séquentielles.
+const statsRes = await db.execute(
+    "SELECT COUNT(*) AS total, COALESCE(SUM(e < 0.9), 0) AS periodic, MIN(mag) AS min_mag FROM comets",
+);
+
+const totalComets = Number(statsRes.rows[0].total);
+const periodicCount = Number(statsRes.rows[0].periodic);
+const minAbsoluteMag = Number(statsRes.rows[0].min_mag || 99);
+
+const headerStats = [
+    { icon: "orbit", value: totalComets.toLocaleString("fr-FR"), label: "comètes" },
+    { icon: "check", value: periodicCount.toLocaleString("fr-FR"), label: "périodiques" },
+    { icon: "sparkles", value: minAbsoluteMag.toFixed(1), suffix: " H", label: "éclat absolu max" },
+];
+
+const description =
+    "Simulez et planifiez l'observation de comètes visibles ce soir depuis votre observatoire d'après leurs éléments orbitaux officiels du Minor Planet Center.";
+---
+
+<BaseLayout title="Planificateur de Comètes" description={description} breadcrumbLabel="Comètes">
+    <main class="container-mp pb-16">
+        <PageHeader title="Planificateur de Comètes">
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <CometsViewer client:idle />
+
+        <p class="mt-12 text-xs text-mp-text-muted border-t border-mp-glass-border pt-6 leading-relaxed">
+            Méthode de calcul : Les éléments orbitaux sont propagés par résolution analytique à deux corps de l'équation
+            de Kepler (pour les trajectoires elliptiques et hyperboliques) et de l'équation de Barker (pour les orbites
+            quasi-paraboliques ou paraboliques). Les coordonnées écliptiques héliocentriques obtenues sont tournées vers
+            le plan écliptique J2000.0, combinées au vecteur Terre-Soleil pour obtenir les coordonnées géocentriques
+            écliptiques, puis converties en Ascension Droite et Déclinaison équatoriales par l'obliquité de l'écliptique
+            (&epsilon; &asymp; 23,44&deg;). La magnitude apparente est estimée d'après la formule standard du Minor
+            Planet Center : m = H + 5 log10(&Delta;) + 2.5 k log10(r).
+        </p>
+    </main>
+</BaseLayout>

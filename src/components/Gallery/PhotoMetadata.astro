@@ -1,0 +1,27 @@
+---
+/**
+ * PhotoMetadata - Renders metadata items for astrophotography cards
+ * Uses Fragment so items flow inline within parent flex container
+ */
+import type { Photo } from "@/lib/photos";
+import MetadataItem from "../UI/MetadataItem.astro";
+
+interface Props {
+    photo: Photo;
+    fields?: ("observatory" | "location" | "constellation" | "year")[];
+    separatorClass?: string;
+    showSeparators?: boolean;
+}
+
+const { photo, fields = ["observatory", "location", "constellation"] } = Astro.props;
+---
+
+{fields.includes("observatory") && photo.observatories.length > 0 && (
+    <MetadataItem icon="telescope" label={photo.observatories.join(", ")} />
+)}
+
+{fields.includes("location") && photo.locations && <MetadataItem icon="pin" label={photo.locations} />}
+
+{fields.includes("constellation") && photo.constellation && <MetadataItem icon="star" label={photo.constellation} />}
+
+{fields.includes("year") && photo.year && <MetadataItem icon="calendar" label={String(photo.year)} />}

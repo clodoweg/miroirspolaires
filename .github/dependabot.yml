@@ -1,0 +1,12 @@
+# Mises à jour automatiques des actions GitHub.
+# POURQUOI : les workflows épinglent chaque action sur un SHA de commit (un tag peut être déplacé
+# vers du code malveillant) ; Dependabot propose les nouvelles versions sous forme de PR vers dev.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore

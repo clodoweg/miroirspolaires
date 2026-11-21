@@ -1,0 +1,54 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import VariableStarsViewer from "@/components/Objects/VariableStarsViewer";
+import { db } from "@/lib/db";
+
+// POURQUOI: Récupère rapidement les statistiques des étoiles variables depuis database_metadata
+// pour éviter des requêtes de type COUNT(*) très lentes (plusieurs dizaines de secondes) sur 4.8M de lignes.
+let totalStars = 4833587;
+let uniqueTypesCount = 5;
+let maxMagnitude = 19.5;
+
+try {
+    const metaRes = await db.execute(
+        "SELECT key, value FROM database_metadata WHERE key IN ('variable_stars_count', 'variable_stars_types_count', 'variable_stars_max_mag')",
+    );
+    const meta = Object.fromEntries(metaRes.rows.map((r) => [r.key as string, r.value as string]));
+    if (meta.variable_stars_count) totalStars = Number(meta.variable_stars_count);
+    if (meta.variable_stars_types_count) uniqueTypesCount = Number(meta.variable_stars_types_count);
+    if (meta.variable_stars_max_mag) maxMagnitude = Number(meta.variable_stars_max_mag);
+} catch (e) {
+    console.warn("Erreur lors de la récupération des métadonnées des étoiles variables :", e);
+}
+
+const headerStats = [
+    { icon: "star", value: totalStars.toLocaleString("fr-FR"), label: "étoiles" },
+    { icon: "tag", value: uniqueTypesCount, label: "types" },
+    { icon: "telescope", value: maxMagnitude.toFixed(1), suffix: " V", label: "magnitude max" },
+];
+
+const description =
+    "Planifiez et simulez l'observation d'étoiles variables célèbres (binaires à éclipses, céphéides, mirides, cataclysmiques) selon votre équipement.";
+---
+
+<BaseLayout title="Études d'Étoiles Variables" description={description} breadcrumbLabel="Étoiles Variables">
+    <main class="container-mp pb-16">
+        <PageHeader title="Études d'Étoiles Variables">
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <VariableStarsViewer client:idle />
+
+        <p class="mt-12 text-xs text-mp-text-muted border-t border-mp-glass-border pt-6 leading-relaxed">
+            Méthode de calcul : Les hauteurs et conditions d'observabilité locales sont recalculées dynamiquement
+            d'après les coordonnées de l'observateur. La magnitude limite visuelle de l'instrument est estimée à l'aide
+            de la relation classique V_lim = 9 + 5 log10(D / 10) où D représente le diamètre du miroir en millimètres.
+            Une marge de sécurité de 1,0 magnitude est soustraite de cette limite pour garantir une détection robuste
+            lors de travaux de photométrie différentielle ou d'analyse spectrale.
+        </p>
+    </main>
+</BaseLayout>

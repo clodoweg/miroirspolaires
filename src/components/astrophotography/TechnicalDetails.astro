@@ -1,0 +1,165 @@
+---
+import type { Photo } from "@/lib/photos";
+import TechIcon from "@/components/UI/TechIcon.astro";
+import AboutObject from "./AboutObject.astro";
+import { extractCatalogueId } from "@/lib/objects/extract-catalogue-id";
+
+import { Telescope, Camera, Settings, Clock, Globe, RotateCw, Scaling, Ruler, Calendar, Sparkles } from "lucide-react";
+
+interface Props {
+    photo: Photo;
+    objDetails?: any;
+    wikiDesc?: any;
+}
+
+const { photo, objDetails, wikiDesc } = Astro.props;
+
+// Helper to capitalize first letter
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+const formattedDate = photo.uploaded
+    ? capitalize(
+          new Date(photo.uploaded).toLocaleDateString("fr-FR", {
+              month: "long",
+              year: "numeric",
+          }),
+      )
+    : null;
+---
+
+<div class="bg-transparent text-mp-text-body p-0 lg:p-6 rounded-lg space-y-6 h-fit">
+    {/* About Object - Wikipedia / Astro Details */}
+    <AboutObject objDetails={objDetails} wikiDesc={wikiDesc} />
+
+    {/* Equipment */}
+    <div>
+        <h3 class="mb-2">Équipement</h3>
+        <ul>
+            {photo.telescope && (
+                <li>
+                    <TechIcon icon={Telescope} />
+                    <span>{photo.telescope}</span>
+                </li>
+            )}
+            {photo.camera && (
+                <li>
+                    <TechIcon icon={Camera} />
+                    <span>{photo.camera}</span>
+                </li>
+            )}
+            {photo.mount && (
+                <li>
+                    <TechIcon icon={Settings} />
+                    <span>{photo.mount}</span>
+                </li>
+            )}
+        </ul>
+    </div>
+
+    {/* Acquisition */}
+    <div>
+        <h3 class="mb-2">Acquisition</h3>
+        <ul>
+            {formattedDate && (
+                <li>
+                    <TechIcon icon={Calendar} />
+                    <span>{formattedDate}</span>
+                </li>
+            )}
+            <li>
+                <TechIcon icon={Clock} />
+                <span>Intégration : {photo.integrationTime}</span>
+            </li>
+        </ul>
+
+        {photo.acquisitionDetails && photo.acquisitionDetails.length > 0 && (
+            <div class="mt-6">
+                <h3 class="mb-3">Détails filtres</h3>
+                <div class="border border-mp-border rounded-lg overflow-hidden bg-mp-surface">
+                    <ul class="mt-0! space-y-0!">
+                        {photo.acquisitionDetails.map((detail) => (
+                            <li class="gap-0! justify-between py-1 px-3 border-b border-mp-border last:border-0 hover:bg-mp-bg transition-colors">
+                                <span class="text-sm text-mp-text-body/90 truncate pr-4">{detail.filter}</span>
+                                <span class="font-mono text-xs text-mp-accent whitespace-nowrap">
+                                    {detail.number} × {detail.duration}s
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </div>
+        )}
+    </div>
+
+    {/* Coordinates */}
+    <div>
+        <h3 class="mb-2">Coordonnées</h3>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+            {photo.constellation && (
+                <li class="sm:col-span-2 sm:order-1">
+                    <TechIcon icon={Sparkles} />
+                    <span>Constellation : {photo.constellation}</span>
+                </li>
+            )}
+            <li class="sm:order-2">
+                <TechIcon icon={Globe} />
+                <span>RA : {photo.ra}</span>
+            </li>
+            <li class="sm:order-4">
+                <TechIcon icon={Globe} />
+                <span>DEC : {photo.dec}</span>
+            </li>
+            {photo.orientation && (
+                <li class="sm:order-3">
+                    <TechIcon icon={RotateCw} />
+                    <span>Orientation : {photo.orientation}°</span>
+                </li>
+            )}
+            {photo.fieldSize && (
+                <li class="sm:order-5">
+                    <TechIcon icon={Scaling} />
+                    <span>Taille : {photo.fieldSize}</span>
+                </li>
+            )}
+            {photo.pixelScale && (
+                <li class="sm:col-span-2 sm:order-6">
+                    <TechIcon icon={Ruler} />
+                    <span>Échantillonnage : {photo.pixelScale}"/pix</span>
+                </li>
+            )}
+        </ul>
+    </div>
+
+    {/* Objects in field */}
+    {photo.objectsInField.length > 0 && (
+        <div>
+            <div class="flex items-center justify-between mb-2">
+                <h3>Objets dans le champ</h3>
+            </div>
+            <ul>
+                <li>
+                    <span class="block">
+                        {photo.objectsInField.map((obj, i) => {
+                            const id = extractCatalogueId(obj);
+                            return (
+                                <>
+                                    {i > 0 && ", "}
+                                    {id ? (
+                                        <a
+                                            href={`/objets?q=${encodeURIComponent(id)}`}
+                                            class="text-mp-accent hover:text-mp-text-link-hover transition-colors"
+                                        >
+                                            {obj}
+                                        </a>
+                                    ) : (
+                                        obj
+                                    )}
+                                </>
+                            );
+                        })}
+                    </span>
+                </li>
+            </ul>
+        </div>
+    )}
+</div>

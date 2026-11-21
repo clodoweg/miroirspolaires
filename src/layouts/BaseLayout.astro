@@ -1,0 +1,343 @@
+---
+// layouts/BaseLayout.astro
+import "@/styles/base.css";
+import { tokens } from "@/styles/design-tokens";
+import Navbar from "@/components/Navbar.astro";
+import Footer from "@/components/Footer.astro";
+import GlobalBreadcrumb from "@/components/GlobalBreadcrumb.astro";
+import Umami from "@/components/Umami.astro";
+import { SEO } from "astro-seo";
+import { ClientRouter } from "astro:transitions";
+import { resolveImage } from "@/utils/imageService";
+
+// Fonts
+// Fonts
+import "@/styles/fonts.css";
+
+type ImageInput = string | { src: string; width?: number; height?: number };
+
+interface Props {
+    title: string;
+    description: string;
+    image?: ImageInput;
+    imageWidth?: number;
+    imageHeight?: number;
+    /** Open Graph type. Use "article" for blog posts. Default: "website". */
+    ogType?: "website" | "article";
+    /** ISO 8601 publication date — only used when ogType === "article". */
+    publishedTime?: string;
+    /** ISO 8601 last-modified date — only used when ogType === "article". */
+    modifiedTime?: string;
+    /** Article categories/tags — only used when ogType === "article". */
+    articleTags?: string[];
+    breadcrumbLabel?: string;
+    hideBreadcrumb?: boolean;
+    breadcrumbExtraItems?: { label: string; href: string }[];
+    hasFloatingMenu?: boolean;
+    hideFooter?: boolean;
+    fullHeight?: boolean;
+    /** Disable default bottom padding before footer. Default: true */
+    contentPaddingBottom?: boolean;
+}
+
+// Default OG image: the homepage hero. Pages without a content-specific
+// image (catalogues, objets, recommandations, …) fall back to this so
+// link previews on WhatsApp/Twitter/etc. stay on-brand. We use the full
+// (non-mini) variant: WhatsApp/Facebook want ≥600 px on the long edge.
+const defaultHero = resolveImage("assets/index/hero.jpg", false);
+
+const {
+    title,
+    description,
+    image = defaultHero,
+    imageWidth,
+    imageHeight,
+    ogType = "website",
+    publishedTime,
+    modifiedTime,
+    articleTags,
+    breadcrumbLabel,
+    hideBreadcrumb = false,
+    breadcrumbExtraItems,
+    hasFloatingMenu = false,
+    hideFooter = false,
+    fullHeight = false,
+    contentPaddingBottom = true,
+} = Astro.props;
+
+// Normalize image input → src string + optional dimensions
+const imageSrc = typeof image === "string" ? image : image.src;
+const ogWidth = imageWidth ?? (typeof image === "object" ? image.width : undefined);
+const ogHeight = imageHeight ?? (typeof image === "object" ? image.height : undefined);
+
+// Construct absolute URL for Open Graph image
+const absoluteImageUrl = imageSrc.startsWith("http") ? imageSrc : new URL(imageSrc, Astro.site).toString();
+
+// Prevent indexing on preview/dev environments
+// VERCEL_ENV: 'production' | 'preview' | 'development' (provided by Vercel at build time)
+const vercelEnv = import.meta.env.VERCEL_ENV || process.env.VERCEL_ENV;
+const isPreviewEnv = vercelEnv === "preview" || vercelEnv === "development" || import.meta.env.DEV;
+const robotsDirective = isPreviewEnv ? "noindex, nofollow" : "index, follow";
+---
+
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <script is:inline>
+            (function () {
+                try {
+                    const stored = localStorage.getItem("theme");
+                    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                    if (stored === "dark" || (!stored && prefersDark)) {
+                        document.documentElement.classList.add("dark");
+                    } else {
+                        document.documentElement.classList.remove("dark");
+                    }
+                } catch {
+                    // POURQUOI : localStorage peut être inaccessible (navigation privée, cookies bloqués) ; on garde le thème par défaut.
+                }
+            })();
+            document.addEventListener("astro:after-swap", function () {
+                try {
+                    const stored = localStorage.getItem("theme");
+                    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                    if (stored === "dark" || (!stored && prefersDark)) {
+                        document.documentElement.classList.add("dark");
+                    } else {
+                        document.documentElement.classList.remove("dark");
+                    }
+                } catch {
+                    // POURQUOI : localStorage peut être inaccessible (navigation privée, cookies bloqués) ; on garde le thème par défaut.
+                }
+            });
+        </script>
+
+        {/* Open the connection to the image CDN early so the first image
+        request doesn't pay the TLS handshake (~150–250 ms saved on cold). */}
+        <link rel="preconnect" href="https://images.miroirspolaires.fr" crossorigin />
+        <link rel="preconnect" href="https://pub-r2.miroirspolaires.fr" crossorigin />
+
+        {/* Preload the two fonts that appear above the fold (Inter 400 for body,
+        Playfair 400 for titles). Without this, the browser only discovers
+        them after parsing the CSS, and the font swap shifts the layout ~100 ms
+        later — measured as 0.12 residual CLS on /astrophotographies/[slug]
+        first paint. crossorigin is mandatory on font preload even when
+        same-origin. */}
+        <link rel="preload" href="/fonts/inter/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+        <link
+            rel="preload"
+            href="/fonts/playfair-display/playfair-display-latin-400-normal.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+
+        <SEO
+            title={title.includes("Miroirs Polaires") ? title : `${title} | Miroirs Polaires`}
+            description={description}
+            canonical={new URL(Astro.url.pathname, Astro.site).toString()}
+            openGraph={{
+                basic: {
+                    title: title,
+                    type: ogType,
+                    image: absoluteImageUrl,
+                },
+                optional: {
+                    description: description,
+                    siteName: "Miroirs Polaires",
+                    locale: "fr_FR",
+                },
+                image: {
+                    alt: title,
+                    ...(ogWidth ? { width: ogWidth } : {}),
+                    ...(ogHeight ? { height: ogHeight } : {}),
+                },
+                ...(ogType === "article"
+                    ? {
+                          article: {
+                              ...(publishedTime ? { publishedTime } : {}),
+                              ...(modifiedTime ? { modifiedTime } : {}),
+                              authors: ["Julien Bourdette"],
+                              ...(articleTags && articleTags.length > 0 ? { tags: articleTags } : {}),
+                          },
+                      }
+                    : {}),
+            }}
+            twitter={{
+                card: "summary_large_image",
+            }}
+            extend={{
+                link: [
+                    {
+                        rel: "icon",
+                        href: "/favicon-light.ico",
+                        type: "image/x-icon",
+                        media: "(prefers-color-scheme: light)",
+                    },
+                    {
+                        rel: "icon",
+                        href: "/favicon-dark.ico",
+                        type: "image/x-icon",
+                        media: "(prefers-color-scheme: dark)",
+                    },
+                ],
+                meta: [
+                    { name: "viewport", content: "width=device-width" },
+                    { name: "generator", content: Astro.generator },
+                    { name: "robots", content: robotsDirective },
+                    { name: "theme-color", content: tokens.colors.bg.uiBlack },
+                    // ViewTransitions handles its own thing, usually not via meta tags in this way but it's a component
+                ],
+            }}
+        />
+        <ClientRouter />
+        <script>
+            // The Stellarium WebAssembly engine + `client:only="react"` islands on
+            // /carte-du-ciel don't survive Astro's client-side navigation cleanly
+            // (the canvas reference and WASM module are tied to the original document).
+            // Force a hard navigation on links that target this page.
+            document.addEventListener("astro:before-preparation", (e: any) => {
+                if (e?.to?.pathname?.startsWith("/carte-du-ciel")) {
+                    e.preventDefault();
+                    window.location.assign(e.to.href);
+                }
+            });
+        </script>
+        <Umami />
+        <slot name="head" />
+        <noscript>
+            <style>
+                .reveal-hidden,
+                .hero-fade {
+                    opacity: 1 !important;
+                    transform: none !important;
+                    animation: none !important;
+                }
+            </style>
+        </noscript>
+    </head>
+    <body class:list={[fullHeight && "overflow-hidden h-dvh"]}>
+        <Navbar showShadow={hideBreadcrumb} />
+        {!hideBreadcrumb && <GlobalBreadcrumb lastItemLabel={breadcrumbLabel} extraItems={breadcrumbExtraItems} />}
+        <div class:list={["flex-1 w-full flex flex-col overflow-x-hidden", contentPaddingBottom && "pb-12 md:pb-20"]}>
+            <slot />
+        </div>
+        <script>
+            import "../scripts/justified-gallery.ts";
+            import "../scripts/scroll-animations.js";
+            import "../scripts/image-fallback.js";
+
+            // Règle centralisée pour les liens externes (nouvel onglet)
+            const applyExternalLinkRule = (link: HTMLAnchorElement) => {
+                if (
+                    link.tagName === "A" &&
+                    link.href &&
+                    link.href.startsWith("http") &&
+                    new URL(link.href).hostname !== window.location.hostname
+                ) {
+                    link.setAttribute("target", "_blank");
+                    link.setAttribute("rel", "noopener noreferrer");
+                }
+            };
+
+            document.addEventListener("astro:page-load", () => {
+                // Appliquer aux liens déjà pré-chargés dans le DOM
+                document.querySelectorAll("a").forEach(applyExternalLinkRule);
+
+                // Observer les ajouts dynamiques (comme le HTML généré par la Lightbox ou React)
+                const observer = new MutationObserver((mutations) => {
+                    for (const mutation of mutations) {
+                        for (const node of mutation.addedNodes) {
+                            if (node.nodeType === Node.ELEMENT_NODE) {
+                                const element = node as Element;
+                                if (element.tagName === "A") {
+                                    applyExternalLinkRule(element as HTMLAnchorElement);
+                                }
+                                element.querySelectorAll("a").forEach(applyExternalLinkRule as any);
+                            }
+                        }
+                    }
+                });
+
+                observer.observe(document.body, { childList: true, subtree: true });
+            });
+        </script>
+        {!hideFooter && <Footer hasFloatingMenu={hasFloatingMenu} />}
+        <div class="grain-overlay"></div>
+        <style
+            is:global
+            define:vars={{
+                grainZIndex: tokens.zIndex.grain,
+                grainOpacity: tokens.effects.opacity.grain,
+                durationSlowest: tokens.transitions.slowest,
+                easeOut: tokens.transitions.easeOut,
+                galleryGap: tokens.component.gallery.gap,
+                galleryRowHeight: tokens.component.gallery.rowHeight.desktop,
+                galleryRowHeightMobile: tokens.component.gallery.rowHeight.mobile,
+            }}
+        >
+            /* Grain Texture Overlay */
+            .grain-overlay::before {
+                content: "";
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: var(--grainZIndex);
+                opacity: var(--grainOpacity);
+                background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+                mix-blend-mode: multiply;
+            }
+
+            /* Reveal Animations */
+            .reveal-hidden {
+                opacity: 0;
+                transform: translateY(20px);
+                transition:
+                    opacity var(--durationSlowest) var(--easeOut),
+                    transform var(--durationSlowest) var(--easeOut);
+                will-change: opacity, transform;
+            }
+
+            .reveal-visible {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+
+            /* Justified Gallery */
+            .justified-gallery {
+                display: flex;
+                flex-wrap: wrap;
+                gap: var(--galleryGap);
+                --jg-row-height: var(--galleryRowHeight);
+                --jg-row-height-mobile: var(--galleryRowHeightMobile);
+            }
+
+            .justified-gallery > img,
+            .justified-gallery > a,
+            .justified-gallery > picture {
+                flex-grow: 0;
+                flex-shrink: 0;
+                height: var(--jg-row-height-mobile);
+                object-fit: cover;
+            }
+
+            @media (min-width: 768px) {
+                .justified-gallery > img,
+                .justified-gallery > a,
+                .justified-gallery > picture {
+                    height: var(--jg-row-height);
+                }
+            }
+
+            .justified-gallery.jg-ready > img,
+            .justified-gallery.jg-ready > a,
+            .justified-gallery.jg-ready > picture {
+                height: auto;
+            }
+        </style>
+    </body>
+</html>

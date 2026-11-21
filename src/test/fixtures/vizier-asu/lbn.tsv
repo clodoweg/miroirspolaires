@@ -1,0 +1,48 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:43 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:43	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f9%2fcatalog&-out.max=6&-out=Seq%2cRA1950%2cDE1950%2cDiam1%2cDiam2%2cBright%2cColor%2cName	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7009
+#Name: VII/9
+#Title: Lynds' Catalogue of Bright Nebulae (Lynds 1965)
+#INFO	ivoid=ivo://cds.vizier/vii/9	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/9	    IVOID of underlying data collection
+#INFO	creator=Lynds B.T.	    First author or institution
+#INFO	cites=bibcode:1965ApJS...12..163L	    Article or Data origin sources
+#INFO	journal=ApJS	    Journal name
+#INFO	original_date=1965	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/9	    Dataset landing page
+#INFO	publication_date=2013-02-26	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1950:	eq_FK4 B1950
+#Table	VII_9_catalog:
+#Name: VII/9/catalog
+#Title: The LBN Catalogue
+#Column	Seq	(I4)	[1/1125]+ Running number (1)	[ucd=meta.id;meta.main]
+#Column	RA1950	(A5)	Hours RA, 1950.0	[ucd=pos.eq.ra;meta.main]
+#Column	DE1950	(A6)	Degrees Dec, 1950.0	[ucd=pos.eq.dec;meta.main]
+#Column	Diam1	(I4)	Largest dimension of nebula	[ucd=phys.size;stat.max]
+#Column	Diam2	(I3)	Smallest dimension of nebula	[ucd=phys.angSize;src]
+#Column	Bright	(I1)	[1/6] Brightness scale (3)	[ucd=phot.mag.sb;arith.ratio]
+#Column	Color	(I1)	[1/4] Color index (2)	[ucd=meta.code;phot.color]
+#Column	Name	(a8)	Other name of nebulosity (5)	[ucd=meta.id]
+Seq	RA1950	DE1950	Diam1	Diam2	Bright	Color	Name
+ 	"h:m:s"	"d:m:s"	arcmin	arcmin	 	 	
+----	-----	------	----	---	-	-	--------
+   1	17 42	-28 50	   4	  4	5	4	S 17
+   2	17 45	-29 10	  14	 10	4	4	S 19
+   3	17 44	-28 45	   2	  2	5	4	S 20
+   4	17 48	-28 55	   3	  3	5	4	S 21
+   5	16 38	-17 30	  25	 12	5	2	
+   6	16 34	-16 30	  90	  8	6	4	
+

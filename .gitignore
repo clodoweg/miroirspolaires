@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.astro/
+.vercel/
+
+# macOS
+.DS_Store
+
+# Editor directories
+# .vscode/
+.idea/
+
+# Environments
+.env*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache
+.npm
+.eslintcache
+*.log
+**.DS_Store
+
+# Admin trash (dev-only, deleted album/blog images live here so Vite's watcher
+# doesn't fire ImageNotFound between markdown rewrite and file removal)
+.admin-trash/
+
+# Claude Code: only personal/runtime state is ignored; settings.json, rules and skills are shared
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+CLAUDE.local.md
+
+# Temporary files
+temp/
+
+# Local artifacts (test/dev output, session cookies, script reports)
+*_results.txt
+dev_output*.txt
+cookies.txt
+missing_r2_upload.txt
+scripts/pipeline/import-progress.json
+
+# Databases
+*.db
+*.sqlite
+local.db
+
+# Claude Code : état local du hook verify-on-stop
+.claude/hooks/.state/
+
+# Rapports de couverture Vitest
+coverage/

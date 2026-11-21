@@ -1,0 +1,17 @@
+---
+import { isAdminGranted } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AstroPhotosPanel from "@/components/Admin/AstroPhotosPanel";
+import WebImagesReminder from "@/components/Admin/WebImagesReminder";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+---
+
+<AdminLayout title="Admin · Astrophotos" description="Pipeline et inventaire CSV des astrophotos." active="astrophotos">
+    <WebImagesReminder scope="astro" client:only="react" />
+    <AstroPhotosPanel client:only="react" />
+</AdminLayout>

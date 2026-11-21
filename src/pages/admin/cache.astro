@@ -1,0 +1,21 @@
+---
+import { isAdminGranted } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import CachePanel from "@/components/Admin/CachePanel";
+
+export const prerender = false;
+
+// POURQUOI: Limiter l'accès aux interfaces d'administration en mode développement local uniquement
+// pour empêcher l'accès non autorisé sur la version de production.
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+---
+
+<AdminLayout
+    title="Admin · Cache CDN & Worker"
+    description="Supervision de l'état de santé du Cloudflare Worker CDN, préchauffage du cache Edge et purge globale du stockage."
+    active="cache"
+>
+    <CachePanel client:only="react" />
+</AdminLayout>

@@ -1,0 +1,48 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import ExoplanetViewer from "@/components/Objects/ExoplanetViewer";
+
+import { db } from "@/lib/db";
+
+// POURQUOI: Calcule dynamiquement les statistiques des exoplanètes à partir de la base de données
+// pour l'affichage de l'en-tête de page au moment du build. Sépare confirmées et candidates TESS.
+// POURQUOI : une seule passe sur la table au lieu de trois requêtes séquentielles.
+const statsRes = await db.execute(
+    "SELECT COALESCE(SUM(is_candidate = 0), 0) AS confirmed, COALESCE(SUM(is_candidate = 1), 0) AS candidates, MAX(v_mag) AS max_mag FROM exoplanets",
+);
+
+const confirmedExoplanets = Number(statsRes.rows[0].confirmed);
+const candidateExoplanets = Number(statsRes.rows[0].candidates);
+const maxMagnitude = Number(statsRes.rows[0].max_mag || 0);
+
+const headerStats = [
+    { icon: "check", value: confirmedExoplanets.toLocaleString("fr-FR"), label: "confirmées" },
+    { icon: "sparkles", value: candidateExoplanets.toLocaleString("fr-FR"), label: "candidates TESS" },
+    { icon: "telescope", value: maxMagnitude.toFixed(1), suffix: " V", label: "magnitude max" },
+];
+
+const description =
+    "Planifiez et simulez l'observation de transits d'exoplanètes depuis votre propre observatoire en fonction de votre équipement.";
+---
+
+<BaseLayout title="Transit d'exoplanètes" description={description} breadcrumbLabel="Exoplanètes">
+    <main class="container-mp pb-16">
+        <PageHeader title="Transit d'exoplanètes">
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <ExoplanetViewer client:idle />
+
+        <p class="mt-12 text-xs text-mp-text-muted border-t border-mp-glass-border pt-6 leading-relaxed">
+            Méthode de calcul : Pour chaque exoplanète, l'éphéméride orbitale (Époque T₀ de référence et Période
+            orbitale) est propagée pour prédire les dates de transit. Les horaires locaux d'entrée (ingress), de milieu
+            et de sortie (egress) sont ajustés en temps réel. L'observabilité prend en compte la hauteur de l'étoile
+            hôte (&gt; 30°), l'épaisseur de la nuit astronomique (Soleil ≤ -12°), et la détectabilité instrumentale
+            (rapport S/B 3σ théorique) estimée à partir du diamètre de votre télescope.
+        </p>
+    </main>
+</BaseLayout>

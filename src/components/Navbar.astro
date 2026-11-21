@@ -1,0 +1,113 @@
+---
+import { getAdminNavItem, getNavItems } from "../config/navigation";
+import { getAdminAccessMode } from "../lib/admin/auth/config";
+import DesktopNavGroup from "./navbar/DesktopNavGroup.astro";
+import MobileMenu from "./navbar/MobileMenu.astro";
+import ThemeToggle from "./UI/ThemeToggle.astro";
+
+interface Props {
+    showShadow?: boolean;
+}
+
+const { showShadow = false } = Astro.props;
+
+// POURQUOI : le menu Admin n'apparaît qu'en `npm run dev` et sur la Preview de la branche de contenu
+// (`getAdminNavItem`), jamais en production.
+const itemsToRender = [...getNavItems()];
+const adminNavItem = getAdminNavItem(getAdminAccessMode());
+if (adminNavItem) itemsToRender.push(adminNavItem);
+---
+
+<nav
+    id="navbar"
+    class:list={[
+        "fixed top-0 z-navbar w-full transition-all duration-500 py-2 bg-mp-ui-black/90 backdrop-blur-md",
+        showShadow && "shadow-floating",
+    ]}
+>
+    <div class="w-full h-full px-8 flex justify-between items-center min-h-[theme('component.navbar.logoHeight')]">
+        <!-- Mobile Menu Button -->
+        <button
+            id="mobile-menu-btn"
+            class="nav:hidden z-50 relative w-[theme('component.navbar.buttonSize')] h-[theme('component.navbar.buttonSize')] flex items-center justify-center group"
+            aria-label="Menu de navigation"
+            aria-expanded="false"
+            aria-controls="mobile-menu-overlay"
+        >
+            <!-- Hamburger Icon -->
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-[theme('component.navbar.iconSize')] h-[theme('component.navbar.iconSize')] text-mp-text-primary transition-opacity duration-300 icon-hamburger"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"></path>
+            </svg>
+
+            <!-- Close Icon (Hidden by default) -->
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-[theme('component.navbar.iconSize')] w-[theme('component.navbar.iconSize')] text-mp-text-primary absolute inset-0 m-auto opacity-0 scale-75 transition-all duration-300 icon-close"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
+                <path d="M18 6 6 18"></path>
+                <path d="m6 6 12 12"></path>
+            </svg>
+        </button>
+
+        <!-- Logo -->
+        <a
+            href="/"
+            class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 nav:static nav:translate-x-0 nav:translate-y-0 block shrink-0 no-underline hover:no-underline"
+        >
+            <img
+                src="/images/logo-mp.png"
+                alt="Miroirs Polaires"
+                width="633"
+                height="202"
+                class="h-[theme('component.navbar.logoHeight')] w-auto object-contain brightness-0 dark:brightness-100 dark:filter-none opacity-90 hover:opacity-100 transition-all duration-300"
+                loading="eager"
+                fetchpriority="high"
+            />
+        </a>
+
+        <!-- Desktop Navigation (All items on the right) -->
+        <DesktopNavGroup items={itemsToRender} />
+
+        <!-- Mobile Top Bar Right: Theme Toggle -->
+        <div class="nav:hidden flex items-center justify-end w-[theme('component.navbar.buttonSize')]">
+            <ThemeToggle id="mobile-nav-theme-toggle" />
+        </div>
+    </div>
+</nav>
+
+<MobileMenu items={itemsToRender} />
+
+<!-- Spacer to prevent content jump -->
+<div class="w-full h-[theme('component.navbar.height')] relative z-behind shrink-0"></div>
+
+<style>
+    /* Toggle states for menu button */
+    #mobile-menu-btn.is-open .icon-hamburger {
+        opacity: 0;
+        transform: rotate(90deg);
+    }
+    #mobile-menu-btn.is-open .icon-close {
+        opacity: 1;
+        /* POURQUOI : Tailwind 4 pose `scale-75` via la propriété `scale`, que `transform` ne remplace pas. */
+        scale: 1;
+    }
+</style>
+
+<script>
+    import "../scripts/navbar.ts";
+</script>

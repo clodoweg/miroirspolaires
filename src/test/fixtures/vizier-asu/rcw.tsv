@@ -1,0 +1,47 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:47 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:47	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f216%2frcw&-out.max=6&-out=RCW%2cRAB1950%2cDEB1950%2cMajAxis%2cMinAxis%2cBr%2cIDs	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7216
+#Name: VII/216
+#Title: H-{alpha} emission regions in Southern Milky Way (Rodgers+ 1960)
+#INFO	ivoid=ivo://cds.vizier/vii/216	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/216	    IVOID of underlying data collection
+#INFO	creator=Rodgers A.W.	    First author or institution
+#INFO	cites=bibcode:1960MNRAS.121..103R	    Article or Data origin sources
+#INFO	journal=MNRA	    Journal name
+#INFO	original_date=1960	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/216	    Dataset landing page
+#INFO	publication_date=2018-02-01	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1950:	eq_FK4 B1950
+#Table	VII_216_rcw:
+#Name: VII/216/rcw
+#Title: The Catalogue (tables 2 and 3 of the paper)
+#Column	RCW	(I3)	RCW id number	[ucd=meta.id;meta.main]
+#Column	RAB1950	(A7)	Right Ascension B1950	[ucd=pos.eq.ra;meta.main]
+#Column	DEB1950	(A6)	Declination B1950	[ucd=pos.eq.dec;meta.main]
+#Column	MajAxis	(I3)	Major Axis Size (arc minutes)	[ucd=phys.angSize]
+#Column	MinAxis	(I3)	Minor Axis Size (arc minutes)	[ucd=phys.angSize]
+#Column	Br	(A2)	[vbmf ] Brightness on H-alpha plates	[ucd=meta.code;phot.mag.sb]
+#Column	IDs	(a32)	Cross Reference Identifications	[ucd=meta.id]
+RCW	RAB1950	DEB1950	MajAxis	MinAxis	Br	IDs
+ 	"h:m:s"	"d:m:s"	arcmin	arcmin	 	
+---	-------	------	---	---	--	--------------------------------
+  1	07 08.0	-11 57	150	150	m 	NGC2327; HS111,113,114;G2,3
+  2	07 02.0	-10 27	 14	 14	b 	IC2177;HS109;G1
+  3	07 14.0	-09 18	  4	  4	b 	HS115
+  4	07 21.5	-08 30	 60	 60	f 	
+  5	07 16.1	-13 09	  8	  8	b 	NGC2359; HS116; G4
+  6	07 08.0	-18 24	 12	 10	b 	G5
+

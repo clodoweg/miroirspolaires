@@ -1,0 +1,46 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:41 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:41	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f118%2fngc2000&-out.max=6&-out=Name%2cType%2cRAB2000%2cDEB2000%2cmag%2csize%2cConst%2cDesc	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7118
+#Name: VII/118
+#Title: NGC 2000.0 (Sky Publishing, ed. Sinnott 1988)
+#INFO	ivoid=ivo://cds.vizier/vii/118	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/118	    IVOID of underlying data collection
+#INFO	creator=Sinnott	    First author or institution
+#INFO	cites=1988cngc.book.....S	    Article or Data origin sources
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/118	    Dataset landing page
+#INFO	publication_date=2022-10-27	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B2000:	eq_FK4 B2000
+#Table	VII_118_ngc2000:
+#Name: VII/118/ngc2000
+#Title: The NGC 2000.0 Catalogue
+#Column	Name	(A5)	NGC or IC designation (preceded by I)	[ucd=meta.id;meta.main]
+#Column	Type	(A3)	Object classification (1)	[ucd=src.class]
+#Column	RAB2000	(A7)	Right Ascension B2000	[ucd=pos.eq.ra;meta.main]
+#Column	DEB2000	(A6)	Declination B2000	[ucd=pos.eq.dec;meta.main]
+#Column	mag	(F4.1)	? Integrated magnitude, visual or photographic (see n_mag)	[ucd=phot.mag;em.opt]
+#Column	size	(F5.1)	? Largest dimension	[ucd=phys.angSize]
+#Column	Const	(A3)	Constellation	[ucd=meta.id]
+#Column	Desc	(a53)	Description of the object (3)	[ucd=meta.note]
+Name	Type	RAB2000	DEB2000	mag	size	Const	Desc
+ 	 	"h:m:s"	"d:m:s"	mag	arcmin	 	
+-----	---	-------	------	----	-----	---	-----------------------------------------------------
+I5370	 Gx	00 00.1	+32 45	15.0	  0.7	And	pB, S, R, stell N
+I5371	   	00 00.2	+32 49	    	     	And	F, vS, *15 att
+ 7801	  -	00 00.4	+50 42	    	     	Cas	Cl, pRi, pC, st 9...
+I5372	 Gx	00 00.4	+32 47	15.0	  0.7	And	F, vS, R N
+I5373	 Gx	00 00.4	+32 47	15.0	  0.7	And	pB, S, R, stell N
+ 7802	 Gx	00 01.1	+06 13	14.0	     	Psc	vF, S, R, psbM
+

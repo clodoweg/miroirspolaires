@@ -1,0 +1,14 @@
+---
+// components/ContentGrid.astro
+// Generic responsive grid for content cards (blog, videos, voyages)
+
+interface Props {
+    class?: string;
+}
+
+const { class: className = "" } = Astro.props;
+---
+
+<div id="content-grid" class:list={["grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6", className]}>
+    <slot />
+</div>

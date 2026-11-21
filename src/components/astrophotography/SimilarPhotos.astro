@@ -1,0 +1,38 @@
+---
+import type { Photo } from "@/lib/photos";
+import GalleryCard from "@/components/UI/GalleryCard.astro";
+import PhotoMetadata from "@/components/Gallery/PhotoMetadata.astro";
+
+interface SimilarPhoto extends Photo {
+    resolvedImageSrc?: any;
+}
+
+interface Props {
+    similarPhotos: SimilarPhoto[];
+}
+
+const { similarPhotos } = Astro.props;
+---
+
+{similarPhotos.length > 0 && (
+    <div class="max-w-container mx-auto px-4 mt-16 pt-8 border-t border-mp-border">
+        <h2 class="mb-6">Photos similaires</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {similarPhotos.map((similar) => (
+                <GalleryCard
+                    title={similar.title}
+                    image={similar.resolvedImageSrc}
+                    href={`/astrophotographies/${similar.slug}`}
+                    cardStyle="stacked"
+                >
+                    <PhotoMetadata
+                        slot="metadata"
+                        photo={similar}
+                        showSeparators={false}
+                        fields={["observatory", "location", "year"]}
+                    />
+                </GalleryCard>
+            ))}
+        </div>
+    </div>
+)}

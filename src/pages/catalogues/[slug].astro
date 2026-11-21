@@ -1,0 +1,64 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import CatalogueViewer from "@/components/Catalogues/CatalogueViewer";
+import CatalogueWikipedia from "@/components/Catalogues/CatalogueWikipedia.astro";
+import { CATALOGUES, getCatalogue } from "@/lib/catalogues/registry";
+import { Map } from "lucide-react";
+
+export async function getStaticPaths() {
+    return CATALOGUES.map((c) => ({ params: { slug: c.slug } }));
+}
+
+const { slug } = Astro.params;
+const catalogue = getCatalogue(slug ?? "");
+
+if (!catalogue) {
+    return Astro.redirect("/catalogues");
+}
+
+const headerStats = [
+    { icon: "star", value: catalogue.count.toLocaleString("fr-FR"), label: "Objets" },
+    { icon: "calendar", value: catalogue.epoch, label: "Époque" },
+    { icon: "tag", value: catalogue.shortName, label: "Catalogue" },
+];
+---
+
+<BaseLayout
+    title={`${catalogue.name} — Catalogues`}
+    description={catalogue.description}
+    breadcrumbLabel={catalogue.shortName}
+>
+    <main class="container-mp pb-16">
+        <PageHeader title={catalogue.name}>
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <CatalogueViewer client:idle slug={catalogue.slug} catalogue={catalogue}>
+            <div class="mt-6 space-y-6">
+                <CatalogueWikipedia
+                    description={catalogue.longDescription ?? catalogue.description}
+                    candidates={catalogue.wikiCandidates ?? []}
+                />
+
+                <div class="flex flex-wrap gap-2">
+                    <a
+                        href={`/carte-du-ciel?mode=catalogue&catalogue=${encodeURIComponent(catalogue.shortName)}`}
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-mp-accent text-mp-accent hover:bg-mp-accent hover:text-mp-ui-black transition-colors no-underline text-xs uppercase tracking-uppercase"
+                    >
+                        <Map className="w-4 h-4" />
+                        Voir sur la carte du ciel
+                    </a>
+                </div>
+            </div>
+        </CatalogueViewer>
+
+        <p class="mt-12 text-xs text-mp-text-muted border-t border-mp-glass-border pt-6">
+            Sources : SIMBAD &amp; VizieR (CDS Strasbourg). Vignettes générées par hips2fits depuis le survey DSS2
+            couleur. Cliquer sur une carte ouvre l'explorateur d'objets pour cet identifiant.
+        </p>
+    </main>
+</BaseLayout>

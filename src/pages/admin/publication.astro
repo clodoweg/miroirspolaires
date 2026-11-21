@@ -1,0 +1,26 @@
+---
+/**
+ * Mise en production depuis l'admin distant : PR de la branche de contenu vers la production.
+ */
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import ReleasePanel from "@/components/Admin/ReleasePanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+const isLocal = isLocalAdmin(Astro.locals);
+---
+
+<AdminLayout title="Admin · Mise en production" description="Publier dev sur le site public." active="publication">
+    {isLocal ? (
+        <p class="text-mp-text-body">
+            En local, la mise en production reste une fusion de <code>dev</code> dans <code>main</code> sur GitHub. Ce
+            bouton est disponible sur l'admin distant.
+        </p>
+    ) : (
+        <ReleasePanel client:only="react" />
+    )}
+</AdminLayout>

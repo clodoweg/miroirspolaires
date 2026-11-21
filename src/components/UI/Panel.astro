@@ -1,0 +1,28 @@
+---
+interface Props {
+    as?: "section" | "div" | "article" | "aside";
+    padding?: 0 | 3 | 4 | 5 | 6 | 8;
+    tone?: "default" | "danger";
+    class?: string;
+}
+
+const { as: Tag = "section", padding = 4, tone = "default", class: className = "" } = Astro.props;
+
+const PADDING: Record<number, string> = {
+    0: "",
+    3: "p-3",
+    4: "p-4",
+    5: "p-5",
+    6: "p-6",
+    8: "p-8",
+};
+
+const TONE: Record<string, string> = {
+    default: "border-mp-glass-border bg-mp-glass-solid",
+    danger: "border-mp-astro-red/40 bg-mp-astro-red/10",
+};
+---
+
+<Tag class:list={["rounded-lg border", TONE[tone], PADDING[padding], className]}>
+    <slot />
+</Tag>

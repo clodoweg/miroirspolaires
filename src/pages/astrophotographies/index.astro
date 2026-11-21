@@ -1,0 +1,142 @@
+---
+// src/pages/astrophotographies/index.astro
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import GalleryGrid from "@/components/Gallery/GalleryGrid.astro";
+import UniversalFilterBar from "@/components/Filters/UniversalFilterBar";
+import seoData from "@/data/seo.json";
+import {
+    photos,
+    getUniqueTypes,
+    getUniqueConstellations,
+    getUniqueObservatories,
+    getUniqueLocations,
+    getUniqueTelescopes,
+    getUniqueCameras,
+    getUniqueYears,
+} from "@/lib/photos";
+import { resolveImage, getWebImageSet } from "@/utils/imageService";
+
+const types = getUniqueTypes();
+const constellations = getUniqueConstellations();
+const observatories = getUniqueObservatories();
+const locations = getUniqueLocations();
+const telescopes = getUniqueTelescopes();
+const cameras = getUniqueCameras();
+const years = getUniqueYears();
+const totalPhotos = photos.length;
+const totalConstellations = constellations.length;
+const yearsOfObservation = years.length > 0 ? Math.max(...years) - Math.min(...years) + 1 : 0;
+
+const filterConfig = [
+    { key: "type", label: "Type", options: types },
+    { key: "constellation", label: "Constellation", options: constellations },
+    { key: "observatories", label: "Observatoire", options: observatories },
+    { key: "location", label: "Lieu", options: locations },
+    { key: "telescope", label: "Télescope", options: telescopes },
+    { key: "camera", label: "Caméra", options: cameras },
+    { key: "year", label: "Année", options: years },
+];
+
+const extraStatsConfig = [
+    {
+        elementId: "stats-count-constellations",
+        dataAttribute: "constellation",
+        type: "count" as const,
+    },
+    {
+        elementId: "stats-count-years",
+        dataAttribute: "year",
+        type: "range" as const,
+    },
+];
+
+const headerStats = [
+    {
+        icon: "camera",
+        value: totalPhotos,
+        label: "Photos",
+        id: "stats-count-photos",
+    },
+    {
+        icon: "star",
+        value: totalConstellations,
+        label: "constellations",
+        id: "stats-count-constellations",
+    },
+    {
+        icon: "clock",
+        value: yearsOfObservation,
+        suffix: "ans",
+        label: "d'observation",
+        id: "stats-count-years",
+    },
+];
+const featuredImage =
+    photos.length > 0
+        ? resolveImage(`../../assets/astrophotographies/${photos[0].imagePath}`, false, photos[0].version)
+        : undefined;
+
+// POURQUOI : précharger exactement l'image de la première carte (le `mini/`, servi tel quel
+// par R2). L'ancien preload visait `w_1000` de l'original, qu'aucune carte n'affiche et que le
+// worker renvoie entier au-delà de 500 Ko : 70 Mo téléchargés pour rien (audit 2026-10).
+const firstCardImage =
+    photos.length > 0
+        ? // POURQUOI : sans `version`, comme l'URL que la carte affiche réellement (sinon `?v=` diffère
+          // et le navigateur télécharge l'image deux fois sans utiliser le preload).
+          resolveImage(`../../assets/astrophotographies/${photos[0].imagePath}`, true)
+        : undefined;
+const lcpPreloadUrl = typeof firstCardImage === "string" ? firstCardImage : (firstCardImage?.src ?? null);
+// POURQUOI : si la carte affiche les versions web (srcset), le preload doit porter le même
+// srcset et les mêmes sizes que GalleryGrid, sinon le navigateur télécharge deux images.
+const lcpPreloadSet = lcpPreloadUrl ? getWebImageSet(lcpPreloadUrl) : null;
+const GRID_CARD_SIZES = "(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw";
+---
+
+<BaseLayout
+    title="Astrophotographies"
+    description={
+        seoData["astrophotographies/index"] ||
+        "Astrophotographies réalisées à partir de mon observatoire dans les Yvelines mais aussi de Provence, d’Espagne ou du Chili."
+    }
+    image={featuredImage}
+    breadcrumbLabel="Astrophotographies"
+>
+    {lcpPreloadUrl && (
+        <Fragment slot="head">
+            {lcpPreloadSet ? (
+                <link
+                    rel="preload"
+                    as="image"
+                    imagesrcset={lcpPreloadSet.srcset}
+                    imagesizes={GRID_CARD_SIZES}
+                    fetchpriority="high"
+                />
+            ) : (
+                <link rel="preload" as="image" href={lcpPreloadUrl} fetchpriority="high" />
+            )}
+        </Fragment>
+    )}
+    <main class="min-h-dvh">
+        <PageHeader
+            title="Astrophotographies"
+            description="L'astrophotographie est l'art de capturer l'invisible, l'infiniment grand et l'infiniment lointain. Depuis dix ans, j'utilise des télescopes de plus en plus puissants pour révéler des détails imperceptibles à l'œil nu."
+        >
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <UniversalFilterBar
+            client:visible
+            filters={filterConfig}
+            extraStats={extraStatsConfig}
+            additionalCountIds={["stats-count-photos"]}
+            dataSelector="[data-type]"
+            viewToggleTarget="#gallery-grid"
+        />
+
+        <GalleryGrid photos={photos} showMetadata={false} />
+    </main>
+</BaseLayout>

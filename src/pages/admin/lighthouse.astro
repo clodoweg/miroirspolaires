@@ -1,0 +1,19 @@
+---
+import { isAdminGranted } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import LighthousePanel from "@/components/Admin/LighthousePanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+---
+
+<AdminLayout
+    title="Admin · Lighthouse Performance"
+    description="Bilan de performance et de qualité Web de toutes les pages et sections du site."
+    active="lighthouse"
+>
+    <LighthousePanel client:only="react" />
+</AdminLayout>

@@ -1,0 +1,62 @@
+---
+/**
+ * Journal d'audit de l'admin distant : les dernières écritures (qui, quoi, quand, résultat), lues dans Turso.
+ */
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import { listAdminActions, type AuditEntry } from "@/lib/admin/audit-log";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+const isLocal = isLocalAdmin(Astro.locals);
+const journal: { entries: AuditEntry[]; error?: string } = isLocal ? { entries: [] } : await listAdminActions(200);
+const dateFormat = new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "short",
+    timeStyle: "medium",
+    timeZone: "Europe/Paris",
+});
+---
+
+<AdminLayout title="Admin · Journal" description="Écritures faites depuis l'admin distant." active="journal">
+    {isLocal ? (
+        <p class="text-mp-text-body">Le journal ne concerne que l'admin distant ; rien n'est enregistré en local.</p>
+    ) : journal.error ? (
+        <p class="text-mp-astro-red">{journal.error}</p>
+    ) : journal.entries.length === 0 ? (
+        <p class="text-mp-text-muted">Aucune écriture enregistrée pour l'instant.</p>
+    ) : (
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="text-mp-text-muted">
+                    <tr>
+                        <th class="py-2 pr-4 font-normal">Date</th>
+                        <th class="py-2 pr-4 font-normal">Compte</th>
+                        <th class="py-2 pr-4 font-normal">Action</th>
+                        <th class="py-2 font-normal">Résultat</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-mp-border">
+                    {journal.entries.map((entry) => (
+                        <tr>
+                            <td class="py-2 pr-4 whitespace-nowrap text-mp-text-body">
+                                {dateFormat.format(new Date(entry.at))}
+                            </td>
+                            <td class="py-2 pr-4 text-mp-text-body">@{entry.actor}</td>
+                            <td class="py-2 pr-4 font-mono text-xs break-all text-mp-text-body">
+                                {entry.method} {entry.path}
+                            </td>
+                            <td
+                                class={`py-2 font-mono ${entry.status < 400 ? "text-mp-text-body" : "text-mp-astro-red"}`}
+                            >
+                                {entry.status}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    )}
+</AdminLayout>

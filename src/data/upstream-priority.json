@@ -1,0 +1,51 @@
+{
+  "updatedAt": "2026-11-06T08:46:56.589Z",
+  "services": {
+    "simbad": {
+      "order": [
+        "harvard",
+        "idia",
+        "cds"
+      ],
+      "disabled": []
+    },
+    "vizier": {
+      "order": [
+        "harvard-asu",
+        "nao-asu",
+        "china-vo-asu",
+        "cds-tap"
+      ],
+      "disabled": []
+    },
+    "sesame": {
+      "order": [
+        "harvard",
+        "cds"
+      ],
+      "disabled": []
+    },
+    "hips2fits": {
+      "order": [
+        "skyview",
+        "cds"
+      ],
+      "disabled": []
+    },
+    "hipsSky": {
+      "order": [
+        "esa",
+        "china-vo",
+        "cds"
+      ],
+      "disabled": []
+    },
+    "aladinScript": {
+      "order": [
+        "self-hosted",
+        "cds"
+      ],
+      "disabled": []
+    }
+  }
+}

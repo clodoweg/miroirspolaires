@@ -1,0 +1,28 @@
+---
+title: "La côte sud d'Irlande"
+description: ""
+image: "../../../assets/voyages/2012/la-cote-sud-dirlande/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-1.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-2.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-3.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-4.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-5.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-6.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-7.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-8.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-9.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-10.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-11.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-12.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-13.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-14.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-15.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-16.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-17.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-18.jpg"
+  - "../../../assets/voyages/2012/la-cote-sud-dirlande/img-19.jpg"
+country: "Irlande"
+season: "Printemps"
+year: 2012
+---

@@ -1,0 +1,56 @@
+name: Update Variable Stars Database
+
+on:
+  workflow_dispatch: # Lancement manuel depuis l'onglet Actions de GitHub
+    inputs:
+      mode:
+        description: 'no-clean = complète sans effacer ; fresh = vide la table puis réimporte tout'
+        type: choice
+        options: [no-clean, fresh]
+        default: no-clean
+      max_mag:
+        description: 'Magnitude limite (--max-mag)'
+        type: string
+        default: '25'
+
+# Le script écrit directement dans Turso : aucun fichier du dépôt n'est modifié ni commité.
+# Secrets requis (Settings > Secrets and variables > Actions) : TURSO_DATABASE_URL, TURSO_AUTH_TOKEN.
+# POURQUOI : pas de mode « reprise » ici. Le fichier de progression n'est pas conservé entre deux
+# exécutions, et sans lui le script vide la table par défaut ; `no-clean` est donc le mode sûr.
+
+# POURQUOI : deux imports simultanés écriraient en même temps dans la même table Turso.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npx vitest run
+
+      - name: Run variable stars update pipeline
+        run: npm run update-variable-stars -- "--$MODE" --max-mag "$MAX_MAG"
+        env:
+          MODE: ${{ inputs.mode }}
+          MAX_MAG: ${{ inputs.max_mag }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}

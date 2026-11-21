@@ -1,0 +1,120 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import AppImage from "@/components/UI/AppImage.astro";
+import ContactForm from "@/components/ContactForm.astro";
+import { resolveImage } from "@/utils/imageService";
+import { socialLinks } from "@/config/social";
+
+const julienTelescope = resolveImage("assets/a-propos/julien-telescope.jpg");
+
+// Descriptions pour chaque réseau social
+const socialDescriptions: Record<string, string> = {
+    YouTube: "pour ma série de vidéos sur l'histoire de l'astronomie",
+    Instagram: "pour mes photos diverses et variées",
+    Astrobin: "pour toutes mes astrophotographies et leurs détails techniques",
+};
+
+const aboutStats = [
+    { icon: "telescope", value: "", label: "Astronome" },
+    { icon: "camera", value: "", label: "Photographe" },
+    { icon: "compass", value: "", label: "Baroudeur" },
+];
+---
+
+<BaseLayout
+    title="À propos de Julien Bourdette"
+    description="Je m'appelle Julien Bourdette, astronome, photographe et baroudeur. Je publie depuis de nombreuses années mes clichés du ciel profond et des paysages polaires."
+    image={julienTelescope}
+    breadcrumbLabel="À propos"
+>
+    {/* POURQUOI pas de preload : l'image est servie par Astro (/_astro/…), pas par le worker ;
+        l'ancien preload visait une URL du worker inexistante (404). Elle est déjà eager + priorité haute. */}
+    <PageHeader title="Julien Bourdette" align="center">
+        <Fragment slot="metadata">
+            <StatsMetadata stats={aboutStats} />
+        </Fragment>
+    </PageHeader>
+
+    <main class="container-mp pt-4!">
+        <!-- Two Column Layout: Photo 1/2, Text 1/2 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
+            <!-- Telescope Column (1/2) -->
+            <div class="rounded-xl overflow-hidden">
+                <AppImage
+                    src={julienTelescope}
+                    alt="Julien Bourdette avec son télescope"
+                    class="w-full h-auto"
+                    zoomable={false}
+                    sizes="(max-width: 767px) 100vw, 50vw"
+                    loading="eager"
+                    fetchpriority="high"
+                />
+            </div>
+
+            <!-- Text Column (1/2) -->
+            <article class="prose prose-lg prose-slate prose-headings:text-mp-text-heading prose-strong:text-mp-text-heading max-w-none prose-headings:font-serif prose-headings:font-normal prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mt-8 prose-h2:mb-4 prose-p:text-mp-text-body">
+                <p>
+                    Je m'appelle Julien Bourdette, aussi connu sous le pseudonyme Clodoweg sur plusieurs réseaux, forums
+                    ou sites internet, et suis membre de l'association{" "}
+                    <a href="https://www.albireo78.com/" target="_blank" rel="noopener">
+                        Albireo78
+                    </a>{" "}
+                    et Atria Observatory.
+                </p>
+
+                <p>
+                    Astrophotographe et astronome amateur, je suis passionné par l'histoire, les sciences et la
+                    photographie. Je réalise des <a href="/astrophotographies">images</a> et des mesures à partir de mon
+                    télescope installé dans mon jardin ainsi que depuis différents observatoires que j'ai mis en place
+                    avec des amis, dont le plus récent se trouve dans le désert d'Atacama au Chili. En parallèle, j'ai
+                    lancé une série de <a href="/videos">vidéos</a> pour parler de l'histoire de l'astronomie.
+                </p>
+
+                <p>
+                    Ma passion pour l'histoire dépasse le cadre des sciences. Très tôt, mes lectures m'ont mené vers
+                    l'histoire nordique, puis vers l'Arctique. Été comme hiver, je consacre désormais une grande partie
+                    de mon temps à explorer ces paysages sauvages de toundra, de glaciers, de banquise et de montagnes,
+                    que j'aime <a href="/voyages">photographier</a>.
+                </p>
+
+                <p>
+                    Un climat froid, des paysages indomptés, un accès difficile, un ciel clair et pur, des parois à
+                    gravir , tout cela m'attire irrésistiblement.
+                </p>
+
+                <p>Vous pouvez me retrouver sur différentes plateformes :</p>
+
+                <div class="flex flex-col gap-4 not-prose mt-4">
+                    {socialLinks.map((link) => (
+                        <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="flex items-start gap-2 text-mp-text-muted hover:text-mp-text-heading transition-colors duration-300 group"
+                        >
+                            <svg
+                                viewBox="0 0 64 64"
+                                class="w-12 h-12 shrink-0 group-hover:scale-110 transition-transform duration-300"
+                            >
+                                <path fill="currentColor" d={link.path} />
+                            </svg>
+                            <span class="pt-2">
+                                <span class="text-mp-text-link group-hover:text-mp-text-link-hover font-medium">
+                                    {link.name}
+                                </span>
+                                {socialDescriptions[link.name] && ` ${socialDescriptions[link.name]}`}
+                            </span>
+                        </a>
+                    ))}
+                </div>
+            </article>
+        </div>
+
+        <!-- Full Width Contact Form -->
+        <section id="contact" class="scroll-mt-24">
+            <ContactForm web3formsAccessKey={import.meta.env.PUBLIC_WEB3FORMS_ACCESS_KEY} />
+        </section>
+    </main>
+</BaseLayout>

@@ -1,0 +1,177 @@
+---
+import { getCollection, render } from "astro:content";
+import { resolveImage, buildOptimizedUrl, getLocalImageDimensions } from "@/utils/imageService";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import Lightbox from "@/components/UI/Lightbox.astro";
+import MobileFloatingMenu from "@/components/MobileFloatingMenu.astro";
+
+import { getAltText } from "@/utils/altText";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import ContentNavigation from "@/components/ContentNavigation.astro";
+import { STAT_ICONS, getCountryIcon, getSeasonIcon } from "@/utils/constants";
+import seoData from "@/data/seo.json";
+
+/**
+ * Génère les routes statiques pour tous les voyages publiés.
+ * @returns {Promise<Array<{ params: { slug: string }, props: { voyage: any, prevVoyage: any, nextVoyage: any } }>>} Liste des routes et propriétés des voyages
+ */
+export async function getStaticPaths() {
+    const voyages = (await getCollection("voyages")).filter((v) => !v.data.draft);
+
+    // Sort by year descending
+    voyages.sort((a, b) => (b.data.year || 0) - (a.data.year || 0));
+
+    return voyages.map((voyage, index) => ({
+        params: { slug: voyage.id },
+        props: {
+            voyage,
+            prevVoyage: index + 1 < voyages.length ? voyages[index + 1] : null,
+            nextVoyage: index - 1 >= 0 ? voyages[index - 1] : null,
+        },
+    }));
+}
+
+const { voyage, prevVoyage, nextVoyage } = Astro.props;
+const { Content } = await render(voyage);
+
+const gallery = voyage.data.gallery || [];
+
+// Header stats display
+const headerStats = [];
+if (voyage.data.country) {
+    const countries = Array.isArray(voyage.data.country) ? voyage.data.country : [voyage.data.country];
+
+    // Join country names
+    const value = countries.join(", ");
+    // Use generic globe icon or specific icon if available
+    const icon = getCountryIcon(countries[0]);
+
+    headerStats.push({ icon, value, label: "" });
+}
+if (voyage.data.season)
+    headerStats.push({
+        icon: getSeasonIcon(voyage.data.season),
+        value: voyage.data.season,
+        label: "",
+    });
+if (voyage.data.year)
+    headerStats.push({
+        icon: STAT_ICONS.Annees,
+        value: voyage.data.year,
+        label: "",
+    });
+
+const seoKey = `voyages/${voyage.id}`;
+const seoDescription =
+    (seoData as Record<string, string>)[seoKey] || voyage.data.description || `Photos de ${voyage.data.title}`;
+
+const resolvedImage = resolveImage(voyage.data.image);
+
+// LCP preload: the first gallery image (600px ultra-lightweight variant).
+const firstImage = gallery[0] ? resolveImage(gallery[0]) : null;
+const firstSrc = typeof firstImage === "string" ? firstImage : firstImage?.src;
+const lcpPreloadUrl = firstSrc ? buildOptimizedUrl(firstSrc, { width: 600, quality: 75, format: "jpeg" }) : "";
+---
+
+<BaseLayout
+    title={voyage.data.title}
+    description={seoDescription}
+    image={resolvedImage}
+    breadcrumbLabel={voyage.data.title}
+    hasFloatingMenu={true}
+>
+    {lcpPreloadUrl && (
+        <Fragment slot="head">
+            <link rel="preload" as="image" href={lcpPreloadUrl} fetchpriority="high" />
+        </Fragment>
+    )}
+    <PageHeader title={voyage.data.title} description={voyage.data.description} align="center">
+        <Fragment slot="metadata">
+            <StatsMetadata stats={headerStats} />
+        </Fragment>
+    </PageHeader>
+
+    <article class="container-mp pb-6 md:pb-0 pt-0 -mt-2">
+        {/* Content/Description if any */}
+        <div class="prose prose-lg prose-slate prose-headings:text-mp-text-heading prose-strong:text-mp-text-heading max-w-none mx-auto mb-6 text-center">
+            <Content />
+        </div>
+
+        {/* Gallery Grid - Masonry Layout */}
+        <div class="columns-1 md:columns-2 lg:columns-3 gap-4">
+            {gallery.map((imgPath, index) => {
+                const imgSrc = resolveImage(imgPath);
+                const rawSrc = typeof imgSrc === "string" ? imgSrc : imgSrc?.src;
+                const optimizedThumbUrl = rawSrc
+                    ? buildOptimizedUrl(rawSrc, { width: 600, quality: 75, format: "jpeg" })
+                    : "";
+
+                // Lightbox source: route through the image worker so we serve a
+                // re-encoded ~2400px WebP instead of the multi-MB R2 original.
+                const fullSrc = buildOptimizedUrl(imgPath, {
+                    width: 2400,
+                    quality: 85,
+                    format: "jpeg",
+                });
+                const dims = getLocalImageDimensions(imgPath) || {
+                    width: 1200,
+                    height: 800,
+                };
+                const isFirst = index === 0;
+
+                return (
+                    <div class="mb-4 break-inside-avoid">
+                        <img
+                            src={optimizedThumbUrl || fullSrc || rawSrc}
+                            data-full-src={fullSrc}
+                            data-fallback-src={rawSrc}
+                            alt={getAltText(imgPath, `${voyage.data.title} — ${index + 1}`)}
+                            width={dims.width}
+                            height={dims.height}
+                            loading={isFirst ? "eager" : "lazy"}
+                            fetchpriority={isFirst ? "high" : "auto"}
+                            decoding={isFirst ? "sync" : "async"}
+                            class="w-full h-auto rounded-lg gallery-image cursor-pointer transition-all duration-300 hover:scale-hover hover:brightness-110 bg-mp-glass-bg"
+                            style={`aspect-ratio: ${dims.width}/${dims.height};`}
+                        />
+                    </div>
+                );
+            })}
+        </div>
+
+        <ContentNavigation
+            prev={
+                prevVoyage
+                    ? {
+                          url: `/voyages/${prevVoyage.id}`,
+                          title: prevVoyage.data.title,
+                      }
+                    : undefined
+            }
+            next={
+                nextVoyage
+                    ? {
+                          url: `/voyages/${nextVoyage.id}`,
+                          title: nextVoyage.data.title,
+                      }
+                    : undefined
+            }
+            prevLabel="Voyage précédent"
+            nextLabel="Voyage suivant"
+        />
+    </article>
+    <MobileFloatingMenu
+        prevUrl={prevVoyage ? `/voyages/${prevVoyage.id}` : undefined}
+        nextUrl={nextVoyage ? `/voyages/${nextVoyage.id}` : undefined}
+        galleryUrl="/voyages"
+    />
+    <Lightbox defaultCaption={voyage.data.title} />
+    <script>
+        import { initAllPhotoSpheres } from "@/scripts/photo-sphere";
+        initAllPhotoSpheres();
+        document.addEventListener("astro:page-load", () => {
+            initAllPhotoSpheres();
+        });
+    </script>
+</BaseLayout>

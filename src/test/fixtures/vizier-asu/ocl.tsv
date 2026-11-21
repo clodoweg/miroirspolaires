@@ -1,0 +1,45 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:51 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:51	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=B%2focl%2fclusters&-out.max=6&-out=Cluster%2cRAJ2000%2cDEJ2000%2cClass%2cDiam%2cAge	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_102022
+#Name: B/ocl
+#Title: Optically visible open clusters and Candidates (Dias+ 2002-2015)
+#INFO	ivoid=ivo://cds.vizier/b/ocl	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/b/ocl	    IVOID of underlying data collection
+#INFO	creator=Dias W.S.	    First author or institution
+#INFO	cites=bibcode:2002A&A...389..871D	    Article or Data origin sources
+#INFO	journal=A&A	    Journal name
+#INFO	original_date=2002	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/B/ocl	    Dataset landing page
+#INFO	publication_date=2018-06-22	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Table	B_ocl_clusters:
+#Name: B/ocl/clusters
+#Title: The Catalogue Data File (V3.5)
+#Column	Cluster	(a17)	Cluster name	[ucd=meta.id;meta.main]
+#Column	RAJ2000	(A8)	Right Ascension J2000	[ucd=pos.eq.ra;meta.main]
+#Column	DEJ2000	(A9)	Declination J2000	[ucd=pos.eq.dec;meta.main]
+#Column	Class	(A2)	Flag for classification of the cluster (G1)	[ucd=meta.code]
+#Column	Diam	(F6.1)	[0.2/1400]? Angular apparent diameter	[ucd=phys.angSize]
+#Column	Age	(F6.3)	[6/10.1]? Age (in log t)	[ucd=time.age]
+Cluster	RAJ2000	DEJ2000	Class	Diam	Age
+ 	"h:m:s"	"d:m:s"	 	arcmin	[yr]
+-----------------	--------	---------	--	------	------
+Berkeley 58      	00 00 12	+60 58 00	  	  11.0	 8.470
+NGC 7801         	00 00 21	+50 44 30	r 	   8.0	 9.230
+FSR 0459         	00 00 39	+59 14 20	IR	   2.0	 8.950
+Stock 18         	00 01 37	+64 37 30	  	   6.0	 8.100
+Berkeley 59      	00 02 14	+67 25 00	  	  10.0	 6.100
+Berkeley 104     	00 03 30	+63 35 00	  	   3.0	 8.890
+

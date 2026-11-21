@@ -1,0 +1,76 @@
+---
+/**
+ * Diagnostic de l'accès de l'admin distant au dépôt GitHub, rendu côté serveur.
+ *
+ * POURQUOI une page plutôt que la seule route `/api/admin/diagnostics` : une page `/admin` s'ouvre depuis
+ * un lien externe (message, autre application), alors que l'API refuse les requêtes inter-sites.
+ */
+import { isAdminGranted } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import { getAdminAccessMode, getRemoteAdminConfig } from "@/lib/admin/auth/config";
+import { diagnoseRemoteAccess, type RemoteAccessDiagnostic } from "@/lib/admin/github/diagnostics";
+import { getRemoteGitHubClient } from "@/lib/admin/stores/content-reader";
+import { diagnoseR2Access, type R2Diagnostic } from "@/lib/admin/remote-images";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+
+const STEP_LABELS: Record<string, string> = {
+    "installation-token": "Jeton d'installation de la GitHub App",
+    repository: "Accès au dépôt",
+    branch: "Branche de contenu",
+    content: "Lecture de src/content/blog",
+};
+
+const isRemote = getAdminAccessMode() === "remote";
+const diagnostic: RemoteAccessDiagnostic | null = isRemote
+    ? await diagnoseRemoteAccess(getRemoteGitHubClient(), getRemoteAdminConfig())
+    : null;
+// POURQUOI : à distance, les images ne vivent que sur R2 ; une galerie vide vient presque toujours de là.
+const r2: R2Diagnostic | null = isRemote ? await diagnoseR2Access() : null;
+---
+
+<AdminLayout title="Admin · Diagnostic" description="Accès de l'admin distant au dépôt et à R2." active="diagnostic">
+    {diagnostic ? (
+        <section class="space-y-4">
+            <p class="text-mp-text-body">
+                Dépôt <code>{diagnostic.repository}</code>, branche <code>{diagnostic.branch}</code> :{" "}
+                <strong class={diagnostic.ok ? "text-mp-accent" : "text-mp-astro-red"}>
+                    {diagnostic.ok ? "accès complet" : "accès incomplet"}
+                </strong>
+            </p>
+            <ul class="space-y-3">
+                {diagnostic.steps.map((step) => (
+                    <li class="rounded-md border border-mp-border px-4 py-3">
+                        <p class="font-semibold text-mp-text-heading">
+                            {step.ok ? "✓" : "✗"} {STEP_LABELS[step.step] ?? step.step}{" "}
+                            <span class="font-normal text-mp-text-muted">(HTTP {step.status || "—"})</span>
+                        </p>
+                        {step.hint && <p class="mt-1 text-sm text-mp-astro-red">{step.hint}</p>}
+                    </li>
+                ))}
+            </ul>
+            {r2 && (
+                <div class="rounded-md border border-mp-border px-4 py-3">
+                    <p class="font-semibold text-mp-text-heading">
+                        {r2.ok ? "✓" : "✗"} Bucket R2 des images{" "}
+                        {r2.bucket && <span class="font-normal text-mp-text-muted">({r2.bucket})</span>}
+                    </p>
+                    {r2.hint && <p class="mt-1 text-sm text-mp-astro-red">{r2.hint}</p>}
+                    {!r2.publicUrlConfigured && (
+                        <p class="mt-1 text-sm text-mp-astro-red">
+                            PUBLIC_R2_URL absente : les images ne s'afficheront pas dans l'éditeur.
+                        </p>
+                    )}
+                </div>
+            )}
+        </section>
+    ) : (
+        <p class="text-mp-text-body">
+            Admin local : le contenu est lu sur le disque, aucun accès GitHub n'est nécessaire.
+        </p>
+    )}
+</AdminLayout>

@@ -1,0 +1,48 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:48 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:48	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f213%2fgroups&-out.max=6&-out=HCG%2cRA1950%2cDE1950%2cType%2cMCount%2cAngSize%2cTotmag%2cEmag	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7213
+#Name: VII/213
+#Title: Hickson's Compact groups of Galaxies (Hickson+ 1982-1994)
+#INFO	ivoid=ivo://cds.vizier/vii/213	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/213	    IVOID of underlying data collection
+#INFO	creator=Hickson P.	    First author or institution
+#INFO	cites=bibcode:1982ApJ...255..382H	    Article or Data origin sources
+#INFO	journal=ApJ	    Journal name
+#INFO	original_date=1982	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/213	    Dataset landing page
+#INFO	publication_date=2024-10-01	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1950:	eq_FK4 B1950
+#Table	VII_213_groups:
+#Name: VII/213/groups
+#Title: Catalog of groups (1982 paper, and errata)
+#Column	HCG	(I3)	[1/100]+ Number of the group in this catalog	[ucd=meta.id;meta.main]
+#Column	RA1950	(A8)	Right Ascension 1950 hours	[ucd=pos.eq.ra;meta.main]
+#Column	DE1950	(A9)	Declination degrees (1950)	[ucd=pos.eq.dec;meta.main]
+#Column	Type	(A2)	Group type (1)	[ucd=src.class]
+#Column	MCount	(I2)	Member count (2)	[ucd=meta.number]
+#Column	AngSize	(F5.1)	Angular size (3)	[ucd=phys.angSize]
+#Column	Totmag	(F5.1)	Total magnitude of group (4)	[ucd=phot.mag;em.opt.R]
+#Column	Emag	(F5.1)	Brightest member magnitude (5)	[ucd=phot.mag;em.opt.R;stat.max]
+HCG	RA1950	DE1950	Type	MCount	AngSize	Totmag	Emag
+ 	"h:m:s"	"d:m:s"	 	 	arcmin	mag	mag
+---	--------	---------	--	--	-----	-----	-----
+  1	00 23 23	+25 26 29	S3	 4	  2.9	 12.8	 13.8
+  2	00 28 55	+08 09 19	S2	 4	  7.1	 12.1	 12.9
+  3	00 31 39	-07 52 07	S2	 4	  3.8	 12.3	 13.0
+  4	00 31 46	-21 43 20	S1	 5	  3.6	 12.5	 13.0
+  5	00 36 19	+06 47 20	S2	 4	  1.6	 12.5	 13.3
+  6	00 36 38	-08 40 12	E3	 4	  1.6	 12.3	 13.4
+

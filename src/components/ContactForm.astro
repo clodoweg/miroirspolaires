@@ -1,0 +1,160 @@
+---
+import { ArrowRight } from "lucide-react";
+
+interface Props {
+    // POURQUOI : pas nommée `accessKey`, nom réservé à l'attribut HTML de raccourci clavier.
+    web3formsAccessKey?: string;
+}
+
+const { web3formsAccessKey = "YOUR_ACCESS_KEY_HERE" } = Astro.props;
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY;
+---
+
+<!-- Cloudflare Turnstile Script -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<div class="mt-12 mb-20">
+    <h2>On discute ?</h2>
+
+    <form action="https://api.web3forms.com/submit" method="POST" id="contact-form" class="space-y-6">
+        <input type="hidden" name="access_key" value={web3formsAccessKey} />
+        <input type="checkbox" name="botcheck" class="hidden" />
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Name -->
+            <div class="space-y-2">
+                <label for="name" class="block text-sm font-medium text-mp-text-body uppercase tracking-wider">
+                    Nom
+                </label>
+                <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    required
+                    autocomplete="off"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    data-bwignore="true"
+                    data-dashlane-ignore="true"
+                    data-form-type="other"
+                    class="w-full bg-transparent border-b border-mp-text-muted/30 focus:border-mp-accent outline-hidden py-2 transition-colors duration-300 text-mp-text-body"
+                    placeholder="Votre nom"
+                />
+            </div>
+
+            <!-- Email -->
+            <div class="space-y-2">
+                <label for="email" class="block text-sm font-medium text-mp-text-body uppercase tracking-wider">
+                    Email
+                </label>
+                <input
+                    type="email"
+                    name="email"
+                    id="email"
+                    required
+                    autocomplete="off"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    data-bwignore="true"
+                    data-dashlane-ignore="true"
+                    data-form-type="other"
+                    class="w-full bg-transparent border-b border-mp-text-muted/30 focus:border-mp-accent outline-hidden py-2 transition-colors duration-300 text-mp-text-body"
+                    placeholder="votre@email.com"
+                />
+            </div>
+        </div>
+
+        <!-- Message -->
+        <div class="space-y-2">
+            <label for="message" class="block text-sm font-medium text-mp-text-body uppercase tracking-wider">
+                Message
+            </label>
+            <textarea
+                name="message"
+                id="message"
+                required
+                rows="5"
+                class="w-full bg-transparent border-b border-mp-text-muted/30 focus:border-mp-accent outline-hidden py-2 transition-colors duration-300 text-mp-text-body resize-none"
+                placeholder="Votre message..."
+            ></textarea>
+        </div>
+
+        <!-- Turnstile Widget -->
+        <div class="cf-turnstile" data-sitekey={siteKey} data-theme="dark"></div>
+
+        <!-- Submit Button -->
+        <div class="pt-4">
+            <button
+                type="submit"
+                class="inline-flex items-center justify-center gap-2 bg-transparent border border-mp-border-light text-mp-text-primary uppercase tracking-widest text-xs font-medium transition-all duration-300 ease-out hover:bg-mp-text-primary hover:text-mp-ui-black hover:border-mp-text-primary rounded-full py-3 px-8"
+            >
+                Envoyer le message
+                <ArrowRight className="w-4 h-4" />
+            </button>
+        </div>
+
+        <!-- Feedback Messages - Now using data-state attribute -->
+        <div
+            id="result"
+            data-state="idle"
+            class="text-sm mt-4 hidden data-[state=loading]:block data-[state=loading]:text-mp-text-muted data-[state=success]:block data-[state=success]:text-mp-accent data-[state=error]:block data-[state=error]:text-mp-astro-red"
+        ></div>
+    </form>
+</div>
+
+<script is:inline>
+    const form = document.getElementById("contact-form");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+
+        // Ensure Turnstile response is included
+        const turnstileResponse = formData.get("cf-turnstile-response");
+        if (!turnstileResponse) {
+            result.textContent = "Veuillez valider le CAPTCHA.";
+            result.dataset.state = "error";
+            return;
+        }
+
+        const object = Object.fromEntries(formData);
+        const json = JSON.stringify(object);
+
+        result.textContent = "Envoi en cours...";
+        result.dataset.state = "loading";
+
+        fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+            body: json,
+        })
+            .then(async (response) => {
+                const json = await response.json();
+                if (response.status == 200) {
+                    result.textContent = "Message envoyé avec succès ! Je vous répondrai dès que possible.";
+                    result.dataset.state = "success";
+                    form.reset();
+                    // Reset Turnstile widget
+                    if (window.turnstile) {
+                        window.turnstile.reset();
+                    }
+                } else {
+                    result.textContent = json.message;
+                    result.dataset.state = "error";
+                }
+            })
+            .catch(() => {
+                result.textContent = "Une erreur s'est produite. Veuillez réessayer.";
+                result.dataset.state = "error";
+            })
+            .finally(function () {
+                setTimeout(() => {
+                    result.dataset.state = "idle";
+                }, 5000);
+            });
+    });
+</script>

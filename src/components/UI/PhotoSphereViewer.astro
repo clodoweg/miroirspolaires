@@ -1,0 +1,213 @@
+---
+/**
+ * Lecteur immersif d'images sphériques à 360° (équirectangulaires).
+ *
+ * POURQUOI : Permet aux lecteurs d'explorer des panoramas sphériques complets (drones,
+ * caméras 360, photosphères reflex) de manière fluide et interactive sans bloquer le
+ * défilement tactile sur smartphone grâce au déclenchement à la demande.
+ *
+ * OPTIONS & EXEMPLES :
+ * <PhotoSphereViewer src="/assets/blog/2026/route/pano.jpg" caption="Sommet du glacier" />
+ */
+
+interface Props {
+    src: string;
+    caption?: string;
+    class?: string;
+}
+
+const { src, caption = "", class: className = "" } = Astro.props;
+
+// Identifiant unique pour ce lecteur dans la page
+const viewerId = `sphere-${Math.random().toString(36).slice(2, 9)}`;
+---
+
+<figure class={`photo-sphere-wrapper relative my-8 w-full max-w-5xl mx-auto ${className}`}>
+    <div
+        id={viewerId}
+        class="photo-sphere-container group relative h-[380px] sm:h-[480px] md:h-[540px] w-full overflow-hidden rounded-2xl border border-mp-glass-border bg-mp-ui-black/80 shadow-2xl transition-all"
+        data-src={src}
+    >
+        <!-- Vue de couverture (évite de charger WebGL et de bloquer le défilement tactile mobile) -->
+        <div class="sphere-cover absolute inset-0 z-10 flex flex-col items-center justify-center overflow-hidden transition-opacity duration-500">
+            <img
+                src={src}
+                alt={caption || "Vue panoramique à 360°"}
+                loading="lazy"
+                decoding="async"
+                class="absolute inset-0 h-full w-full object-cover filter brightness-[0.75] transition-transform duration-700 group-hover:scale-105"
+            />
+            <div class="absolute inset-0 bg-linear-to-t/srgb from-black/80 via-black/20 to-black/40"></div>
+
+            <!-- Badge supérieur 360° -->
+            <div class="absolute top-4 left-4 z-20 flex items-center gap-2 rounded-full border border-mp-accent/40 bg-mp-ui-black/70 px-3.5 py-1.5 backdrop-blur-md">
+                <span class="relative flex h-2 w-2">
+                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-mp-accent opacity-75"></span>
+                    <span class="relative inline-flex h-2 w-2 rounded-full bg-mp-accent"></span>
+                </span>
+                <span class="font-sans text-xs font-semibold uppercase tracking-wider text-mp-accent">Photo 360°</span>
+            </div>
+
+            <!-- Bouton central d'exploration -->
+            <button
+                type="button"
+                class="sphere-play-btn z-20 flex flex-col items-center gap-2 rounded-2xl border border-mp-accent/50 bg-mp-ui-black/80 px-6 py-4 text-white shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:border-mp-accent hover:bg-mp-accent/20 cursor-pointer"
+                aria-label="Lancer l'exploration à 360°"
+            >
+                <div class="flex h-14 w-14 items-center justify-center rounded-full bg-mp-accent/30 text-mp-accent shadow-inner">
+                    <svg
+                        class="h-7 w-7 transition-transform duration-500 group-hover:rotate-180"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="m4.93 4.93 4.24 4.24"></path>
+                        <path d="m14.83 9.17 4.24-4.24"></path>
+                        <path d="m14.83 14.83 4.24 4.24"></path>
+                        <path d="m9.17 14.83-4.24 4.24"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </div>
+                <span class="text-sm font-semibold tracking-wide text-mp-text-primary">Explorer la vue à 360°</span>
+                <span class="text-[11px] text-mp-text-muted">Glisser pour regarder · Molette pour zoomer</span>
+            </button>
+
+            {caption && (
+                <div class="absolute bottom-4 left-4 right-4 z-20 text-center sm:text-left">
+                    <span class="inline-block rounded-lg border border-mp-glass-border/60 bg-black/60 px-3 py-1 text-xs text-mp-text-secondary backdrop-blur-md">
+                        {caption}
+                    </span>
+                </div>
+            )}
+        </div>
+
+        <!-- Conteneur WebGL Pannellum injecté dynamiquement -->
+        <div class="sphere-webgl-target absolute inset-0 h-full w-full"></div>
+    </div>
+
+    {caption && (
+        <figcaption class="mt-2 text-center text-xs italic text-mp-text-muted">
+            {caption} · <span class="text-mp-accent">Vue sphérique interactive</span>
+        </figcaption>
+    )}
+</figure>
+
+<!-- Styles Pannellum injectés une seule fois -->
+<style is:global>
+    @import "/libs/pannellum/pannellum.css";
+
+    .pnlm-container {
+        background-color: #0d0f14 !important;
+        font-family: inherit !important;
+    }
+    .pnlm-load-box {
+        background-color: rgba(13, 15, 20, 0.85) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        backdrop-filter: blur(8px) !important;
+        color: #e2e8f0 !important;
+    }
+    .pnlm-load-box p {
+        color: #e2e8f0 !important;
+        font-size: 13px !important;
+    }
+    .pnlm-control {
+        background-color: rgba(13, 15, 20, 0.75) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 8px !important;
+        backdrop-filter: blur(8px) !important;
+        transition: all 0.2s ease !important;
+    }
+    .pnlm-control:hover {
+        background-color: rgba(226, 161, 86, 0.3) !important;
+        border-color: rgba(226, 161, 86, 0.6) !important;
+    }
+</style>
+
+<script>
+    /**
+     * Chargeur asynchrone sécurisé pour Pannellum
+     */
+    let pannellumPromise: Promise<any> | null = null;
+
+    function loadPannellum(): Promise<any> {
+        if (pannellumPromise) return pannellumPromise;
+
+        pannellumPromise = new Promise((resolve, reject) => {
+            if ((window as any).pannellum) {
+                resolve((window as any).pannellum);
+                return;
+            }
+            const script = document.createElement("script");
+            script.src = "/libs/pannellum/pannellum.js";
+            script.async = true;
+            script.onload = () => resolve((window as any).pannellum);
+            script.onerror = (err) => reject(err);
+            document.head.appendChild(script);
+        });
+
+        return pannellumPromise;
+    }
+
+    function initSphereViewers() {
+        const containers = document.querySelectorAll<HTMLElement>(".photo-sphere-container:not([data-initialized])");
+
+        containers.forEach((container) => {
+            const playBtn = container.querySelector<HTMLButtonElement>(".sphere-play-btn");
+            const cover = container.querySelector<HTMLElement>(".sphere-cover");
+            const target = container.querySelector<HTMLElement>(".sphere-webgl-target");
+            const src = container.dataset.src;
+
+            if (!playBtn || !cover || !target || !src) return;
+
+            const startViewer = async () => {
+                try {
+                    container.setAttribute("data-initialized", "true");
+                    const pannellum = await loadPannellum();
+
+                    // Disparition progressive de la couverture
+                    cover.style.opacity = "0";
+                    setTimeout(() => {
+                        cover.style.display = "none";
+                    }, 500);
+
+                    // Initialisation du visualiseur WebGL
+                    pannellum.viewer(target, {
+                        type: "equirectangular",
+                        panorama: src,
+                        autoLoad: true,
+                        autoRotate: -2,
+                        autoRotateInactivityDelay: 3000,
+                        compass: false,
+                        showZoomCtrl: true,
+                        showFullscreenCtrl: true,
+                        keyboardZoom: false,
+                        mouseZoom: true,
+                        hfov: 100,
+                        minHfov: 40,
+                        maxHfov: 120,
+                    });
+                } catch (err) {
+                    console.error("[PhotoSphereViewer] Erreur lors de l'initialisation 360 :", err);
+                }
+            };
+
+            playBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                startViewer();
+            });
+        });
+    }
+
+    // Initialisation au chargement de la page et lors des navigations Astro
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initSphereViewers);
+    } else {
+        initSphereViewers();
+    }
+    document.addEventListener("astro:page-load", initSphereViewers);
+</script>

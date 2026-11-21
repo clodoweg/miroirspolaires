@@ -1,0 +1,174 @@
+---
+interface Stat {
+    icon?: string;
+    value: string | number | { mobile: string; desktop: string };
+    label: string;
+    suffix?: string;
+    id?: string;
+    key?: string;
+}
+
+interface Props {
+    stats: Stat[];
+}
+
+const { stats } = Astro.props;
+
+import {
+    Calendar,
+    Tag,
+    Clock,
+    Compass,
+    Star,
+    Telescope,
+    Camera,
+    Hourglass,
+    Globe,
+    Film,
+    MapPin,
+    SatelliteDish,
+    Settings,
+    Mountain,
+    FileText,
+    Cpu,
+    Snowflake,
+    Leaf,
+    Sun,
+    Wind,
+    Check,
+    Sparkles,
+    Orbit,
+    Ruler,
+    Weight,
+} from "lucide-react";
+
+// Map icon strings to Lucide components
+const IconMap: Record<string, any> = {
+    calendar: Calendar,
+    tag: Tag,
+    clock: Clock,
+    compass: Compass,
+    star: Star,
+    telescope: Telescope,
+    camera: Camera,
+    hourglass: Hourglass,
+    globe: Globe,
+    film: Film,
+    pin: MapPin,
+    dish: SatelliteDish,
+    cog: Settings,
+    mountain: Mountain,
+    "file-text": FileText,
+    cpu: Cpu,
+    snowflake: Snowflake,
+    leaf: Leaf,
+    sun: Sun,
+    wind: Wind,
+    check: Check,
+    sparkles: Sparkles,
+    orbit: Orbit,
+    ruler: Ruler,
+    weight: Weight,
+};
+---
+
+<div class="metadata-container flex flex-wrap items-center gap-6 gap-y-2 text-mp-text-body overflow-hidden transition-all duration-300">
+    {stats.map((stat) => {
+        const IconComponent = stat.icon ? IconMap[stat.icon] : null;
+        const isResponsiveValue = typeof stat.value === "object" && stat.value !== null && "mobile" in stat.value;
+
+        return (
+            <div
+                class="metadata-item flex flex-col items-center leading-none transition-opacity duration-300"
+                title={stat.label}
+                data-stat-label={stat.label}
+            >
+                <div class="flex items-center justify-center gap-2">
+                    {IconComponent ? (
+                        <div class="shrink-0">
+                            <IconComponent className="w-4 h-4 text-mp-text-body" strokeWidth={1.5} />
+                        </div>
+                    ) : stat.icon ? (
+                        <div class="shrink-0 text-base">{stat.icon}</div>
+                    ) : null}
+
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-sm font-bold text-mp-text-heading" id={stat.id} data-key={stat.key}>
+                            {isResponsiveValue ? (
+                                <>
+                                    <span class="md:hidden">{(stat.value as any).mobile}</span>
+                                    <span class="hidden md:inline">{(stat.value as any).desktop}</span>
+                                </>
+                            ) : (
+                                stat.value
+                            )}
+                        </span>
+                        {stat.suffix && <span class="text-sm font-bold text-mp-text-heading">{stat.suffix}</span>}
+                    </div>
+                </div>
+                {stat.label && (
+                    <span class="text-micro-mobile md:text-micro-tablet lg:text-micro-desktop uppercase tracking-wider text-mp-text-muted font-medium whitespace-nowrap">
+                        {stat.label}
+                    </span>
+                )}
+            </div>
+        );
+    })}
+</div>
+
+<script>
+    // Adjust metadata visibility to prevent wrapping
+    function adjustMetadataLayout() {
+        const containers = document.querySelectorAll(".metadata-container");
+
+        containers.forEach((container) => {
+            const items = container.querySelectorAll(".metadata-item");
+            const observatoryItem = container.querySelector('[data-stat-label="Observatoire"]') as HTMLElement;
+
+            if (!observatoryItem) return;
+
+            // 1. Reset visibility to check natural flow
+            observatoryItem.style.display = "";
+            observatoryItem.style.opacity = "1";
+
+            // 2. Check if wrapping occurs
+            // We check if the last item's top position is different significantly from the first item's top
+            // Filter only currently visible items for checking
+            const visibleItems = Array.from(items).filter(
+                (item) => (item as HTMLElement).offsetParent !== null,
+            ) as HTMLElement[];
+
+            if (visibleItems.length < 2) return;
+
+            const firstTop = visibleItems[0].offsetTop;
+            const lastTop = visibleItems[visibleItems.length - 1].offsetTop;
+
+            // Tolerance of a few pixels for sub-pixel rendering differences
+            if (Math.abs(lastTop - firstTop) > 5) {
+                // Wrapping detected! Hide Observatory.
+                observatoryItem.style.display = "none";
+                observatoryItem.style.opacity = "0";
+            }
+        });
+    }
+
+    // Run on page events
+    document.addEventListener("astro:page-load", () => {
+        adjustMetadataLayout();
+
+        // Use ResizeObserver for robustness
+        const resizeObserver = new ResizeObserver(() => {
+            // Debounce slightly? No, direct is usually fine for UI adjustments
+            window.requestAnimationFrame(adjustMetadataLayout);
+        });
+
+        document.querySelectorAll(".metadata-container").forEach((el) => {
+            resizeObserver.observe(el);
+            // Also observe parent to catch container width changes
+            if (el.parentElement) resizeObserver.observe(el.parentElement);
+        });
+    });
+
+    // Fallback for initial load
+    window.addEventListener("load", adjustMetadataLayout);
+</script>

@@ -1,0 +1,28 @@
+---
+title: "Le tour du Mustang dans l'Himalaya"
+description: ""
+image: "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-1.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-2.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-3.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-4.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-5.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-6.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-7.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-8.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-9.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-10.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-11.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-12.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-13.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-14.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-15.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-16.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-17.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-18.jpg"
+  - "../../../assets/voyages/2014/le-tour-du-mustang-dans-lhimalaya/img-19.jpg"
+country: "Népal"
+season: "Été"
+year: 2014
+---

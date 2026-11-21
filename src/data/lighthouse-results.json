@@ -1,0 +1,337 @@
+{
+  "target": "https://www.miroirspolaires.fr",
+  "mode": "production",
+  "timestamp": "2026-11-02T21:36:35.364Z",
+  "durationSeconds": 238,
+  "summary": {
+    "averagePerformance": 94,
+    "averageAccessibility": 95,
+    "averageBestPractices": 99,
+    "averageSeo": 100
+  },
+  "results": [
+    {
+      "path": "/",
+      "name": "Accueil",
+      "group": "pages_principales",
+      "scores": {
+        "performance": 100,
+        "accessibility": 94,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 1729.34182,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 944.7444200000001,
+        "ttfb": 14,
+        "totalBytes": 3004335
+      }
+    },
+    {
+      "path": "/astrophotographies",
+      "name": "Astrophotographies (Listing)",
+      "group": "pages_principales",
+      "scores": {
+        "performance": 76,
+        "accessibility": 94,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 7149.589999999999,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 1509.481,
+        "ttfb": 15,
+        "totalBytes": 2993883
+      }
+    },
+    {
+      "path": "/voyages",
+      "name": "Voyages (Listing)",
+      "group": "pages_principales",
+      "scores": {
+        "performance": 100,
+        "accessibility": 94,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 1206.455,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 924.455,
+        "ttfb": 18,
+        "totalBytes": 704797
+      }
+    },
+    {
+      "path": "/blog",
+      "name": "Blog (Listing)",
+      "group": "pages_principales",
+      "scores": {
+        "performance": 94,
+        "accessibility": 94,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 3082.6639999999998,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 926.664,
+        "ttfb": 15,
+        "totalBytes": 1253241
+      }
+    },
+    {
+      "path": "/videos",
+      "name": "Vidéos (Listing)",
+      "group": "pages_principales",
+      "scores": {
+        "performance": 99,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 1984.83,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 934.83,
+        "ttfb": 12,
+        "totalBytes": 630066
+      }
+    },
+    {
+      "path": "/a-propos",
+      "name": "À propos",
+      "group": "pages_principales",
+      "scores": {
+        "performance": 94,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 3159.074,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 909.074,
+        "ttfb": 15,
+        "totalBytes": 2382972
+      }
+    },
+    {
+      "path": "/observatoires",
+      "name": "Observatoires",
+      "group": "pages_principales",
+      "scores": {
+        "performance": 100,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 1660.5529999999999,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 910.553,
+        "ttfb": 15,
+        "totalBytes": 372054
+      }
+    },
+    {
+      "path": "/statistiques",
+      "name": "Statistiques",
+      "group": "pages_principales",
+      "scores": {
+        "performance": 100,
+        "accessibility": 90,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 1208.6019999999999,
+        "cls": 0,
+        "tbt": 12,
+        "fcp": 1208.6019999999999,
+        "ttfb": 15,
+        "totalBytes": 405618
+      }
+    },
+    {
+      "path": "/astrophotographies/la-nebuleuse-d-orion-m42-1213620",
+      "name": "Astrophoto (Détail Orion)",
+      "group": "astrophotographies",
+      "scores": {
+        "performance": 86,
+        "accessibility": 94,
+        "bestPractices": 96,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 4151.626,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 940.846,
+        "ttfb": 14,
+        "totalBytes": 1988583
+      }
+    },
+    {
+      "path": "/voyages/2026/la-transylvanie",
+      "name": "Voyage (Détail Transylvanie)",
+      "group": "voyages",
+      "scores": {
+        "performance": 80,
+        "accessibility": 94,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 5535.490499999998,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 913.2890000000001,
+        "ttfb": 13,
+        "totalBytes": 7826388
+      }
+    },
+    {
+      "path": "/blog/2026/road-trip-en-transylvanie",
+      "name": "Blog (Détail Transylvanie)",
+      "group": "blog",
+      "scores": {
+        "performance": 75,
+        "accessibility": 94,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 9452.158,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 1057.542,
+        "ttfb": 15,
+        "totalBytes": 8115569
+      }
+    },
+    {
+      "path": "/videos/astrologie-astronomie",
+      "name": "Vidéo (Détail Astrologie)",
+      "group": "videos",
+      "scores": {
+        "performance": 100,
+        "accessibility": 94,
+        "bestPractices": 96,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 972.451,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 972.451,
+        "ttfb": 12,
+        "totalBytes": 1261923
+      }
+    },
+    {
+      "path": "/carte-du-ciel",
+      "name": "Carte du ciel",
+      "group": "outils",
+      "scores": {
+        "performance": 99,
+        "accessibility": 93,
+        "bestPractices": 96,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 1978.152,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 1086.778,
+        "ttfb": 19,
+        "totalBytes": 921118
+      }
+    },
+    {
+      "path": "/objets",
+      "name": "Explorateur Objets",
+      "group": "outils",
+      "scores": {
+        "performance": 100,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 1438.2759999999998,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 988.276,
+        "ttfb": 14,
+        "totalBytes": 249630
+      }
+    },
+    {
+      "path": "/catalogues",
+      "name": "Catalogues (Index)",
+      "group": "outils",
+      "scores": {
+        "performance": 100,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 917.0455,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 917.0455,
+        "ttfb": 14,
+        "totalBytes": 148554
+      }
+    },
+    {
+      "path": "/catalogues/messier",
+      "name": "Catalogue Messier",
+      "group": "outils",
+      "scores": {
+        "performance": 100,
+        "accessibility": 96,
+        "bestPractices": 96,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 922.0590000000001,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 922.0590000000001,
+        "ttfb": 15,
+        "totalBytes": 276339
+      }
+    },
+    {
+      "path": "/recommandations",
+      "name": "Recommandations",
+      "group": "outils",
+      "scores": {
+        "performance": 100,
+        "accessibility": 96,
+        "bestPractices": 100,
+        "seo": 100
+      },
+      "metrics": {
+        "lcp": 907.682,
+        "cls": 0,
+        "tbt": 0,
+        "fcp": 907.682,
+        "ttfb": 20,
+        "totalBytes": 276164
+      }
+    }
+  ]
+}

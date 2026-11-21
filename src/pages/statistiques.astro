@@ -1,0 +1,100 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import { resolveImage } from "@/utils/imageService";
+
+import {
+    photos,
+    getUniqueConstellations,
+    getUniqueYears,
+    getUniqueTelescopes,
+    getUniqueTypes,
+    getUniqueLocations,
+    getUniqueCameras,
+    getUniqueObservatories,
+} from "@/lib/photos";
+
+import StatsChartsContainer from "@/components/UI/StatsChartsContainer";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+
+// ============================================================================
+// DATA GATHERING
+// ============================================================================
+
+// 1. GLOBAL STATS
+// ----------------
+
+// Calculate totals for header
+const totalPhotos = photos.length;
+const totalHours = Math.round(photos.reduce((acc, p) => acc + (p.integrationSeconds || 0), 0) / 3600);
+const totalFrames = photos.reduce(
+    (acc, p) => acc + p.acquisitionDetails.reduce((sum, d) => sum + (d.number || 0), 0),
+    0,
+);
+
+// Equipment Stats & Filter Options
+const telescopes = getUniqueTelescopes();
+const constellations = getUniqueConstellations();
+const types = getUniqueTypes();
+const years = getUniqueYears();
+const locations = getUniqueLocations();
+const cameras = getUniqueCameras();
+const observatories = getUniqueObservatories();
+
+// Prepare photos with resolved image URLs for charts
+const photosWithImages = photos.map((p) => {
+    const resolved = resolveImage(`assets/astrophotographies/mini/${p.imagePath}`, false, p.version);
+    return {
+        ...p,
+        resolvedImageUrl: typeof resolved === "string" ? resolved : resolved.src,
+    };
+});
+
+// Filter configuration
+const filterConfig = [
+    { key: "type", label: "Type", options: types },
+    { key: "constellation", label: "Constellation", options: constellations },
+    { key: "observatories", label: "Observatoire", options: observatories },
+    { key: "locations", label: "Lieu", options: locations },
+    { key: "telescope", label: "Télescope", options: telescopes },
+    { key: "camera", label: "Caméra", options: cameras },
+    { key: "year", label: "Année", options: years },
+];
+---
+
+<BaseLayout
+    title="Statistiques"
+    description="Statistiques détaillées sur mes astrophotographies : temps d'exposition, matériel utilisé, et production par année."
+    breadcrumbLabel="Statistiques"
+>
+    <PageHeader title="Statistiques" align="center">
+        <StatsMetadata
+            slot="metadata"
+            stats={[
+                {
+                    value: totalPhotos,
+                    label: "Photos",
+                    icon: "star",
+                    id: "stat-photos",
+                },
+                {
+                    value: totalHours,
+                    suffix: "heures",
+                    label: "d'intégration",
+                    icon: "clock",
+                    id: "stat-hours",
+                },
+                {
+                    value: totalFrames,
+                    suffix: "poses",
+                    label: "unitaires",
+                    icon: "camera",
+                    id: "stat-frames",
+                },
+            ]}
+        />
+    </PageHeader>
+
+    <!-- ALL CHARTS WITH FILTER BAR -->
+    <StatsChartsContainer client:visible photos={photosWithImages} filterConfig={filterConfig} />
+</BaseLayout>

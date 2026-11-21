@@ -1,0 +1,47 @@
+---
+/**
+ * VideoCard - Dedicated 16:9 video card for YouTube listings.
+ *
+ * Displays 100% of the image thumbnail in exact 16:9 aspect ratio,
+ * with duration badge on top.
+ */
+import type { ImageMetadata } from "astro";
+import AppImage from "./AppImage.astro";
+
+interface Props {
+    title: string;
+    date?: string;
+    duration?: string;
+    image: ImageMetadata | string;
+    href: string;
+    categories?: string[];
+    loading?: "eager" | "lazy";
+}
+
+const { title, duration, image, href, loading = "lazy" } = Astro.props;
+---
+
+<a
+    href={href}
+    class="group block relative w-full aspect-video rounded-xl overflow-hidden bg-mp-ui-black border border-mp-border-light hover:border-mp-accent/50 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+    title={title}
+>
+    {/* 16:9 Image Thumbnail */}
+    <AppImage
+        src={image}
+        alt={title}
+        width={800}
+        aspectRatio="16/9"
+        class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        loading={loading}
+        disableAnimation={true}
+        sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+    />
+
+    {/* Duration Badge — Bottom Right */}
+    {duration && (
+        <div class="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded-sm bg-black/80 backdrop-blur-md border border-white/10 text-[11px] font-mono text-white font-medium tracking-wide z-10">
+            {duration}
+        </div>
+    )}
+</a>

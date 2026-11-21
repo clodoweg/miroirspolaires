@@ -1,0 +1,128 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import AppImage from "@/components/UI/AppImage.astro";
+import { resolveImage } from "@/utils/imageService";
+import { getUniqueTelescopes, getUniqueCameras, getUniqueMounts } from "@/lib/photos";
+
+// Get stats from photos data
+const telescopes = getUniqueTelescopes();
+const cameras = getUniqueCameras();
+const mounts = getUniqueMounts();
+
+const headerStats = [
+    { icon: "dish", value: telescopes.length, label: "télescopes" },
+    { icon: "camera", value: cameras.length, label: "caméras" },
+    { icon: "cog", value: mounts.length, label: "montures" },
+];
+
+const observatories = [
+    {
+        title: "ATRIA Observatory (2020 - )",
+        image: "../assets/observatoires/atria.jpg",
+        text: `Après l'Espagne, le Chili ! Avec 5 membres de Sadr, nous montons l'association ATRIA Observatory et décidons d'installer un important setup au Chili, hébergé chez <a href="https://www.deepskychile.com/fr" target="_blank" rel="noopener noreferrer">DeepSkyChile</a> à 1700m d'altitude dans le désert d'Atacama.
+    
+Le matériel est constitué d'un télescope CDK 17", d'un diamètre de 43cm et d'une distance focale de 2900mm sur une monture Direct Drive L500 de chez <a href="https://planewave.com/" target="_blank" rel="noopener noreferrer">Planewave</a>.
+
+La partie imagerie est confiée à une caméra noir et blanc QHY 600M 24*36cm, une roue à filtre et une série de filtres 2" LRGBSHO Antlia (3nm pour les filtres à bande étroite). Et malgré tout un léger autoguidage avec un OAG et une QHY178M, pour nous permettre d'atteindre une FWHM regularly autour de 1,6".
+
+Après plus d'un an de péripétie, de construction du matériel, envoi, installation, réglages et un bon paquet d'imprévus, fin 2021 notre setup voit sa première lumière !`,
+    },
+    {
+        title: "Observatoire perso V2 (2019 - )",
+        image: "../assets/observatoires/perso_v2.jpg",
+        text: `Étant donné que j'ai déporté l'observation du ciel profond à mes différents observatoires à distance, je me suis équipé de matériel pour l'observation visuelle planétaire chez moi. Outre le plaisir de pouvoir observer les planètes et la lune, c'est surtout pour moi la possibilité de les faire découvrir aux amis de passage.
+
+Un Schidt-Cassegrain Celestron C9 sur monture alt-azimutal Nexstar Evolution équipée de la caméra de pointage Starsense et d'un module GPS.
+
+Pour la partie visuelle, j'utilise un binoculaire William Optics, ainsi des Barlow x1,6 ou x2. Les oculaires sont des orthoscopiques de Fujiyama de 7mm et 12,5mm pour les planètes.
+
+Parallèlement, mon fils a un télescope fabriqué par un membre du club <a href="https://www.albireo78.com/" target="_blank" rel="noopener noreferrer">Albireo</a>, sur base d'impression 3D.`,
+    },
+    {
+        title: "SADR Espagne (2018 - 2021)",
+        image: "../assets/observatoires/sadr_espagne.jpg",
+        text: `Avec un autre membre de la team Sadr Provence, nous avons choisi de monter notre propre setup en Espagne, à <a href="https://www.entreencinasyestrellas.es/en/en-home/" target="_blank" rel="noopener noreferrer">E-Eye</a>, à environ 100km au nord de Seville, dans la sierra espagnole.
+
+Le setup est constitué d'un lunette Takahashi TSA 120 modifiée avec un crayford Feather Touch Starlight Instruments 3″, un correcteur TOA 35FL.
+
+La monture est une Skywatcher AZ-EQ6, avec une platine de fixation SkyMeca. La caméra pour imager est une QHY163M, avec une roue à filtre QHYCFW2 et un diviseur optique QHYOAG, le tout accompagné de 7 filtres Astrodon 36mm non montés LRGBSHO.`,
+    },
+    {
+        title: "SADR Provence (2017 - 2018)",
+        image: "../assets/observatoires/sadr_provence.jpg",
+        text: `Pendant une année, j'ai fait partie de la team Sadr Provence, où nous avons pu utiliser l'observatoire situé en Haute-Provence pour réaliser des photos, des mesures scientifiques, et où je me suis formé sur l'utilisation et la résolution de problèmes de setup en remote.
+
+Le setup est constitué d'un Newton 200mm ONTC8 sur une monture Skywatcher EQ6 avec un focuser USB Focus.
+
+L'observatoire était situé tout près de l'observatoire de Haute-Provence, là où en 1995 a été détectée la première exoplanète.`,
+    },
+    {
+        title: "Observatoire Perso V1 (2014 - 2018)",
+        image: "../assets/observatoires/perso_v1.jpg",
+        text: `J'utilise un télescope de type newton, Skywatcher 200/1000 (f/5) avec porte oculaire TS ACUN2. Ma monture est une Skywatcher AZ-EQ6 GT depuis juillet 2016.
+
+L'imagerie ciel profond est effectuée avec une caméra monochrome Atik One 6.0. La couleur est rendue à l'aide de filtres interférentiels L, R, G et B Baader, et des filtres à bande étroite Ha, OIII et SII.
+
+Pour le prétraitement et le traitement j'utilise Pixinsight, et pour les finitions Photoshop.
+
+Cet observatoire était situé en vallée de Chevreuse, dans les Yvelines, zone fortement polluée. En juin 2018 j'ai revendu ce setup.`,
+    },
+];
+---
+
+<BaseLayout
+    title="Observatoires et matériel"
+    description="Découvrez les observatoires où je capture le ciel depuis 2014, de mon télescope dans les Yvelines au CDK17’’ de l’Atria Observatory dans le désert d'Atacama."
+    breadcrumbLabel="Observatoires"
+>
+    <PageHeader title="Observatoires et matériel" align="center">
+        <Fragment slot="metadata">
+            <StatsMetadata stats={headerStats} />
+        </Fragment>
+    </PageHeader>
+
+    <main class="container-mp pt-4!">
+        {observatories.map((obs, index) => {
+            const match = obs.title.match(/(.*)\s+(\(.*\))/);
+            const name = match ? match[1] : obs.title;
+            const date = match ? match[2].replace(/[()]/g, "") : "";
+            const imgSrc = resolveImage(obs.image);
+
+            return (
+                <article class={`pb-12 md:pb-16 ${index > 0 ? "pt-12 md:pt-16" : ""}`}>
+                    {/* Two Column Layout: Photo 1/2, Text 1/2 */}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-start">
+                        {/* Image Column (1/2) */}
+                        <div class="rounded-xl overflow-hidden">
+                            <AppImage
+                                src={imgSrc}
+                                alt={obs.title}
+                                width={1200}
+                                class="w-full h-auto"
+                                zoomable={false}
+                                sizes="(max-width: 767px) 100vw, 50vw"
+                                loading={index === 0 ? "eager" : "lazy"}
+                                fetchpriority={index === 0 ? "high" : "auto"}
+                            />
+                        </div>
+
+                        {/* Text Column (1/2) */}
+                        <article class="prose prose-lg prose-slate prose-headings:text-mp-text-heading max-w-none prose-headings:font-serif prose-headings:font-normal prose-h2:text-2xl md:prose-h2:text-3xl prose-h2:mt-0 prose-h2:mb-2 prose-p:text-mp-text-body">
+                            <h2>{name}</h2>
+                            <p class="text-sm text-mp-text-muted uppercase tracking-widest mb-6">{date}</p>
+                            <Fragment
+                                set:html={obs.text
+                                    .split("\n")
+                                    .filter((p) => p.trim())
+                                    .map((p) => `<p>${p}</p>`)
+                                    .join("")}
+                            />
+                        </article>
+                    </div>
+                </article>
+            );
+        })}
+    </main>
+</BaseLayout>

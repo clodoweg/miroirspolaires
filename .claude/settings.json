@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/verify-on-stop.sh",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev *)",
+      "Bash(npm run build *)",
+      "Bash(npm test *)",
+      "Bash(npm run test *)",
+      "Bash(npm run test:coverage *)",
+      "Bash(npx astro check *)",
+      "Bash(npx vitest run *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git branch *)",
+      "Bash(node scripts/build/compute-image-dimensions.mjs *)",
+      "Bash(node scripts/build/sitemap-lastmod.mjs *)",
+      "Bash(node scripts/audit/r2-coverage.js *)",
+      "Bash(node scripts/audit/seo-coverage.mjs *)"
+    ],
+    "ask": [
+      "Bash(node scripts/r2/upload_local_to_r2.js *)",
+      "Bash(node scripts/r2/delete-dirs.mjs *)",
+      "Bash(node scripts/r2/purge-cache.mjs *)",
+      "Bash(node scripts/r2/download_r2_to_local.js *)",
+      "Bash(node scripts/build/regen-thumbs.mjs *)",
+      "Bash(node scripts/pipeline/update-exoplanets.mjs *)",
+      "Bash(node scripts/pipeline/update-variable-stars.mjs *)",
+      "Bash(node scripts/pipeline/update-comets.mjs *)",
+      "Bash(node scripts/pipeline/update-asteroids.mjs *)",
+      "Bash(node scripts/pipeline/crossmatch-variable-stars.mjs *)",
+      "Bash(npm run update-exoplanets *)",
+      "Bash(npm run update-variable-stars *)",
+      "Bash(npm run crossmatch-gaia *)",
+      "Bash(node scripts/db/init-db.mjs *)",
+      "Bash(node scripts/db/create-indexes.mjs *)",
+      "Bash(npx wrangler deploy *)",
+      "Bash(node scripts/r2/warm-cache.mjs *)",
+      "Bash(node scripts/pipeline/generate-mini.mjs *)",
+      "Bash(node scripts/pipeline/migrate-asset-years.mjs *)",
+      "Bash(npm run sync-asset-years *)",
+      "Bash(node scripts/seo/*)",
+      "Bash(node scripts/audit/lighthouse-runner.mjs *)",
+      "Bash(bash scripts/stellarium/build.sh *)",
+      "Bash(git push *)"
+    ],
+    "deny": [
+      "Read(./.env*)",
+      "Edit(./.env*)",
+      "Read(./cookies.txt)",
+      "Edit(./cookies.txt)",
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git reset --hard *)"
+    ]
+  }
+}

@@ -1,0 +1,222 @@
+---
+interface Props {
+    src: string;
+    alt: string;
+    widths?: number[];
+    sizes?: string;
+    quality?: number;
+    format?: "webp" | "jpeg" | "avif";
+    priority?: boolean;
+    aspectRatio?: string; // ex: "16/9"
+    class?: string;
+    zoomable?: boolean;
+    caption?: string;
+    version?: string;
+    /** `false` : ignorer les versions web (src/data/web-images.json) et garder la source telle quelle. */
+    webImages?: boolean;
+    [key: string]: any;
+}
+
+const {
+    src,
+    alt,
+    widths = IMAGE_CONFIG.WIDTHS,
+    sizes = "(max-width: 767px) 100vw, (max-width: 1024px) 50vw, (max-width: 1400px) 33vw, 480px",
+    quality,
+    // WARNING: defaults to "jpeg" until the image worker can produce lossy
+    // WebP. Current worker (Photon WASM 0.2.x/0.3.x) only does lossless WebP,
+    // which is consistently larger than the source JPEG (~5×). The worker
+    // also silently downgrades f_webp to f_jpeg server-side, but specifying
+    // jpeg in the URL avoids stale CDN entries from the broken webp era and
+    // makes intent explicit. See docs/audits/2026-05-performance-audit.md §6.1.
+    format = "jpeg",
+    priority = false,
+    aspectRatio,
+    isOverlay = false,
+    class: className = "",
+    zoomable = false,
+    caption,
+    version,
+    webImages = true,
+    ...rest
+} = Astro.props;
+
+import { getImageConfig, getWebImageSet } from "@/utils/imageService";
+const { FORCE_LOCAL_IMAGES } = getImageConfig();
+
+import { IMAGE_CONFIG } from "@/config/imageConfig.mjs";
+
+// Configuration
+const WORKER_URL = import.meta.env.IMAGE_WORKER_URL || "";
+const R2_URL = import.meta.env.PUBLIC_R2_URL || "";
+
+/**
+ * Nettoie et normalise le chemin de l'image pour le Worker
+ * Le worker attend /chemin/image.jpg
+ */
+const getWorkerPath = (path: string) => {
+    if (!path) return "";
+
+    // Retirer d'éventuels paramètres d'URL (?v=...) pour la détection du chemin
+    let cleanPath = path.split("?")[0].split("#")[0];
+
+    // Si c'est une URL complète R2, on garde juste le chemin relative
+    if (cleanPath.startsWith(R2_URL)) {
+        cleanPath = cleanPath.replace(R2_URL, "");
+    }
+
+    // Si c'est une URL complète Worker, on garde juste le chemin relative (cas edge)
+    if (cleanPath.startsWith(WORKER_URL)) {
+        // Regex pour retirer la partie /w_...,q_...,f_.../
+        cleanPath = cleanPath.replace(WORKER_URL, "").replace(/^\/[^/]+\//, "/");
+    }
+
+    // Ensure leading slash
+    if (!cleanPath.startsWith("/")) {
+        cleanPath = "/" + cleanPath;
+    }
+
+    return cleanPath;
+};
+
+const imagePath = getWorkerPath(src);
+
+// Bypass the worker entirely for pre-sized thumbnails (URLs ending in
+// `-thumb.jpg` or containing `/mini/`). The thumb has already been generated at the exact width/quality
+// we want to serve (e.g. 800px / q75 mozjpeg, or astrophotographies mini) —
+// running it through the worker would only re-encode it, waste Worker CPU (10ms limit),
+// and risk 503 errors. Listing cards take this direct R2 path.
+const isPresizedThumb = imagePath.endsWith("-thumb.jpg") || imagePath.includes("/mini/");
+
+/**
+ * Génère l'URL optimisée pour une largeur donnée
+ */
+const getOptimizedUrl = (width: number, q: number) => {
+    let url = `${WORKER_URL}/w_${width},q_${q},f_${format}${imagePath}`;
+    if (version) {
+        url += `?v=${version}`;
+    }
+    return url;
+};
+
+// Quality: desktop vs mobile from config
+const desktopQuality = quality ?? IMAGE_CONFIG.QUALITY.DESKTOP;
+const mobileQuality = quality ?? IMAGE_CONFIG.QUALITY.MOBILE;
+
+// Logique Src / Srcset
+let defaultSrc: string;
+let desktopSrcset: string | undefined;
+let mobileSrcset: string | undefined;
+
+const isBlogOrVoyage = imagePath.startsWith("/blog/") || imagePath.startsWith("/voyages/");
+const localApiRoute = imagePath.startsWith("/blog/")
+    ? imagePath.replace(/^\/blog\/(\d{4})\/([^/]+)\/(.+)$/, "/api/admin/images/$1/$2/$3")
+    : imagePath.startsWith("/voyages/")
+      ? imagePath.replace(/^\/voyages\/(\d{4})\/([^/]+)\/(.+)$/, "/api/admin/voyages-images/$1/$2/$3")
+      : "";
+
+// POURQUOI : une image qui a des versions web 400/800/1200 px (src/data/web-images.json) est servie
+// depuis R2 avec un vrai srcset, au lieu du worker (qui renvoie l'original au-delà de 500 Ko) ou
+// d'une mini/ de 1 600 px. Le repli en cas d'erreur reste l'image d'origine.
+const webImageSet = FORCE_LOCAL_IMAGES || !webImages ? null : getWebImageSet(src, version);
+const usePlainImg = !webImageSet && (FORCE_LOCAL_IMAGES || isPresizedThumb);
+
+if (webImageSet) {
+    defaultSrc = webImageSet.pick(800);
+    desktopSrcset = webImageSet.srcset;
+    mobileSrcset = webImageSet.srcset;
+} else if (FORCE_LOCAL_IMAGES || isPresizedThumb) {
+    // Mode Local OR pre-sized thumb passthrough
+    // POURQUOI : En développement local (DEV), si l'article vient d'être créé en local, ses images
+    // ne sont pas encore déployées sur Cloudflare R2 (404). On sert l'image directement via l'API locale.
+    if (import.meta.env.DEV && isBlogOrVoyage && localApiRoute) {
+        defaultSrc = localApiRoute;
+    } else {
+        defaultSrc = isPresizedThumb ? (version ? `${R2_URL}${imagePath}?v=${version}` : `${R2_URL}${imagePath}`) : src;
+    }
+    desktopSrcset = undefined;
+    mobileSrcset = undefined;
+} else {
+    // Mode Production / Worker
+    if (import.meta.env.DEV && isBlogOrVoyage && localApiRoute) {
+        defaultSrc = localApiRoute;
+        desktopSrcset = undefined;
+        mobileSrcset = undefined;
+    } else {
+        // Use config widths unless overridden
+        const targetWidths = widths && widths.length > 0 ? widths : IMAGE_CONFIG.WIDTHS;
+
+        // Fallback src (Desktop version)
+        defaultSrc = getOptimizedUrl(1000, desktopQuality);
+
+        // Génération du srcset Desktop (default)
+        desktopSrcset = targetWidths.map((w) => `${getOptimizedUrl(w, desktopQuality)} ${w}w`).join(",\n    ");
+
+        // Génération du srcset Mobile (lower quality)
+        mobileSrcset = targetWidths.map((w) => `${getOptimizedUrl(w, mobileQuality)} ${w}w`).join(",\n    ");
+    }
+}
+
+// Gestion du chargement
+const loading = priority ? "eager" : "lazy";
+const fetchPriority = priority ? "high" : "auto";
+
+// Styles calculés pour l'aspect ratio
+const styles: Record<string, string> = {};
+if (aspectRatio) {
+    const [w, h] = aspectRatio.split("/").map(Number);
+    if (w && h) {
+        styles["aspect-ratio"] = String(w / h);
+    } else {
+        styles["aspect-ratio"] = aspectRatio; // Fallback for simple numbers or CSS vars
+    }
+}
+
+// POURQUOI : gestionnaires `onerror` inline (repli R2 immédiat, avant le chargement de image-fallback.js).
+// Passés par objet car la règle a11y `no-noninteractive-element-interactions` compare `onerror` à sa
+// liste blanche `onError` en tenant compte de la casse : ce n'est pas une interaction utilisateur.
+const thumbFallbackHandler = {
+    onerror:
+        "this.onerror=null; if(this.dataset.fallbackSrc && this.src!==this.dataset.fallbackSrc) this.src=this.dataset.fallbackSrc;",
+};
+const pictureFallbackHandler = {
+    onerror:
+        "this.onerror=null; this.closest('picture')?.querySelectorAll('source').forEach(e => e.remove()); this.src=this.dataset.fallbackSrc;",
+};
+---
+
+{usePlainImg ? (
+    <img
+        src={defaultSrc}
+        alt={alt}
+        data-fallback-src={`${R2_URL}${imagePath}`}
+        {...thumbFallbackHandler}
+        loading={loading}
+        fetchpriority={fetchPriority}
+        class:list={[!isOverlay && "bg-mp-glass-bg", className]}
+        style={styles}
+        {...rest}
+    />
+) : (
+    <picture class="block w-full h-full">
+        <source media="(max-width: 767px)" srcset={mobileSrcset} sizes={sizes} />
+        <source media="(min-width: 768px)" srcset={desktopSrcset} sizes={sizes} />
+        <img
+            src={defaultSrc}
+            alt={alt}
+            data-fallback-src={`${R2_URL}${imagePath}`}
+            data-full-src={`${R2_URL}${imagePath}`}
+            data-caption={caption}
+            {...pictureFallbackHandler}
+            loading={loading}
+            fetchpriority={fetchPriority}
+            class:list={[
+                !isOverlay && "bg-mp-glass-bg", // Skeleton styling
+                zoomable && "gallery-image cursor-pointer",
+                className,
+            ]}
+            style={styles}
+            {...rest}
+        />
+    </picture>
+)}

@@ -1,0 +1,80 @@
+---
+import type { NavItem } from "../../config/navigation";
+import { socialLinks } from "../../config/social";
+import ThemeToggle from "../UI/ThemeToggle.astro";
+
+interface Props {
+    items: NavItem[];
+}
+
+const { items } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const isActive = (href: string) => {
+    if (href === "/") return currentPath === "/";
+    return currentPath.startsWith(href);
+};
+---
+
+<div
+    id="mobile-menu-backdrop"
+    class="fixed top-[56px] left-0 right-0 bottom-0 z-modalBackdrop bg-mp-ui-black/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-base"
+    aria-hidden="true"
+></div>
+
+<!-- Off-canvas Menu Mobile -->
+<nav
+    id="mobile-menu-panel"
+    class="fixed top-[56px] left-0 bottom-0 z-modal w-full bg-mp-ui-black transform -translate-x-full transition-transform duration-slow ease-mp-ease safe-y overflow-y-auto"
+    aria-label="Menu mobile"
+>
+    <div class="flex flex-col h-full text-center p-6 pt-12">
+        <!-- Main Navigation -->
+        <ul class="space-y-1">
+            {items
+                .flatMap((item) => (item.children ? item.children : [item]))
+                .map((link) => (
+                    <li>
+                        <a
+                            href={link.href}
+                            class:list={[
+                                "flex w-full justify-center items-center rounded-lg transition-colors duration-300 px-4 py-3 touch-feedback text-lg font-medium no-underline hover:no-underline",
+                                isActive(link.href!)
+                                    ? "text-mp-accent bg-mp-accent-hover"
+                                    : "text-mp-text-body hover:text-mp-text-heading hover:bg-mp-surface",
+                            ]}
+                            aria-current={isActive(link.href!) ? "page" : undefined}
+                        >
+                            {link.label}
+                        </a>
+                    </li>
+                ))}
+        </ul>
+
+        <!-- Theme Toggle Row -->
+        <div class="mt-8 pt-6 border-t border-mp-border flex items-center justify-between px-4 max-w-xs mx-auto w-full">
+            <span class="text-xs font-sans text-mp-text-muted uppercase tracking-wider">Thème</span>
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-mp-text-body font-sans font-medium">Clair / Sombre</span>
+                <ThemeToggle id="mobile-menu-drawer-theme-toggle" />
+            </div>
+        </div>
+
+        <!-- Social Icons Row (Bottom) -->
+        <div class="mt-8 flex items-center justify-center gap-8">
+            {socialLinks.map((link) => (
+                <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={link.name}
+                    class="block w-12 h-12 text-mp-text-muted hover:text-mp-accent hover:scale-110 transition-all duration-300 ease-out no-underline hover:no-underline"
+                >
+                    <svg viewBox="0 0 64 64" class="w-full h-full">
+                        <path fill="currentColor" d={link.path} />
+                    </svg>
+                </a>
+            ))}
+        </div>
+    </div>
+</nav>

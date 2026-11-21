@@ -1,0 +1,497 @@
+---
+// src/pages/astrophotographies/[slug].astro
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import { photos, getSimilarPhotos } from "@/lib/photos";
+import MobileFloatingMenu from "@/components/MobileFloatingMenu.astro";
+import AppImage from "@/components/UI/AppImage.astro";
+import StaticSkyMap from "@/components/SkyMap/StaticSkyMap";
+import TechnicalDetails from "@/components/astrophotography/TechnicalDetails.astro";
+import ActionButtons from "@/components/astrophotography/ActionButtons.astro";
+
+import SimilarPhotos from "@/components/astrophotography/SimilarPhotos.astro";
+import ContentNavigation from "@/components/ContentNavigation.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import { generatePhotoSchema } from "@/utils/seo";
+import { resolveImage, imageExists, remoteAssetExists, getLocalImageDimensions } from "@/utils/imageService";
+import seoData from "@/data/seo.json";
+
+import fs from "node:fs";
+import type { ImageMetadata } from "astro";
+import path from "node:path";
+import { getAltText } from "@/utils/altText";
+
+export async function getStaticPaths() {
+    // Load wikipedia data here, once, at build time
+    let wikipediaData: Record<string, any> = {};
+    try {
+        const wikipediaPath = path.join(process.cwd(), "src/data/wikipedia.json");
+        if (fs.existsSync(wikipediaPath)) {
+            wikipediaData = JSON.parse(fs.readFileSync(wikipediaPath, "utf8"));
+        }
+    } catch (e) {
+        console.error("Error reading wikipedia.json in getStaticPaths:", e);
+    }
+
+    let astroDetailsData: Record<string, any> = {};
+    try {
+        const astroDetailsPath = path.join(process.cwd(), "src/data/astro_details.json");
+        if (fs.existsSync(astroDetailsPath)) {
+            astroDetailsData = JSON.parse(fs.readFileSync(astroDetailsPath, "utf8"));
+        }
+    } catch (e) {
+        console.error("Error reading astro_details.json in getStaticPaths:", e);
+    }
+
+    // Sort photos by date descending (newest first)
+    const sortedPhotos = [...photos].sort((a, b) => {
+        return new Date(b.uploaded).getTime() - new Date(a.uploaded).getTime();
+    });
+
+    // Pre-calculate annotation existence for all photos
+    const photosWithAnnotationState = await Promise.all(
+        sortedPhotos.map(async (photo) => {
+            const annotationPath = photo.annotationPath;
+            let hasAnnotation = false;
+            if (annotationPath) {
+                // Check local first
+                hasAnnotation = imageExists(annotationPath);
+                // If not local, check remote (R2)
+                if (!hasAnnotation) {
+                    const remotePath = `../../assets/astrophotographies/${annotationPath}`;
+                    hasAnnotation = await remoteAssetExists(remotePath);
+                }
+            }
+            return { photo, hasAnnotation };
+        }),
+    );
+
+    return photosWithAnnotationState.map(({ photo, hasAnnotation }, index) => ({
+        params: { slug: photo.slug },
+        props: {
+            photo,
+            hasAnnotation,
+            wikiDesc: wikipediaData[String(photo.id)] || wikipediaData[Number(photo.id)] || null,
+            objDetails: astroDetailsData[String(photo.id)] || astroDetailsData[Number(photo.id)] || null,
+            prevPhoto: index + 1 < sortedPhotos.length ? photosWithAnnotationState[index + 1].photo : null,
+            nextPhoto: index - 1 >= 0 ? photosWithAnnotationState[index - 1].photo : null,
+        },
+    }));
+}
+
+const { photo, hasAnnotation, wikiDesc, objDetails, prevPhoto, nextPhoto } = Astro.props;
+
+// Helper to get string URL from resolved image (for schema/downloads)
+const getSrcUrl = (resolved: ImageMetadata | string | undefined | null) => {
+    if (!resolved) return undefined;
+    if (typeof resolved === "string") return resolved;
+    return resolved.src;
+};
+
+// Main Image Resolution
+// POURQUOI: Utilise la vignette mini (true) qui est désormais générée en 1600px (au lieu de 800px) :
+// - Assez légère (< 500 Ko) pour être traitée par le worker CDN à la volée (passthrough évité).
+// - Assez définie (1600px) pour rester parfaitement nette sur les écrans haute densité (DPR > 1, Windows scaling).
+const resolvedMain = resolveImage(`../../assets/astrophotographies/${photo.imagePath}`, true, photo.version);
+const resolvedFull = resolveImage(`../../assets/astrophotographies/${photo.imagePath}`, false, photo.version);
+const mainImageSrc = resolvedMain;
+const mainImageUrl = getSrcUrl(resolvedMain);
+const fullImageUrl = getSrcUrl(resolvedFull);
+// POURQUOI : précharger l'URL exacte de l'image affichée. AppImage ne reçoit pas `version`, donc
+// la mini s'affiche sans `?v=` ; un preload avec `?v=` la faisait télécharger deux fois.
+const mainImagePreloadUrl = getSrcUrl(resolveImage(`../../assets/astrophotographies/${photo.imagePath}`, true));
+
+// Probe the local file for real intrinsic dimensions, so that <picture>
+// reserves the exact box and CLS stays at 0. We probe the full (not mini)
+// variant because mini might not exist for older photos. Fallback to 3/2
+// if the photo isn't in the local glob (e.g. R2-only).
+const mainDims = getLocalImageDimensions(`../../assets/astrophotographies/${photo.imagePath}`) || {
+    width: 3,
+    height: 2,
+};
+
+// Finding Chart Resolution
+const resolvedFinding = photo.findingChartPath
+    ? resolveImage(`../../assets/astrophotographies/${photo.findingChartPath}`, false, photo.version)
+    : null;
+const findingChartUrl = getSrcUrl(resolvedFinding);
+
+// Annotation Resolution - check file exists via Astro asset glob (done in getStaticPaths)
+const annotationRelativePath = photo.annotationPath ? `../../assets/astrophotographies/${photo.annotationPath}` : null;
+const resolvedAnnotation =
+    hasAnnotation && annotationRelativePath ? resolveImage(annotationRelativePath, false, photo.version) : null;
+const annotationUrl = getSrcUrl(resolvedAnnotation);
+
+// Location Map Resolution
+const locationMapPath = objDetails?.location_map?.image;
+const resolvedLocationMap =
+    locationMapPath && !locationMapPath.startsWith("http")
+        ? resolveImage(`../../assets/astrophotographies/${locationMapPath}`, false, photo.version)
+        : locationMapPath;
+const locationMapUrl = getSrcUrl(resolvedLocationMap);
+
+// Similar Photo Logic
+// Use the helper from lib/photos.ts
+const similarPhotosData = getSimilarPhotos(photo);
+
+// Pre-resolve similar photos images
+const similarPhotos = similarPhotosData.map((similar) => {
+    const resolved = resolveImage(`../../assets/astrophotographies/${similar.imagePath}`, true, similar.version);
+    return { ...similar, resolvedImageSrc: resolved };
+});
+
+const schema = generatePhotoSchema(photo, mainImageUrl);
+
+const seoKey = `astrophotographies/${photo.slug}`;
+const seoDescription = (seoData as Record<string, string>)[seoKey] || photo.description;
+
+// Prepare Stats for Metadata
+const detailStats = [];
+if (photo.observatories.length > 0) {
+    detailStats.push({
+        icon: "telescope",
+        value: photo.observatories.join(", "),
+        label: "Observatoire",
+    });
+}
+if (photo.locations) {
+    detailStats.push({
+        icon: "pin",
+        value: photo.locations,
+        label: "Lieu",
+    });
+}
+if (photo.constellation) {
+    detailStats.push({
+        icon: "star",
+        value: photo.constellation,
+        label: "Constellation",
+    });
+}
+---
+
+<BaseLayout
+    title={`${photo.title} - Astrophotographies`}
+    description={seoDescription}
+    image={resolvedFull}
+    breadcrumbLabel={photo.title}
+    hasFloatingMenu={true}
+>
+    <Fragment slot="head">
+        <script type="application/ld+json" set:html={schema} />
+        {mainImagePreloadUrl && <link rel="preload" as="image" href={mainImagePreloadUrl} fetchpriority="high" />}
+    </Fragment>
+
+    <main
+        class="bg-mp-glass-solid text-mp-text-primary pb-6 md:pb-0"
+        data-prev-url={prevPhoto ? `/astrophotographies/${prevPhoto.slug}` : ""}
+        data-next-url={nextPhoto ? `/astrophotographies/${nextPhoto.slug}` : ""}
+    >
+        <PageHeader title={photo.title} align="center">
+            {detailStats.length > 0 && <StatsMetadata slot="metadata" stats={detailStats} />}
+        </PageHeader>
+        <div class="max-w-container mx-auto px-4 pt-0 -mt-2">
+            {/* Mobile Image - Full Width relative to container */}
+            <div
+                id="mobile-image-container"
+                class={`block lg:hidden w-full relative group rounded-sm overflow-hidden ${annotationUrl ? "cursor-pointer" : ""}`}
+                data-has-annotation={annotationUrl ? "true" : "false"}
+            >
+                {mainImageSrc ? (
+                    <AppImage
+                        src={mainImageSrc}
+                        alt={photo.title}
+                        class="w-full h-auto"
+                        loading="eager"
+                        fetchpriority="high"
+                        zoomable={false}
+                        width={mainDims.width}
+                        height={mainDims.height}
+                        sizes="100vw"
+                        webImages={false}
+                    />
+                ) : (
+                    <div class="w-full aspect-photo flex items-center justify-center text-mp-text-muted bg-mp-bg-secondary">
+                        Image non trouvée
+                    </div>
+                )}
+
+                {/* Annotation Overlay Mobile */}
+                {annotationUrl && (
+                    <AppImage
+                        src={annotationUrl}
+                        alt={getAltText(annotationUrl, `Annotation pour ${photo.title}`)}
+                        class="annotation-layer absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0 transition-opacity duration-300 z-10"
+                        onerror="console.error('Failed to load mobile annotation:', this.src); this.style.display='none';"
+                        width={1920}
+                        height={1280}
+                        isOverlay={true}
+                    />
+                )}
+            </div>
+        </div>
+
+        <div class="max-w-container mx-auto px-4 pt-0 lg:pt-0">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-6">
+                {/* Row 2, Col 1: Main Content (Image, Actions, Description) */}
+                <div class="lg:col-span-8 space-y-6 lg:space-y-6 order-2 lg:order-3">
+                    {/* Main Image */}
+                    <div
+                        class={`bg-mp-bg-secondary rounded-lg overflow-hidden shadow-2xl relative group hidden lg:block ${annotationUrl ? "cursor-pointer" : ""}`}
+                        id="image-container-desktop"
+                        data-has-annotation={annotationUrl ? "true" : "false"}
+                    >
+                        {mainImageSrc ? (
+                            <AppImage
+                                src={mainImageSrc}
+                                alt={photo.title}
+                                class="w-full h-auto rounded-sm"
+                                loading="eager"
+                                fetchpriority="high"
+                                zoomable={false}
+                                width={mainDims.width}
+                                height={mainDims.height}
+                                sizes="(max-width: 1400px) 66vw, 933px"
+                                webImages={false}
+                            />
+                        ) : (
+                            <div class="bg-mp-bg-secondary w-full aspect-photo flex items-center justify-center text-mp-text-muted">
+                                Image non trouvée
+                            </div>
+                        )}
+
+                        {/* Annotation Overlay */}
+                        {/* POURQUOI priority={false} : l'annotation est masquée au chargement ; en priorité
+                            haute, elle concurrençait l'image LCP (mêmes dimensions, plusieurs Mo). */}
+                        {annotationUrl && (
+                            <AppImage
+                                src={annotationUrl}
+                                alt={getAltText(annotationUrl, `Annotation pour ${photo.title}`)}
+                                id="annotation-layer-desktop"
+                                class="annotation-layer absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0 transition-opacity duration-300 z-10"
+                                onerror="console.error('Failed to load desktop annotation:', this.src); this.style.display='none';"
+                                width={1920}
+                                height={1280}
+                                isOverlay={true}
+                                priority={false}
+                                quality={90}
+                            />
+                        )}
+                    </div>
+
+                    <div class="space-y-4">
+                        <ActionButtons photo={photo} mainImageUrl={fullImageUrl} annotationUrl={annotationUrl} />
+                    </div>
+
+                    {/* Finding Chart / Location Map */}
+                    {photo.raVal != null && photo.decVal != null ? (
+                        <a
+                            href={`/carte-du-ciel?slug=${photo.slug}`}
+                            class="block group relative cursor-pointer"
+                            title="Voir sur la carte interactive"
+                        >
+                            {/* aspect-photo / md:aspect-2/1 mirror StaticSkyMap's own
+                    wrapper so the box reserves the exact space React will
+                    fill on hydrate — kills the ~200ms layout shift that
+                    used to push everything below down on first paint
+                    (cf. docs/audits/2026-05-performance-audit.md §6.3).
+
+                    content-visibility:auto lets the browser skip rendering
+                    work for this subtree while off-screen; client:visible
+                    defers React hydration (and thus the Stellarium WASM
+                    load) until the element enters the viewport. Combined,
+                    Lighthouse no longer pays the ~14 MB WASM eval cost in
+                    its measurement window (cf. §17.4.1). */}
+                            <div
+                                class="aspect-photo md:aspect-2/1 bg-mp-bg-secondary rounded-lg overflow-hidden shadow-md transition-transform duration-300 group-hover:scale-[1.02]"
+                                style="content-visibility: auto; contain-intrinsic-size: auto 400px;"
+                            >
+                                <StaticSkyMap
+                                    client:visible
+                                    raVal={photo.raVal}
+                                    decVal={photo.decVal}
+                                    radius={photo.radius}
+                                    fieldSize={photo.fieldSize}
+                                    title={photo.title}
+                                />
+                            </div>
+                        </a>
+                    ) : (
+                        (findingChartUrl || (objDetails && objDetails.location_map)) && (
+                            <div>
+                                {objDetails && objDetails.location_map && locationMapUrl ? (
+                                    <div class="relative rounded-lg overflow-hidden shadow-md">
+                                        <AppImage
+                                            src={locationMapUrl}
+                                            alt={`Carte de localisation pour ${photo.title}`}
+                                            class="w-full h-auto block"
+                                            loading="lazy"
+                                            width={600}
+                                            height={400}
+                                        />
+                                        <div
+                                            class="absolute w-4 h-4 rounded-full border-2 border-mp-astro-red -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                            style={{
+                                                left: `${objDetails.location_map.x}%`,
+                                                top: `${objDetails.location_map.y}%`,
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    findingChartUrl && (
+                                        <div class="rounded-lg overflow-hidden shadow-md">
+                                            <AppImage
+                                                src={findingChartUrl}
+                                                alt={getAltText(
+                                                    findingChartUrl,
+                                                    `Carte de repérage pour ${photo.title}`,
+                                                )}
+                                                class="w-full h-auto"
+                                                loading="lazy"
+                                                onerror="console.error('Failed to load finding chart:', this.src); this.style.display='none';"
+                                                width={600}
+                                                height={400}
+                                            />
+                                        </div>
+                                    )
+                                )}
+                            </div>
+                        )
+                    )}
+                </div>
+
+                {/* Row 2, Col 2: Sidebar (Metadata & Tech) */}
+                <div class="lg:col-span-4 space-y-6 order-3 lg:order-4 h-fit">
+                    <TechnicalDetails photo={photo} objDetails={objDetails} wikiDesc={wikiDesc} />
+                </div>
+            </div>
+        </div>
+
+        <div style="content-visibility: auto; contain-intrinsic-size: auto 600px;">
+            <SimilarPhotos similarPhotos={similarPhotos} />
+        </div>
+
+        <div class="max-w-container mx-auto px-4" style="content-visibility: auto; contain-intrinsic-size: auto 200px;">
+            <ContentNavigation
+                prev={
+                    prevPhoto
+                        ? {
+                              url: `/astrophotographies/${prevPhoto.slug}`,
+                              title: prevPhoto.title,
+                          }
+                        : undefined
+                }
+                next={
+                    nextPhoto
+                        ? {
+                              url: `/astrophotographies/${nextPhoto.slug}`,
+                              title: nextPhoto.title,
+                          }
+                        : undefined
+                }
+                prevLabel="Photo précédente"
+                nextLabel="Photo suivante"
+                class="mt-24 md:mb-20"
+            />
+        </div>
+    </main>
+    <MobileFloatingMenu
+        prevUrl={prevPhoto ? `/astrophotographies/${prevPhoto.slug}` : undefined}
+        nextUrl={nextPhoto ? `/astrophotographies/${nextPhoto.slug}` : undefined}
+        galleryUrl="/astrophotographies"
+    />
+</BaseLayout>
+<script is:inline>
+    // Astro View Transitions compatible event listener
+    document.addEventListener("astro:page-load", () => {
+        // Keyboard arrow navigation between photos
+        const mainEl = document.querySelector("main[data-prev-url]");
+        if (mainEl) {
+            const prevUrl = mainEl.dataset.prevUrl;
+            const nextUrl = mainEl.dataset.nextUrl;
+
+            function handleArrowNav(e) {
+                // Ignore if focus is inside an input, textarea or contenteditable
+                const tag = document.activeElement?.tagName;
+                if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement?.isContentEditable) return;
+
+                if (e.key === "ArrowLeft" && prevUrl) {
+                    window.location.href = prevUrl;
+                } else if (e.key === "ArrowRight" && nextUrl) {
+                    window.location.href = nextUrl;
+                }
+            }
+
+            document.removeEventListener("keydown", handleArrowNav);
+            document.addEventListener("keydown", handleArrowNav);
+        }
+
+        function toggleAnnotations(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            const layers = document.querySelectorAll(".annotation-layer");
+            const toggleBtn = document.getElementById("toggle-annotation");
+            const toggleBtnIcon = document.getElementById("annotation-btn-icon");
+            const actionText = document.getElementById("annotation-action-text");
+
+            if (layers.length === 0) return;
+
+            // Check current state: are we showing them?
+            const isVisible = layers[0].classList.contains("opacity-100");
+            const shouldShow = !isVisible;
+
+            // Toggle layers
+            layers.forEach((layer) => {
+                if (shouldShow) {
+                    layer.classList.remove("opacity-0");
+                    layer.classList.add("opacity-100");
+                } else {
+                    layer.classList.remove("opacity-100");
+                    layer.classList.add("opacity-0");
+                }
+            });
+
+            // Update button style and text
+            if (toggleBtn) {
+                // Tailwind classes for Primary state (active)
+                const primaryClasses = ["bg-mp-accent/10", "text-mp-accent", "border-mp-accent", "shadow-xs"];
+                // Tailwind classes for Secondary state (inactive)
+                const secondaryClasses = ["bg-transparent", "text-mp-text-primary", "border-mp-border-light"];
+
+                if (shouldShow) {
+                    if (actionText) actionText.textContent = "Masquer ";
+                    if (toggleBtnIcon) toggleBtnIcon.textContent = "✖️";
+
+                    toggleBtn.classList.remove(...secondaryClasses);
+                    toggleBtn.classList.add(...primaryClasses);
+                } else {
+                    if (actionText) actionText.textContent = "Voir ";
+                    if (toggleBtnIcon) toggleBtnIcon.textContent = "📋";
+
+                    toggleBtn.classList.remove(...primaryClasses);
+                    toggleBtn.classList.add(...secondaryClasses);
+                }
+            }
+        }
+
+        const toggleBtn = document.getElementById("toggle-annotation");
+        if (toggleBtn) {
+            // Remove any existing listener first to prevent duplicates if any
+            toggleBtn.removeEventListener("click", toggleAnnotations);
+            toggleBtn.addEventListener("click", toggleAnnotations);
+        }
+
+        // Also toggle on image click
+        const containers = ["mobile-image-container", "image-container-desktop"];
+        containers.forEach((id) => {
+            const el = document.getElementById(id);
+            if (el && el.dataset.hasAnnotation === "true") {
+                el.removeEventListener("click", toggleAnnotations);
+                el.addEventListener("click", toggleAnnotations);
+            }
+        });
+    });
+</script>

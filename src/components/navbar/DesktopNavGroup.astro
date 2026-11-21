@@ -1,0 +1,82 @@
+---
+import type { NavItem } from "../../config/navigation";
+import ThemeToggle from "../UI/ThemeToggle.astro";
+
+interface Props {
+    items: NavItem[];
+}
+
+const { items } = Astro.props;
+const currentPath = Astro.url.pathname;
+
+const isActive = (href: string) => {
+    if (href === "/") return currentPath === "/";
+    return currentPath.startsWith(href);
+};
+---
+
+<div class="hidden nav:flex items-center gap-6">
+    {items.map((item, index) => {
+        // POURQUOI: Pour éviter que les menus déroulants ne débordent de l'écran sur la droite (notamment sur les écrans intermédiaires ou lorsque le menu Admin est affiché tout à droite),
+        // nous alignons les deux derniers menus déroulants sur le bord droit de leur bouton parent (right-0) au lieu du bord gauche (left-0).
+        //
+        // OPTIONS & EXEMPLES:
+        // - Pour aligner à droite uniquement le tout dernier élément: `index === items.length - 1`
+        // - Pour forcer l'alignement à gauche sur tous les éléments, supprimez cette condition et utilisez simplement la classe statique `left-0`.
+        const alignRight = index >= items.length - 2;
+
+        return item.children ? (
+            <div class="relative group">
+                <button class="text-mp-text-body hover:text-mp-accent transition-colors text-xs font-medium py-1 uppercase tracking-[0.15em] flex items-center gap-1">
+                    {item.label}
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="w-3 h-3 transition-transform group-hover:rotate-180"
+                    >
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </button>
+                <div
+                    class:list={[
+                        "absolute top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 min-w-[200px]",
+                        alignRight ? "right-0" : "left-0",
+                    ]}
+                >
+                    <div class="bg-mp-ui-black/95 backdrop-blur-md border border-mp-border rounded-lg shadow-xl shadow-slate-900/10 overflow-hidden py-2">
+                        {item.children.map((child) => (
+                            <a
+                                href={child.href}
+                                class="block rounded-lg transition-colors duration-300 text-mp-text-body hover:text-mp-accent hover:bg-mp-surface px-4 py-2 text-xs whitespace-nowrap uppercase tracking-widest no-underline hover:no-underline"
+                            >
+                                {child.label}
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        ) : (
+            <a
+                href={item.href!}
+                class="relative text-mp-text-body hover:text-mp-accent transition-colors text-xs font-medium py-1 uppercase tracking-[0.15em] group no-underline hover:no-underline"
+            >
+                {item.label}
+                <span
+                    class:list={[
+                        "absolute bottom-0 left-0 h-px bg-mp-accent transition-all duration-300 ease-out",
+                        isActive(item.href!) ? "w-full" : "w-0 group-hover:w-full",
+                    ]}
+                />
+            </a>
+        );
+    })}
+    <div class="w-px h-4 bg-mp-border my-auto mx-1" aria-hidden="true"></div>
+    <ThemeToggle id="desktop-theme-toggle" />
+</div>

@@ -1,0 +1,22 @@
+# Ignore large asset directories that are synced from R2
+# These folders should NOT be in git (too large, synced externally)
+*.jpg
+*.svg
+*.json
+*.png
+*.webp
+*.gif
+.DS_Store
+
+# BUT include these directories (small, managed locally, served by Astro)
+!a-propos/
+!a-propos/**
+!index/
+!index/**
+!observatoires/
+!observatoires/**
+!videos/
+!videos/**
+
+# Re-ignore macOS metadata inside the re-included folders above
+**/.DS_Store

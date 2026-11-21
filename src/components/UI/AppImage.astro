@@ -1,0 +1,104 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import ResponsiveImage from "@/components/UI/ResponsiveImage.astro";
+
+interface Props {
+    src: ImageMetadata | string | undefined | null;
+    alt: string;
+    class?: string;
+    width?: number;
+    height?: number;
+    /** Explicit aspect ratio (e.g. "3/2"). Wins over width+height when provided.
+     *  Required for string srcs (R2 URLs) when neither height nor a parent
+     *  aspect class reserves space — otherwise CLS spikes. */
+    aspectRatio?: string;
+    zoomable?: boolean;
+    version?: string;
+    [key: string]: any; // Allow other props
+}
+
+const {
+    src,
+    alt,
+    class: className,
+    width,
+    height,
+    aspectRatio: aspectRatioProp,
+    zoomable = true,
+    version,
+    decoding = "async",
+    isOverlay = false,
+    disableAnimation = false,
+    ...rest
+} = Astro.props;
+
+import { getAltText } from "@/utils/altText";
+
+// Resolve detailed alt text from central DB, fallback to prop
+const finalAlt = getAltText(src, alt);
+
+// Helper to check if it's a valid source
+const isValidSrc = (s: any): s is ImageMetadata | string => {
+    return !!s;
+};
+
+// Aspect ratio resolution: explicit prop > width+height computation.
+// Without one or the other, string srcs (R2) cause CLS on first paint.
+const aspectRatio = aspectRatioProp || (width && height ? `${width}/${height}` : undefined);
+const isPriority = rest.loading === "eager" || rest.fetchpriority === "high";
+
+// Calculate resolved height when width is passed without explicit height
+// to prevent Astro's <Image> from pairing custom width with unscaled src.height (causing portrait crop)
+let resolvedHeight = height;
+if (!resolvedHeight && width) {
+    if (aspectRatio) {
+        const [w, h] = aspectRatio.split("/").map(Number);
+        if (w && h) {
+            resolvedHeight = Math.round(width * (h / w));
+        }
+    } else if (typeof src !== "string" && src?.width && src?.height) {
+        resolvedHeight = Math.round(width * (src.height / src.width));
+    }
+}
+---
+
+{isValidSrc(src) ? (
+    typeof src === "string" ? (
+        <ResponsiveImage
+            src={src}
+            version={version}
+            alt={finalAlt}
+            class:list={[
+                !isOverlay && "bg-mp-bg-secondary",
+                "transition-all duration-700 ease-out transform",
+                !isOverlay && !disableAnimation && "js-reveal", // reveal-hidden removed for audit
+                zoomable && "hover:scale-card-hover hover:brightness-110 active:scale-card-hover active:brightness-110",
+                className,
+            ]}
+            aspectRatio={aspectRatio}
+            priority={isPriority}
+            decoding={decoding}
+            isOverlay={isOverlay}
+            zoomable={zoomable}
+            {...rest}
+        />
+    ) : (
+        <Image
+            src={src}
+            alt={finalAlt}
+            class:list={[
+                !isOverlay && "bg-mp-bg-secondary",
+                "transition-all duration-700 ease-out transform",
+                !isOverlay && !disableAnimation && "js-reveal", // reveal-hidden removed for audit
+                zoomable && "hover:scale-card-hover hover:brightness-110 active:scale-card-hover active:brightness-110",
+                className,
+            ]}
+            width={width || (src.width as number)}
+            height={resolvedHeight || (src.height as number)}
+            decoding={decoding}
+            quality="mid"
+            {...rest}
+        />
+    )
+) : null}

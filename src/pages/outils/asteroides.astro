@@ -1,0 +1,49 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import AsteroidsViewer from "@/components/Objects/AsteroidsViewer";
+import { db } from "@/lib/db";
+
+// POURQUOI: Calcule dynamiquement les statistiques des astéroïdes à partir de la base de données
+// pour l'affichage de l'en-tête de page au moment du build.
+// POURQUOI : une seule passe sur la table au lieu de trois requêtes séquentielles.
+const statsRes = await db.execute(
+    "SELECT COUNT(*) AS total, COALESCE(SUM(h <= 16.0), 0) AS bright, MIN(h) AS min_h FROM asteroids",
+);
+
+const totalAsteroids = Number(statsRes.rows[0].total);
+const brightCount = Number(statsRes.rows[0].bright);
+const minAbsoluteH = Number(statsRes.rows[0].min_h || 22);
+
+const headerStats = [
+    { icon: "orbit", value: totalAsteroids.toLocaleString("fr-FR"), label: "astéroïdes" },
+    { icon: "check", value: brightCount.toLocaleString("fr-FR"), label: "lumineux" },
+    { icon: "sparkles", value: minAbsoluteH.toFixed(1), suffix: " H", label: "éclat absolu max" },
+];
+
+const description =
+    "Simulez et planifiez l'observation d'astéroïdes potentiellement dangereux (PHAs) visibles ce soir depuis votre observatoire d'après leurs éléments orbitaux officiels du Minor Planet Center.";
+---
+
+<BaseLayout title="Planificateur d'Astéroïdes" description={description} breadcrumbLabel="Astéroïdes">
+    <main class="container-mp pb-16">
+        <PageHeader title="Planificateur d'Astéroïdes">
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <AsteroidsViewer client:idle />
+
+        <p class="mt-12 text-xs text-mp-text-muted border-t border-mp-glass-border pt-6 leading-relaxed">
+            Méthode de calcul : Les éléments orbitaux sont propagés par résolution de l'équation de Kepler pour les
+            orbites elliptiques à partir de la date de l'époque du Minor Planet Center. Le calcul du moyen mouvement
+            ($n$) est utilisé pour mettre à jour l'anomalie moyenne ($M$) à la date d'observation, puis l'anomalie
+            excentrique ($E$) est résolue par itération numérique. Les coordonnées écliptiques héliocentriques obtenues
+            sont combinées aux coordonnées de la Terre pour obtenir la position géocentrique. La magnitude apparente
+            ($V$) est calculée d'après le système de magnitude standard $H, G$ adopté par l'IAU en utilisant l'angle de
+            phase Soleil-Astéroïde-Terre ($\alpha$) et les fonctions de phase standard $\Phi_1$ et $\Phi_2$.
+        </p>
+    </main>
+</BaseLayout>

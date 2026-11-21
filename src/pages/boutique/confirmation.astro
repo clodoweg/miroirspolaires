@@ -1,0 +1,114 @@
+---
+/**
+ * @file src/pages/boutique/confirmation.astro
+ * @description Page de remerciement et de confirmation après paiement sur Stripe Checkout.
+ * Rassure le lecteur sur la prise en compte de sa commande et détaille les étapes d'expédition.
+ */
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { CheckCircle2, Package, Mail, Sparkles, Compass, Home } from "lucide-react";
+import { SHOP_CONFIG, isBoutiqueEnabled } from "@/config/shop";
+
+export const prerender = false;
+
+// POURQUOI : Si la boutique est désactivée via ENABLE_BOUTIQUE,
+// la page de confirmation n'est pas accessible.
+if (!isBoutiqueEnabled()) {
+    return Astro.redirect("/404");
+}
+
+const book = SHOP_CONFIG.book;
+---
+
+<BaseLayout
+    title="Merci pour votre commande ! · Miroirs Polaires"
+    description="Confirmation de votre commande du livre d'art Miroirs Polaires."
+    hideBreadcrumb={true}
+>
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-16 md:py-24 text-center space-y-8">
+        <!-- Icône de célébration -->
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-mp-accent/15 border-2 border-mp-accent shadow-glow text-mp-accent animate-scale-up">
+            <CheckCircle2 className="w-10 h-10" />
+        </div>
+
+        <!-- Titres -->
+        <div class="space-y-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-white/5 border border-white/10 text-mp-accent">
+                <Sparkles className="w-3.5 h-3.5" /> Commande validée avec succès
+            </span>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-serif text-mp-text-heading">
+                Merci pour votre commande !
+            </h1>
+            <p class="text-base sm:text-lg text-mp-text-body max-w-xl mx-auto">
+                Votre exemplaire de <strong class="text-mp-accent font-serif font-normal">{book.title}</strong> est
+                désormais réservé et en cours de préparation.
+            </p>
+        </div>
+
+        <!-- Carte des prochaines étapes -->
+        <div class="text-left rounded-2xl border border-mp-accent/30 bg-mp-bg-secondary p-6 sm:p-8 space-y-6 shadow-2xl">
+            <h2 class="text-lg font-serif text-mp-text-heading flex items-center gap-2">
+                <Package className="w-5 h-5 text-mp-accent" />
+                <span>Ce qu'il va se passer maintenant</span>
+            </h2>
+
+            <div class="space-y-4 text-xs sm:text-sm text-mp-text-body">
+                <div class="flex items-start gap-3.5 p-3 rounded-xl bg-white/5 border border-white/5">
+                    <Mail className="w-5 h-5 text-mp-accent shrink-0 mt-0.5" />
+                    <div>
+                        <p class="font-semibold text-mp-text-heading">Reçu et confirmation par email</p>
+                        <p class="text-mp-text-muted mt-0.5">
+                            Un email de confirmation contenant votre reçu de paiement ainsi que le récapitulatif complet
+                            de votre commande vous a été envoyé par Stripe.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3.5 p-3 rounded-xl bg-white/5 border border-white/5">
+                    <Package className="w-5 h-5 text-mp-accent shrink-0 mt-0.5" />
+                    <div>
+                        <p class="font-semibold text-mp-text-heading">Préparation minutieuse</p>
+                        <p class="text-mp-text-muted mt-0.5">
+                            Chaque livre est inspecté et soigneusement emballé dans un étui rigide anti-choc sous 48h
+                            ouvrées.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3.5 p-3 rounded-xl bg-white/5 border border-white/5">
+                    <Sparkles className="w-5 h-5 text-mp-accent shrink-0 mt-0.5" />
+                    <div>
+                        <p class="font-semibold text-mp-text-heading">Prise en charge et suivi postal</p>
+                        <p class="text-mp-text-muted mt-0.5">
+                            Dès le dépôt de votre colis chez Mondial Relay, vous recevrez un email vous permettant de
+                            suivre son acheminement jusqu'au point relais. Pour une remise en main propre, le lieu et la
+                            date sont à convenir avec l'auteur.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liens de navigation et continuation de la visite -->
+        <div class="pt-6 space-y-4">
+            <p class="text-xs uppercase tracking-wider text-mp-text-muted">
+                En attendant votre livre, continuez le voyage sur le site :
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-4">
+                <a
+                    href="/astrophotographies"
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-mp-accent text-white text-xs uppercase tracking-wider font-semibold shadow-glow hover:bg-mp-accent/90 transition-all"
+                >
+                    <Compass className="w-4 h-4" />
+                    Explorer les astrophotographies
+                </a>
+                <a
+                    href="/"
+                    class="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/20 text-xs uppercase tracking-wider text-mp-text-heading hover:border-mp-accent hover:text-mp-accent transition-all"
+                >
+                    <Home className="w-4 h-4" />
+                    Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</BaseLayout>

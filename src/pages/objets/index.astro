@@ -1,0 +1,37 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import ObjectExplorer from "@/components/Objects/ObjectExplorer";
+import seoData from "@/data/seo.json";
+import { resolveObject } from "@/lib/objects/resolve";
+
+// SSR so we can prefetch the SIMBAD/Wikipedia/VizieR chain server-side
+// when the user lands with ?q=… (e.g. a shared link). The result is
+// passed as a prop to <ObjectExplorer> so first paint already has data.
+export const prerender = false;
+
+const initialQuery = Astro.url.searchParams.get("q") ?? "";
+const initialData = initialQuery ? await resolveObject(initialQuery).catch(() => null) : null;
+
+const headerStats = [
+    { icon: "globe", value: "SIMBAD", label: "Source" },
+    { icon: "star", value: "DSS · 2MASS · WISE", label: "Surveys" },
+];
+
+const description =
+    (seoData as Record<string, string>)["objets/index"] ||
+    "Exploration des objets du ciel profonds au travers des principaux catalogues";
+---
+
+<BaseLayout title="Objets du ciel" description={description} breadcrumbLabel="Objets du ciel">
+    <main class="container-mp pb-16">
+        <PageHeader title="Explorateur d'objets du ciel">
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <ObjectExplorer client:idle initialQuery={initialQuery} initialData={initialData} />
+    </main>
+</BaseLayout>

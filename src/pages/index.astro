@@ -1,0 +1,204 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import AppImage from "@/components/UI/AppImage.astro";
+import Hero from "@/components/Hero.astro";
+import BlogCard from "@/components/BlogCard.astro";
+import SectionHeader from "@/components/sections/SectionHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import BentoGridItem from "@/components/UI/BentoGridItem.astro";
+import PrimaryButton from "@/components/UI/PrimaryButton.astro";
+import { Play } from "lucide-react";
+import { getHomepageData } from "@/utils/homepage";
+import { generateSiteSchema } from "@/utils/seo";
+import { getImage } from "astro:assets";
+import testHero from "@/assets/index/hero.jpg";
+
+const siteSchema = generateSiteSchema();
+
+const FEATURED_PHOTO_SLUGS: string[] = [];
+const FEATURED_VOYAGE_SLUGS: string[] = [];
+// POURQUOI : Laisser vide ([]) sélectionne automatiquement et dynamiquement
+// les 3 derniers articles de blog publiés par ordre chronologique décroissant.
+const FEATURED_BLOG_SLUGS: string[] = [];
+
+const heroPreloadMobile = await getImage({ src: testHero, width: 640, format: "webp", quality: 70 });
+const heroPreloadDesktop = await getImage({ src: testHero, width: 1280, format: "webp", quality: 70 });
+
+const {
+    astroHeaderStats,
+    voyageHeaderStats,
+    observatoryHeaderStats,
+    videoHeaderStats,
+    blogHeaderStats,
+    astroData,
+    voyageData,
+    blogData,
+    videoData,
+    heroImage,
+    obsAtriaImage,
+    obsV2Image,
+} = await getHomepageData({
+    featuredPhotoSlugs: FEATURED_PHOTO_SLUGS,
+    featuredVoyageSlugs: FEATURED_VOYAGE_SLUGS,
+    featuredBlogSlugs: FEATURED_BLOG_SLUGS,
+});
+---
+
+<BaseLayout
+    title="Miroirs Polaires - Julien Bourdette"
+    description="Des aurores boréales sous les cieux polaires aux galaxies lointaines, en passant par l'Himalaya, ce site est une porte ouverte les univers de Julien Bourdette."
+    image={heroImage}
+    hideBreadcrumb={true}
+>
+    <Fragment slot="head">
+        <script type="application/ld+json" set:html={siteSchema} />
+        <link rel="preload" as="image" href={heroPreloadMobile.src} media="(max-width: 767px)" fetchpriority="high" />
+        <link rel="preload" as="image" href={heroPreloadDesktop.src} media="(min-width: 768px)" fetchpriority="high" />
+    </Fragment>
+    <Hero title="Astronomie amateur et photographie polaire" ctaText="Explorer" ctaHref="#portfolios" />
+
+    <!-- Blog Section -->
+    <section
+        id="portfolios"
+        class="scroll-mt-[56px] md:scroll-mt-[56px] flex flex-col justify-start pt-0 pb-8 min-h-1/2-dvh md:min-h-dvh md:justify-center md:py-12 bg-mp-bg text-mp-text-heading"
+    >
+        <div class="container-mp py-0">
+            <SectionHeader title="Blog et publications" inverted={true}>
+                <StatsMetadata slot="metadata" stats={blogHeaderStats} />
+            </SectionHeader>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-y-8 md:gap-8">
+                {blogData.map((item, index) => (
+                    <BlogCard
+                        title={item.title}
+                        date={item.date}
+                        categories={item.categories}
+                        description={item.description}
+                        image={item.img}
+                        href={item.href}
+                        variant="vertical"
+                        mobileVariant="overlay"
+                        mobileLayout={index === 0 ? "vertical" : "horizontal"}
+                        sizes={
+                            index === 0
+                                ? "(max-width: 767px) calc(100vw - 2rem), (min-width: 1400px) 466px, 33vw"
+                                : "(max-width: 767px) 33vw, (min-width: 1400px) 466px, 33vw"
+                        }
+                    />
+                ))}
+            </div>
+            <div class="text-center mt-10">
+                <PrimaryButton href="/blog" label="Parcourir le blog" />
+            </div>
+        </div>
+    </section>
+
+    <!-- Astrophotographies Section -->
+    <section class="pt-0 pb-8 md:py-12 bg-mp-deep-space text-mp-text-heading">
+        <div class="container-mp py-0">
+            <SectionHeader title="Photographies du ciel profond">
+                <StatsMetadata slot="metadata" stats={astroHeaderStats} />
+            </SectionHeader>
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 md:gap-8">
+                {astroData.map((item, index) => (
+                    <BentoGridItem
+                        index={index}
+                        image={item.img}
+                        href={item.href}
+                        variant="dark"
+                        mobileVariant="overlay"
+                        class={index >= 3 ? "md:hidden" : ""}
+                    />
+                ))}
+            </div>
+            <div class="text-center mt-10">
+                <PrimaryButton href="/astrophotographies" label="Voir les astrophotographies" />
+            </div>
+        </div>
+    </section>
+
+    <!-- Voyages Section -->
+    <section class="pt-0 pb-8 md:py-12 bg-mp-bg text-mp-text-heading">
+        <div class="container-mp py-0">
+            <SectionHeader title="Photographies de voyage" inverted={true}>
+                <StatsMetadata slot="metadata" stats={voyageHeaderStats} />
+            </SectionHeader>
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 md:gap-8">
+                {voyageData.map((item, index) => (
+                    <BentoGridItem
+                        index={index}
+                        image={item.img}
+                        href={item.href}
+                        variant="light"
+                        mobileVariant="overlay"
+                        class={index >= 3 ? "md:hidden" : ""}
+                    />
+                ))}
+            </div>
+            <div class="text-center mt-10">
+                <PrimaryButton href="/voyages" label="Voir les photographies" />
+            </div>
+        </div>
+    </section>
+
+    <!-- Observatoires Section -->
+    <section class="pt-0 pb-8 md:py-12 bg-mp-deep-space text-mp-text-heading">
+        <div class="container-mp py-0">
+            <SectionHeader title="Observatoires et matériel">
+                <StatsMetadata slot="metadata" stats={observatoryHeaderStats} />
+            </SectionHeader>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <a href="/observatoires" class="aspect-video overflow-hidden rounded-lg group">
+                    <AppImage
+                        src={obsAtriaImage}
+                        alt="ATRIA Observatory"
+                        width={1200}
+                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 767px) 100vw, (min-width: 1400px) 700px, 50vw"
+                    />
+                </a>
+                <a href="/observatoires" class="aspect-video overflow-hidden rounded-lg group">
+                    <AppImage
+                        src={obsV2Image}
+                        alt="Observatoire personnel V2"
+                        width={1200}
+                        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 767px) 100vw, (min-width: 1400px) 700px, 50vw"
+                    />
+                </a>
+            </div>
+            <div class="text-center mt-10">
+                <PrimaryButton href="/observatoires" label="Découvrir mon matériel" />
+            </div>
+        </div>
+    </section>
+
+    <!-- Videos Section -->
+    <section class="pt-0 pb-8 md:py-12 bg-mp-bg text-mp-text-heading">
+        <div class="container-mp py-0">
+            <SectionHeader title="Vidéos">
+                <StatsMetadata slot="metadata" stats={videoHeaderStats} />
+            </SectionHeader>
+            <div class="grid grid-cols-2 md:grid-cols-2 gap-4 md:gap-6">
+                {videoData.map((video) => (
+                    <a href={video.href} class="aspect-video overflow-hidden rounded-lg group relative">
+                        <AppImage
+                            src={video.img}
+                            alt={video.title || "Vidéo"}
+                            width={1200}
+                            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            sizes="(max-width: 767px) 50vw, (min-width: 1400px) 700px, 50vw"
+                        />
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="w-16 h-16 bg-mp-text-heading/90 rounded-full flex items-center justify-center">
+                                <Play className="w-6 h-6 text-mp-ui-black ml-1" fill="currentColor" />
+                            </div>
+                        </div>
+                    </a>
+                ))}
+            </div>
+            <div class="text-center mt-10">
+                <PrimaryButton href="/videos" label="Visionner les épisodes" />
+            </div>
+        </div>
+    </section>
+</BaseLayout>

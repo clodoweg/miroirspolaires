@@ -1,0 +1,150 @@
+---
+interface Props {
+    prevUrl?: string;
+    nextUrl?: string;
+    galleryUrl: string;
+}
+
+const { prevUrl, nextUrl, galleryUrl } = Astro.props;
+import { ArrowLeft, ArrowRight, Share, LayoutGrid } from "lucide-react";
+---
+
+<div
+    id="mobile-floating-menu"
+    class="fixed bottom-0 left-0 z-floating w-full bg-mp-ui-black/90 backdrop-blur-md md:hidden pb-safe-area pt-2 transition-all duration-300"
+>
+    <div class="grid grid-cols-3 h-[theme('component.mobileMenu.height')]">
+        <!-- Previous Button -->
+        {prevUrl ? (
+            <a
+                href={prevUrl}
+                class="floating-menu-item flex flex-col items-center justify-center h-full text-mp-text-primary transition-colors gap-1 no-underline hover:no-underline"
+            >
+                <ArrowLeft className="w-6 h-6" />
+                <span class="text-[theme('component.mobileMenu.fontSize')] font-sans">Précédent</span>
+            </a>
+        ) : (
+            <a
+                href={galleryUrl}
+                class="floating-menu-item flex flex-col items-center justify-center h-full text-mp-text-primary transition-colors gap-1 no-underline hover:no-underline"
+            >
+                <LayoutGrid className="w-6 h-6" />
+                <span class="text-[theme('component.mobileMenu.fontSize')] font-sans">Index</span>
+            </a>
+        )}
+
+        <!-- Share Button -->
+        <button
+            id="mobile-share-btn"
+            class="floating-menu-item flex flex-col items-center justify-center h-full text-mp-text-primary transition-colors gap-1 no-underline hover:no-underline"
+        >
+            <Share className="w-6 h-6" />
+            <span class="text-[theme('component.mobileMenu.fontSize')] font-sans">Partager</span>
+        </button>
+
+        <!-- Next Button -->
+        {nextUrl ? (
+            <a
+                href={nextUrl}
+                class="floating-menu-item flex flex-col items-center justify-center h-full text-mp-text-primary transition-colors gap-1 no-underline hover:no-underline"
+            >
+                <ArrowRight className="w-6 h-6" />
+                <span class="text-[theme('component.mobileMenu.fontSize')] font-sans">Suivant</span>
+            </a>
+        ) : (
+            <a
+                href={galleryUrl}
+                class="floating-menu-item flex flex-col items-center justify-center h-full text-mp-text-primary transition-colors gap-1 no-underline hover:no-underline"
+            >
+                <LayoutGrid className="w-6 h-6" />
+                <span class="text-[theme('component.mobileMenu.fontSize')] font-sans">Index</span>
+            </a>
+        )}
+    </div>
+</div>
+
+<script>
+    function initMobileMenuScroll() {
+        const menu = document.getElementById("mobile-floating-menu");
+        if (!menu) return;
+
+        let scrollTimeout: any;
+
+        const handleScroll = () => {
+            // If at top, use default 90%
+            if (window.scrollY <= 20) {
+                menu.classList.remove("bg-mp-ui-black", "bg-mp-ui-black/50");
+                menu.classList.add("bg-mp-ui-black/90", "backdrop-blur-md");
+                return;
+            }
+
+            // If scrolling, transparent (50%)
+            menu.classList.remove("bg-mp-ui-black", "bg-mp-ui-black/90");
+            menu.classList.add("bg-mp-ui-black/50", "backdrop-blur-md");
+
+            // Clear previous timeout
+            clearTimeout(scrollTimeout);
+
+            // Revert when stop scrolling (90%)
+            scrollTimeout = setTimeout(() => {
+                menu.classList.remove("bg-mp-ui-black", "bg-mp-ui-black/50");
+                menu.classList.add("bg-mp-ui-black/90", "backdrop-blur-md");
+            }, 600);
+        };
+
+        window.removeEventListener("scroll", handleScroll);
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        // Initial check
+        handleScroll();
+    }
+
+    // Share Logic
+    const shareBtn = document.getElementById("mobile-share-btn");
+    shareBtn?.addEventListener("click", async () => {
+        const shareData = {
+            title: document.title,
+            text: "Regarde ça sur Miroirs Polaires !",
+            url: window.location.href,
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch {
+                // POURQUOI : l'utilisateur a annulé le partage, rien à signaler.
+            }
+        } else {
+            // Fallback: Copy to clipboard
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                const originalText = shareBtn.querySelector("span")?.innerText;
+                const span = shareBtn.querySelector("span");
+                if (span) span.innerText = "Copié !";
+                setTimeout(() => {
+                    if (span && originalText) span.innerText = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error("Failed to copy", err);
+            }
+        }
+    });
+
+    // "Click to Champagne" Logic
+    const menuItems = document.querySelectorAll(".floating-menu-item");
+    menuItems.forEach((item) => {
+        item.addEventListener("click", () => {
+            // Reset others (optional, but good practice if single select feeling)
+            menuItems.forEach((other) => {
+                other.classList.remove("text-mp-accent");
+                other.classList.add("text-mp-text-primary");
+            });
+
+            // Set current
+            item.classList.remove("text-mp-text-primary");
+            item.classList.add("text-mp-accent");
+        });
+    });
+
+    initMobileMenuScroll();
+    document.addEventListener("astro:after-swap", initMobileMenuScroll);
+</script>

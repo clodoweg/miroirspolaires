@@ -1,0 +1,457 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import seoData from "@/data/seo.json";
+
+import { db } from "@/lib/db";
+
+const description =
+    (seoData as Record<string, string>)["outils/index"] ||
+    "Accédez aux différents outils d'astronomie pour planifier et optimiser vos observations : carte du ciel, transits d'exoplanètes, suivi de comètes, variabilité stellaire et calculs d'observabilité locale.";
+
+// Calcul dynamique du nombre total d'objets en base de données
+let totalObjects = 4843000;
+try {
+    const [exoplanetsCountRes, cometsCountRes, asteroidsCountRes, starsMetaRes] = await Promise.all([
+        db.execute("SELECT COUNT(*) as count FROM exoplanets"),
+        db.execute("SELECT COUNT(*) as count FROM comets"),
+        db.execute("SELECT COUNT(*) as count FROM asteroids"),
+        db.execute("SELECT value FROM database_metadata WHERE key = 'variable_stars_count'"),
+    ]);
+
+    let starsCount = 4833587;
+    if (starsMetaRes.rows[0]?.value) {
+        starsCount = Number(starsMetaRes.rows[0].value);
+    }
+
+    totalObjects =
+        Number(exoplanetsCountRes.rows[0].count) +
+        Number(cometsCountRes.rows[0].count) +
+        Number(asteroidsCountRes.rows[0].count) +
+        starsCount;
+} catch (e) {
+    console.warn("Erreur lors de la récupération du nombre total d'objets :", e);
+}
+
+const headerStats = [
+    { icon: "star", value: "8", label: "outils" },
+    { icon: "compass", value: totalObjects.toLocaleString("fr-FR"), label: "objets" },
+    { icon: "globe", value: "7", label: "sources" },
+];
+
+const tools = [
+    {
+        title: "Carte du Ciel",
+        description:
+            "Carte interactive du ciel nocturne ajustée à vos coordonnées locales et votre date d'observation.",
+        href: "/carte-du-ciel",
+        badges: ["Interactif", "Ciel local"],
+        gradient: "from-blue-600/20 to-indigo-600/20",
+        borderHover: "hover:border-blue-500/40 hover:shadow-blue-950/20",
+        iconColor: "text-blue-400",
+        iconName: "sky-map",
+    },
+    {
+        title: "Explorateur d'Objets",
+        description:
+            "Explorez la base de données d'objets célestes (Messier, NGC, IC) pour planifier vos séances d'astrophotographie.",
+        href: "/objets",
+        badges: ["Deep Sky", "SIMBAD"],
+        gradient: "from-purple-600/20 to-fuchsia-600/20",
+        borderHover: "hover:border-purple-500/40 hover:shadow-purple-950/20",
+        iconColor: "text-purple-400",
+        iconName: "objects",
+    },
+    {
+        title: "Catalogues",
+        description:
+            "Accédez à des catalogues d'objets astronomiques complets et triés selon leur observabilité locale.",
+        href: "/catalogues",
+        badges: ["Base de données", "Faisabilité"],
+        gradient: "from-emerald-600/20 to-teal-600/20",
+        borderHover: "hover:border-emerald-500/40 hover:shadow-emerald-950/20",
+        iconColor: "text-emerald-400",
+        iconName: "catalogues",
+    },
+    {
+        title: "Recommandations",
+        description:
+            "Obtenez des suggestions d'objets à observer ou photographier adaptées à votre instrument et aux conditions de la nuit.",
+        href: "/recommandations",
+        badges: ["Suggestions", "Filtres"],
+        gradient: "from-amber-600/20 to-orange-600/20",
+        borderHover: "hover:border-amber-500/40 hover:shadow-amber-950/20",
+        iconColor: "text-amber-400",
+        iconName: "recommendations",
+    },
+    {
+        title: "Transit d'Exoplanètes",
+        description:
+            "Calculez et simulez les horaires des transits de planètes extrasolaires observables selon votre équipement.",
+        href: "/outils/exoplanetes",
+        badges: ["Transits", "Photométrie"],
+        gradient: "from-cyan-600/20 to-sky-600/20",
+        borderHover: "hover:border-cyan-500/40 hover:shadow-cyan-950/20",
+        iconColor: "text-cyan-400",
+        iconName: "exoplanets",
+    },
+    {
+        title: "Étoiles Variables",
+        description: "Suivez les cycles de pulsation et simulez la variabilité photométrique d'étoiles de référence.",
+        href: "/outils/etoiles-variables",
+        badges: ["Pulsantes", "AAVSO"],
+        gradient: "from-rose-600/20 to-pink-600/20",
+        borderHover: "hover:border-rose-500/40 hover:shadow-rose-950/20",
+        iconColor: "text-rose-400",
+        iconName: "variable-stars",
+    },
+    {
+        title: "Comètes",
+        description:
+            "Suivez les comètes de passage, calculez leurs éphémérides et estimez leur observabilité locale en temps réel.",
+        href: "/outils/cometes",
+        badges: ["Éphémérides", "Cométaire"],
+        gradient: "from-teal-600/20 to-cyan-600/20",
+        borderHover: "hover:border-teal-500/40 hover:shadow-teal-950/20",
+        iconColor: "text-teal-400",
+        iconName: "comets",
+    },
+    {
+        title: "Astéroïdes & PHA",
+        description:
+            "Surveillez les astéroïdes géocroiseurs et potentiellement dangereux passant à proximité de la Terre.",
+        href: "/outils/asteroides",
+        badges: ["Géocroiseurs", "PHA"],
+        gradient: "from-violet-600/20 to-indigo-600/20",
+        borderHover: "hover:border-violet-500/40 hover:shadow-violet-950/20",
+        iconColor: "text-violet-400",
+        iconName: "asteroids",
+    },
+];
+---
+
+<BaseLayout title="Outils d'observation" description={description} breadcrumbLabel="Outils">
+    <main class="container-mp pb-16">
+        <PageHeader title="Outils d'observation">
+            <Fragment slot="metadata">
+                <StatsMetadata stats={headerStats} />
+            </Fragment>
+        </PageHeader>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
+            {tools.map((tool) => (
+                <a
+                    href={tool.href}
+                    class={`group flex flex-col h-full bg-mp-card-bg border border-mp-border hover:border-mp-accent/50 rounded-2xl p-5 transition-all duration-slow shadow-xs hover:shadow-md ${tool.borderHover} overflow-hidden relative`}
+                >
+                    {/* Glowing Background Effect */}
+                    <div
+                        class={`absolute -top-12 -right-12 w-24 h-24 bg-linear-to-br/srgb ${tool.gradient} rounded-full blur-2xl group-hover:scale-150 transition-transform duration-slow opacity-70`}
+                    />
+
+                    {/* Top: Icon container */}
+                    <div
+                        class={`w-full h-32 flex items-center justify-center rounded-xl bg-mp-surface border border-mp-border overflow-hidden relative ${tool.iconColor}`}
+                    >
+                        {tool.iconName === "sky-map" && (
+                            <svg class="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+                                <circle
+                                    cx="60"
+                                    cy="60"
+                                    r="45"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-dasharray="3 3"
+                                    opacity="0.15"
+                                />
+                                <circle
+                                    cx="60"
+                                    cy="60"
+                                    r="30"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-dasharray="1 3"
+                                    opacity="0.25"
+                                />
+                                <line x1="60" y1="5" x2="60" y2="115" stroke="currentColor" opacity="0.1" />
+                                <line x1="5" y1="60" x2="115" y2="60" stroke="currentColor" opacity="0.1" />
+                                <polyline
+                                    points="40,30 55,45 80,40 90,60"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    opacity="0.4"
+                                />
+                                <circle cx="40" cy="30" r="3" fill="#D4B483" />
+                                <circle cx="55" cy="45" r="2.5" fill="#fff" />
+                                <circle cx="80" cy="40" r="2" fill="#fff" />
+                                <circle cx="90" cy="60" r="3.5" fill="#D4B483" class="animate-pulse" />
+                            </svg>
+                        )}
+
+                        {tool.iconName === "objects" && (
+                            <svg class="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+                                <defs>
+                                    <radialGradient id="galaxyGlow" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#fff" stop-opacity="1" />
+                                        <stop offset="50%" stop-color="currentColor" stop-opacity="0.8" />
+                                        <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                                    </radialGradient>
+                                </defs>
+                                <circle cx="60" cy="60" r="10" fill="url(#galaxyGlow)" />
+                                <path
+                                    d="M 60,60 Q 40,50 40,35 Q 40,20 60,20 Q 80,20 80,45 Q 80,70 50,75 Q 20,80 20,50 Q 20,15 50,10"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    opacity="0.5"
+                                />
+                                <path
+                                    d="M 60,60 Q 80,70 80,85 Q 80,100 60,100 Q 40,100 40,75 Q 40,50 70,45 Q 100,40 100,70 Q 100,105 70,110"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                    opacity="0.3"
+                                />
+                                <circle cx="30" cy="80" r="1.5" fill="#fff" opacity="0.6" />
+                                <circle cx="90" cy="25" r="1.5" fill="#fff" opacity="0.6" />
+                                <circle cx="75" cy="90" r="2" fill="#D4B483" opacity="0.8" />
+                            </svg>
+                        )}
+
+                        {tool.iconName === "catalogues" && (
+                            <svg class="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+                                <rect x="20" y="25" width="80" height="8" rx="2" fill="currentColor" opacity="0.25" />
+                                <rect x="20" y="39" width="80" height="6" rx="1.5" fill="currentColor" opacity="0.1" />
+                                <rect x="20" y="51" width="80" height="6" rx="1.5" fill="currentColor" opacity="0.15" />
+                                <rect x="20" y="63" width="80" height="6" rx="1.5" fill="currentColor" opacity="0.05" />
+                                <rect x="20" y="75" width="80" height="6" rx="1.5" fill="currentColor" opacity="0.1" />
+                                <rect x="20" y="87" width="80" height="6" rx="1.5" fill="currentColor" opacity="0.05" />
+                                <circle
+                                    cx="75"
+                                    cy="65"
+                                    r="15"
+                                    fill="none"
+                                    stroke="#D4B483"
+                                    stroke-width="1.5"
+                                    opacity="0.7"
+                                />
+                                <line x1="85" y1="75" x2="95" y2="85" stroke="#D4B483" stroke-width="2" opacity="0.7" />
+                            </svg>
+                        )}
+
+                        {tool.iconName === "recommendations" && (
+                            <svg class="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+                                <circle
+                                    cx="60"
+                                    cy="60"
+                                    r="35"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    opacity="0.2"
+                                />
+                                <circle
+                                    cx="60"
+                                    cy="60"
+                                    r="20"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                    opacity="0.3"
+                                />
+                                <line
+                                    x1="60"
+                                    y1="15"
+                                    x2="60"
+                                    y2="105"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                    opacity="0.25"
+                                />
+                                <line
+                                    x1="15"
+                                    y1="60"
+                                    x2="105"
+                                    y2="60"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                    opacity="0.25"
+                                />
+                                <polygon
+                                    points="60,48 63,54 70,55 65,60 66,67 60,63 54,67 55,60 50,55 57,54"
+                                    fill="#D4B483"
+                                />
+                                <circle cx="35" cy="35" r="2" fill="#fff" opacity="0.6" />
+                                <circle cx="85" cy="75" r="1.5" fill="#fff" opacity="0.5" />
+                            </svg>
+                        )}
+
+                        {tool.iconName === "exoplanets" && (
+                            <svg class="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+                                <defs>
+                                    <radialGradient id="starGlow" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#fff" />
+                                        <stop offset="40%" stop-color="currentColor" stop-opacity="0.8" />
+                                        <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                                    </radialGradient>
+                                </defs>
+                                <circle cx="55" cy="55" r="20" fill="url(#starGlow)" />
+                                <ellipse
+                                    cx="60"
+                                    cy="55"
+                                    rx="38"
+                                    ry="12"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                    opacity="0.25"
+                                    transform="rotate(-15 60 55)"
+                                />
+                                <circle cx="32" cy="62" r="4.5" fill="#0A0A0A" stroke="#D4B483" stroke-width="1" />
+                            </svg>
+                        )}
+
+                        {tool.iconName === "variable-stars" && (
+                            <svg class="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+                                <defs>
+                                    <radialGradient id="variableStarGlow" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#fff" />
+                                        <stop offset="60%" stop-color="currentColor" stop-opacity="0.8" />
+                                        <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                                    </radialGradient>
+                                </defs>
+                                <circle cx="60" cy="60" r="18" fill="url(#variableStarGlow)" />
+                                <circle
+                                    cx="60"
+                                    cy="60"
+                                    r="26"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                    stroke-dasharray="4 4"
+                                    opacity="0.2"
+                                    class="animate-pulse"
+                                />
+                                <line
+                                    x1="60"
+                                    y1="15"
+                                    x2="60"
+                                    y2="28"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    opacity="0.4"
+                                />
+                                <line
+                                    x1="60"
+                                    y1="92"
+                                    x2="60"
+                                    y2="105"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    opacity="0.4"
+                                />
+                                <line
+                                    x1="15"
+                                    y1="60"
+                                    x2="28"
+                                    y2="60"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    opacity="0.4"
+                                />
+                                <line
+                                    x1="92"
+                                    y1="60"
+                                    x2="105"
+                                    y2="60"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    opacity="0.4"
+                                />
+                            </svg>
+                        )}
+
+                        {tool.iconName === "comets" && (
+                            <svg class="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+                                <defs>
+                                    <radialGradient id="cometHead" cx="50%" cy="50%" r="50%">
+                                        <stop offset="0%" stop-color="#fff" />
+                                        <stop offset="50%" stop-color="currentColor" stop-opacity="0.8" />
+                                        <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                                    </radialGradient>
+                                    <linearGradient id="cometTail" x1="0%" y1="50%" x2="100%" y2="0%">
+                                        <stop offset="0%" stop-color="currentColor" stop-opacity="0.6" />
+                                        <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                                    </linearGradient>
+                                </defs>
+                                <path
+                                    d="M 35,55 C 50,52 85,38 105,30 C 90,55 90,60 105,78 C 85,70 50,58 35,55 Z"
+                                    fill="url(#cometTail)"
+                                />
+                                <circle cx="35" cy="55" r="5" fill="#fff" />
+                                <circle cx="35" cy="55" r="11" fill="url(#cometHead)" />
+                                <circle cx="75" cy="46" r="1" fill="#fff" opacity="0.6" />
+                                <circle cx="90" cy="62" r="1.5" fill="#D4B483" opacity="0.5" />
+                            </svg>
+                        )}
+
+                        {tool.iconName === "asteroids" && (
+                            <svg class="w-full h-full" viewBox="0 0 120 120" aria-hidden="true">
+                                <defs>
+                                    <linearGradient id="earthGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#3B82F6" />
+                                        <stop offset="100%" stop-color="#1D4ED8" />
+                                    </linearGradient>
+                                </defs>
+                                <path
+                                    d="M 85,35 A 25,25 0 0,0 85,85 A 21,21 0 0,1 85,35 Z"
+                                    fill="url(#earthGlow)"
+                                    opacity="0.5"
+                                />
+                                <path
+                                    d="M 15,90 Q 55,60 105,25"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1"
+                                    stroke-dasharray="3 3"
+                                    opacity="0.3"
+                                />
+                                <path
+                                    d="M 42,62 Q 38,50 48,46 Q 58,45 56,58 Q 54,68 42,62 Z"
+                                    fill="#4B5563"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                />
+                                <circle cx="46" cy="52" r="1.5" fill="#1F2937" />
+                                <circle cx="51" cy="59" r="1" fill="#1F2937" />
+                            </svg>
+                        )}
+                    </div>
+
+                    {/* Middle: Content */}
+                    <div class="mt-4 grow flex flex-col">
+                        {/* POURQUOI h2 : la page n'a pas d'autre niveau entre le h1 et ces cartes (saut h1 → h3). */}
+                        <h2 class="font-serif font-light text-mp-text-heading text-lg group-hover:text-mp-accent transition-colors duration-normal text-left">
+                            {tool.title}
+                        </h2>
+                        <p class="text-xs text-mp-text-muted mt-2 leading-relaxed grow text-left">{tool.description}</p>
+                    </div>
+
+                    {/* Bottom: Badges */}
+                    <div class="flex flex-wrap gap-1.5 pt-4 border-t border-mp-border mt-4">
+                        {tool.badges.map((badge) => (
+                            <span class="text-[9px] bg-mp-accent/10 text-mp-accent px-2 py-0.5 rounded-sm border border-mp-accent/15 select-none uppercase font-sans font-medium tracking-wide">
+                                {badge}
+                            </span>
+                        ))}
+                        <span class="ml-auto text-mp-text-muted group-hover:text-mp-accent group-hover:translate-x-1 transition-all duration-normal text-sm font-sans font-medium">
+                            &rarr;
+                        </span>
+                    </div>
+                </a>
+            ))}
+        </div>
+    </main>
+</BaseLayout>

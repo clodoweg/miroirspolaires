@@ -1,0 +1,42 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:48:57 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:48:57	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f9%2fcatalog&-out.max=2&-out=Seq%2cDiam1%2cDiam2%2cArea%2cBright%2cColor%2cName&Seq=1000	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7009
+#Name: VII/9
+#Title: Lynds' Catalogue of Bright Nebulae (Lynds 1965)
+#INFO	ivoid=ivo://cds.vizier/vii/9	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/9	    IVOID of underlying data collection
+#INFO	creator=Lynds B.T.	    First author or institution
+#INFO	cites=bibcode:1965ApJS...12..163L	    Article or Data origin sources
+#INFO	journal=ApJS	    Journal name
+#INFO	original_date=1965	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/9	    Dataset landing page
+#INFO	publication_date=2013-02-26	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1950:	eq_FK4 B1950
+#Table	VII_9_catalog:
+#Name: VII/9/catalog
+#Title: The LBN Catalogue
+#Column	Seq	(I4)	[1/1125]+ Running number (1)	[ucd=meta.id;meta.main]
+#Column	Diam1	(I4)	Largest dimension of nebula	[ucd=phys.size;stat.max]
+#Column	Diam2	(I3)	Smallest dimension of nebula	[ucd=phys.angSize;src]
+#Column	Area	(F7.3)	Area of nebulosity	[ucd=phys.angSize]
+#Column	Bright	(I1)	[1/6] Brightness scale (3)	[ucd=phot.mag.sb;arith.ratio]
+#Column	Color	(I1)	[1/4] Color index (2)	[ucd=meta.code;phot.color]
+#Column	Name	(a8)	Other name of nebulosity (5)	[ucd=meta.id]
+Seq	Diam1	Diam2	Area	Bright	Color	Name
+ 	arcmin	arcmin	deg2	 	 	
+----	----	---	-------	-	-	--------
+1000	   2	  2	  0.001	3	1	C 71
+

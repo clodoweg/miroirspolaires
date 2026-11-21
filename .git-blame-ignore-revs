@@ -1,0 +1,6 @@
+# Commits de reformatage pur, ignorés par git blame
+# (git config blame.ignoreRevsFile .git-blame-ignore-revs ; GitHub les ignore automatiquement)
+
+# style: format the codebase with Prettier
+# NB : ce commit contient aussi, par erreur, l ajout du hook Stop dans .claude/settings.json.
+57a759399e30e3d766f8ebfd408ea42882df1d91

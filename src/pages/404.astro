@@ -1,0 +1,26 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import PrimaryButton from "@/components/UI/PrimaryButton.astro";
+---
+
+<BaseLayout
+    title="Page introuvable"
+    description="La page demandée n'existe pas ou a été déplacée. Revenez à l'accueil ou explorez les astrophotographies, le blog et les voyages."
+    breadcrumbLabel="404"
+>
+    <main class="container-mp pb-16 flex-1 flex items-center">
+        <div class="max-w-screen-md mx-auto text-center space-y-8 w-full">
+            <PageHeader title="Page introuvable" align="center" />
+
+            <p class="text-mp-text-body text-lg">Cette page n'existe pas, ou plus. Où vouliez-vous aller ?</p>
+
+            <div class="flex flex-wrap justify-center gap-3">
+                <PrimaryButton href="/">Accueil</PrimaryButton>
+                <PrimaryButton href="/astrophotographies">Astrophotographies</PrimaryButton>
+                <PrimaryButton href="/blog">Blog</PrimaryButton>
+                <PrimaryButton href="/voyages">Voyages</PrimaryButton>
+            </div>
+        </div>
+    </main>
+</BaseLayout>

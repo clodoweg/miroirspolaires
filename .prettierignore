@@ -1,0 +1,17 @@
+# POURQUOI : le Markdown est du contenu éditorial (articles, voyages, docs) ; le reformater
+# changerait le rendu ou les diffs de contenu sans bénéfice.
+*.md
+# Données générées ou exportées : régénérées par leurs scripts, jamais éditées à la main.
+src/data/
+data/
+src/assets/astrophotographies/annotations/
+package-lock.json
+# Code tiers et sorties de build.
+public/
+dist/
+.vercel/
+.astro/
+coverage/
+temp/
+workers/**/node_modules/
+workers/**/.wrangler/

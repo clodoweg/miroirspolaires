@@ -1,0 +1,45 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:45 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:45	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f26D%2fcatalog&-out.max=6&-out=UGC%2cRA1950%2cDE1950%2cMajAxis%2cMinAxis%2cPmag%2cHubble	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7026
+#Name: VII/26D
+#Title: Uppsala General Catalogue of Galaxies (UGC) (Nilson 1973)
+#INFO	ivoid=ivo://cds.vizier/vii/26d	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/26d	    IVOID of underlying data collection
+#INFO	creator=Nilson P.	    First author or institution
+#INFO	cites=1973UGC...C......0N	    Article or Data origin sources
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/26D	    Dataset landing page
+#INFO	publication_date=2003-07-22	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1950:	eq_FK4 B1950
+#Table	VII_26D_catalog:
+#Name: VII/26D/catalog
+#Title: UGC catalogue
+#Column	UGC	(I5)	[1/12921]+= UGC number	[ucd=meta.id;meta.main]
+#Column	RA1950	(A7)	Right Ascension 1950 (hours)	[ucd=pos.eq.ra;meta.main]
+#Column	DE1950	(A6)	Declination 1950 (degrees)	[ucd=pos.eq.dec;meta.main]
+#Column	MajAxis	(F6.2)	? Major axis of the galaxy as measured on the POSS blue print. (2)	[ucd=phys.angSize;src]
+#Column	MinAxis	(F5.2)	? Minor axis of the galaxy as measured on the POSS blue print. (2)	[ucd=phys.angSize;src]
+#Column	Pmag	(F4.1)	? Photographic magnitude mpg , recorded to precision given in published catalogue; i.e., if tenths not reported, byte 64 is blank.	[ucd=phot.mag;em.opt.B]
+#Column	Hubble	(a7)	Classification in the Hubble system or remarks, in a free field format, including lower case designations.	[ucd=src.morph.type]
+UGC	RA1950	DE1950	MajAxis	MinAxis	Pmag	Hubble
+ 	"h:m:s"	"d:m:s"	arcmin	arcmin	mag	
+-----	-------	------	------	-----	----	-------
+    1	00 00.0	+16 22	  1.50	 1.30	14.9	DBL SYS
+    2	00 00.0	+44 39	  1.10	 0.20	17.0	
+    3	00 00.2	+18 37	  2.00	 1.00	14.8	SBa
+    4	00 00.5	+03 56	  1.30	 0.80	15.5	Sb-c
+    5	00 00.6	-02 11	  1.30	 0.80	14.3	SBb/Sc
+    6	00 00.6	+21 42	  1.00	 0.70	14.4	PECULR
+

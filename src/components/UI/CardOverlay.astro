@@ -1,0 +1,23 @@
+---
+/**
+ * Shared overlay component for PhotoCard and BlogCard.
+ * Encapsulates the fade-in text overlay logic.
+ */
+interface Props {
+    class?: string;
+    overlayGradient?: boolean;
+    compact?: boolean;
+}
+
+const { class: className, overlayGradient = true, compact = false } = Astro.props;
+---
+
+<div
+    class:list={[
+        "absolute inset-0 p-4 md:p-6 flex flex-col justify-end z-20",
+        overlayGradient && (compact ? "bg-gradient-overlay-compact" : "bg-gradient-overlay"),
+        className,
+    ]}
+>
+    <slot />
+</div>

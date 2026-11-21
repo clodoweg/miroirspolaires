@@ -1,0 +1,76 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { EAGER_LOAD_COUNT } from "@/utils/constants";
+import VideoCard from "@/components/UI/VideoCard.astro";
+import ContentGrid from "@/components/ContentGrid.astro";
+import StatsMetadata from "@/components/sections/StatsMetadata.astro";
+import PageHeader from "@/components/PageHeader.astro";
+import { resolveImage } from "@/utils/imageService";
+import { getCollection } from "astro:content";
+
+const allVideos = await getCollection("videos");
+const videos = allVideos.sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+// Calculate total duration
+function parseDuration(duration: string | undefined): number {
+    if (!duration) return 0;
+    const parts = duration.split(":").map(Number);
+    if (parts.length === 2) {
+        return parts[0] * 60 + parts[1]; // mm:ss
+    } else if (parts.length === 3) {
+        return parts[0] * 3600 + parts[1] * 60 + parts[2]; // hh:mm:ss
+    }
+    return 0;
+}
+
+const totalSeconds = videos.reduce((acc, v) => acc + parseDuration(v.data.duration), 0);
+const totalHours = Math.floor(totalSeconds / 3600);
+const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+const totalDuration = `${totalHours}h${totalMinutes.toString().padStart(2, "0")}`;
+
+const title = "Ma chaîne YouTube";
+const description =
+    "Cette série de vidéos explore l'histoire et l'astronomie, en mettant en lumière les grands savants et leurs théories visionnaires qui, depuis plus de 2 000 ans, tentent de décrypter et de modéliser l'univers qui nous entoure.";
+const seoDescription =
+    "Cette série de vidéos est un projet né de ma passion pour l'astronomie et l'histoire et suit un fil conducteur : expliquer comment notre vision du monde et de notre place dans l'univers a évolué au fil des observations et découvertes scientifiques.";
+
+const firstVideoImage = videos.length > 0 ? resolveImage(videos[0].data.image) : undefined;
+---
+
+<BaseLayout title={title} description={seoDescription} image={firstVideoImage} breadcrumbLabel="Vidéos">
+    <PageHeader title={title} description={description}>
+        <Fragment slot="metadata">
+            <StatsMetadata
+                stats={[
+                    {
+                        icon: "film",
+                        value: videos.length,
+                        suffix: "Episodes",
+                        label: "YouTube",
+                    },
+                    {
+                        icon: "clock",
+                        value: totalDuration,
+                        label: "de Vidéo",
+                    },
+                ]}
+            />
+        </Fragment>
+    </PageHeader>
+
+    <main class="container-mp">
+        <ContentGrid>
+            {videos.map((video, index) => (
+                <VideoCard
+                    title={video.data.title}
+                    date={video.data.date}
+                    duration={video.data.duration}
+                    categories={video.data.categories || []}
+                    image={resolveImage(video.data.image)}
+                    href={`/videos/${video.id}`}
+                    loading={index < EAGER_LOAD_COUNT ? "eager" : "lazy"}
+                />
+            ))}
+        </ContentGrid>
+    </main>
+</BaseLayout>

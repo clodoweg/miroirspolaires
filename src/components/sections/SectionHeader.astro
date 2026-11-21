@@ -1,0 +1,25 @@
+---
+// components/SectionHeader.astro
+// A reusable header component for homepage sections (uses h2 instead of h1)
+interface Props {
+    title: string;
+    inverted?: boolean;
+}
+
+const { title } = Astro.props;
+const hasMetadataSlot = Astro.slots.has("metadata");
+---
+
+<div class="flex flex-col items-center text-center mb-6 pt-8 md:pt-0">
+    <!-- Title -->
+    <div class="flex flex-col items-center mb-2">
+        <h2 class="slide-in-from-bottom">{title}</h2>
+    </div>
+
+    <!-- Metadata from slot -->
+    {hasMetadataSlot && (
+        <div class="flex flex-wrap justify-center items-center gap-4 text-xs-mobile md:text-xs-tablet lg:text-xs-desktop font-sans uppercase tracking-wider text-mp-text-body/60 mt-4 mb-2 slide-in-from-bottom delay-100">
+            <slot name="metadata" />
+        </div>
+    )}
+</div>

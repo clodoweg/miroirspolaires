@@ -1,0 +1,103 @@
+{
+  "name": "portfolio-astro-miroirs-polaires",
+  "type": "module",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "update-exoplanets": "node scripts/pipeline/update-exoplanets.mjs",
+    "update-variable-stars": "node scripts/pipeline/update-variable-stars.mjs",
+    "crossmatch-gaia": "node scripts/pipeline/crossmatch-variable-stars.mjs",
+    "check-variable-stars": "node scripts/pipeline/check-variable-stars.mjs",
+    "sync-asset-years": "node scripts/pipeline/migrate-asset-years.mjs",
+    "update-catalogues": "node scripts/build/update-catalogue-snapshots.mjs"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.0",
+    "@astrojs/react": "^7.1.2",
+    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/vercel": "^11.0.10",
+    "@aws-sdk/client-s3": "^3.956.0",
+    "@aws-sdk/s3-request-presigner": "^3.1157.0",
+    "@floating-ui/dom": "^1.8.0",
+    "@libsql/client": "^0.18.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tiptap/extensions": "^3.33.0",
+    "@tiptap/markdown": "^3.33.0",
+    "@tiptap/pm": "^3.33.0",
+    "@tiptap/react": "^3.33.0",
+    "@tiptap/starter-kit": "^3.33.0",
+    "astro": "^7.3.1",
+    "astro-seo": "^1.2.0",
+    "dotenv": "^18.0.9",
+    "lucide-react": "^1.63.0",
+    "papaparse": "^5.4.1",
+    "probe-image-size": "^7.2.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-is": "^19.2.6",
+    "recharts": "^3.6.0",
+    "sharp": "^0.35.5",
+    "stripe": "^23.0.0",
+    "tailwindcss": "^4.3.3",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "@eslint/js": "^10.0.1",
+    "@tailwindcss/typography": "^0.5.19",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/papaparse": "^5.3.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react-swc": "^4.3.0",
+    "@vitest/coverage-v8": "^5.0.5",
+    "cheerio": "^1.2.0",
+    "eslint": "^10.13.0",
+    "eslint-plugin-astro": "^3.2.1",
+    "eslint-plugin-jsx-a11y-x": "^0.2.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "fast-glob": "^3.3.3",
+    "globals": "^17.13.0",
+    "happy-dom": "^21.0.4",
+    "marked": "^18.0.4",
+    "pixelmatch": "^8.0.0",
+    "playwright": "^1.64.1",
+    "pngjs": "^7.0.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-astro": "^1.1.2",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.72.1",
+    "unified": "^11.0.5",
+    "vitest": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "overrides": {
+    "zod": "^4.6.7",
+    "@vercel/routing-utils": {
+      "path-to-regexp": "^6.3.0"
+    },
+    "@tailwindcss/typography": {
+      "postcss-selector-parser": "^6.1.5"
+    },
+    "minimatch": "^11.0.1",
+    "@vercel/nft": {
+      "glob": "^14.0.2"
+    }
+  }
+}

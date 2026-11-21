@@ -1,0 +1,28 @@
+---
+title: "Le massif du Langtang au Népal"
+description: ""
+image: "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-1.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-2.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-3.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-4.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-5.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-6.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-7.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-8.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-9.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-10.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-11.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-12.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-13.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-14.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-15.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-16.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-17.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-18.jpg"
+  - "../../../assets/voyages/2009/le-massif-du-langtang-au-nepal/img-19.jpg"
+country: "Népal"
+season: "Automne"
+year: 2009
+---

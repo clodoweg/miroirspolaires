@@ -1,0 +1,79 @@
+name: Admin job
+
+# Script lancé depuis l'admin distant (/admin/scripts sur la Preview de dev), par la GitHub App.
+# Le runner (scripts/admin/run-admin-job.mjs) vérifie le job dans Turso et n'accepte que les entrées
+# `remote: true` de src/lib/admin/scripts.ts ; ce que le script écrit sous src/data/ ou data/ est
+# committé sur dev. Journal et état du job : tables Turso admin_jobs et admin_job_logs.
+# Secrets requis : TURSO_DATABASE_URL, TURSO_AUTH_TOKEN (jeton en écriture).
+# POURQUOI le workflow doit exister sur main : GitHub ne déclenche un workflow_dispatch que pour un
+# fichier présent sur la branche par défaut, même quand le run cible dev.
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: 'Identifiant du job (créé par l’admin)'
+        required: true
+        type: string
+      script_id:
+        description: 'Entrée de SCRIPTS marquée remote'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+# POURQUOI : deux runs du même script écriraient en même temps dans Turso ou dans les mêmes fichiers.
+concurrency:
+  group: admin-job-${{ inputs.script_id }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    # WARNING: ne committe que sur dev ; un lancement manuel sur une autre branche est ignoré.
+    if: github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+      TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+      JOB_ID: ${{ inputs.job_id }}
+      SCRIPT_ID: ${{ inputs.script_id }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run script
+        run: node scripts/admin/run-admin-job.mjs --job="$JOB_ID" --script="$SCRIPT_ID"
+
+      - name: Commit results
+        id: commit
+        run: |
+          git add -A src/data data
+          if git diff --cached --quiet; then
+            echo "Aucun fichier modifié."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update data from admin job $SCRIPT_ID"
+          git pull --rebase origin dev
+          git push origin HEAD:dev
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Finalize job
+        if: always()
+        env:
+          OUTCOME: ${{ job.status }}
+          COMMIT_SHA: ${{ steps.commit.outputs.sha }}
+        run: node scripts/admin/run-admin-job.mjs --finalize --job="$JOB_ID" --outcome="$OUTCOME" --commit="$COMMIT_SHA"

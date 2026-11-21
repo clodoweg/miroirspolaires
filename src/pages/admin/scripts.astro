@@ -1,0 +1,18 @@
+---
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import ScriptsRunner from "@/components/Admin/ScriptsRunner";
+import RemoteJobsPanel from "@/components/Admin/RemoteJobsPanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+// POURQUOI : en local, spawn et SSE ; à distance, GitHub Actions et journal dans Turso.
+const isLocal = isLocalAdmin(Astro.locals);
+---
+
+<AdminLayout title="Admin · Scripts" description="Exécution des scripts SEO et de checks." active="scripts">
+    {isLocal ? <ScriptsRunner client:only="react" /> : <RemoteJobsPanel client:only="react" />}
+</AdminLayout>

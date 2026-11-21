@@ -1,0 +1,59 @@
+---
+/**
+ * Bouton primaire réutilisable
+ * Style unifié pour tous les CTA du site
+ */
+interface Props {
+    href?: string;
+    type?: "button" | "submit" | "reset";
+    label?: string;
+    class?: string;
+    variant?: "default" | "glow" | "secondary" | "filled" | "inverted";
+    [key: string]: any;
+}
+
+const { href, type = "button", label, class: className = "", variant = "default", ...rest } = Astro.props;
+import { ArrowRight } from "lucide-react";
+
+// Base styles
+const baseClasses =
+    "inline-flex items-center justify-center gap-2 bg-transparent uppercase tracking-uppercase text-xs no-underline font-medium transition-all duration-300 ease-out hover:no-underline hover:bg-mp-accent hover:text-white hover:border-mp-accent active:bg-mp-accent active:text-white active:border-mp-accent rounded-full py-3 px-8";
+
+// Variant styles
+const variants = {
+    default: "border border-mp-border-light text-mp-text-heading hover:border-mp-accent",
+    glow: "border border-mp-accent text-mp-text-heading shadow-glow hover:shadow-glowStrong",
+    secondary: "bg-mp-accent/10 text-mp-accent border border-mp-accent/30 shadow-xs hover:bg-mp-accent/20",
+    filled: "bg-mp-accent text-white border-mp-accent shadow-glow hover:bg-mp-accent/90 hover:shadow-glowStrong",
+    inverted:
+        "bg-mp-accent text-white border-mp-accent hover:bg-transparent hover:text-mp-text-heading hover:border-mp-border-light",
+};
+
+const combinedClasses = `${baseClasses} ${variants[variant]}`;
+
+const hasSlot = Astro.slots.has("default");
+---
+
+{href ? (
+    <a href={href} class:list={[combinedClasses, className]} {...rest}>
+        {hasSlot ? (
+            <slot />
+        ) : (
+            <>
+                {label}
+                <ArrowRight className="w-4 h-4" />
+            </>
+        )}
+    </a>
+) : (
+    <button type={type} class:list={[combinedClasses, className]} {...rest}>
+        {hasSlot ? (
+            <slot />
+        ) : (
+            <>
+                {label}
+                <ArrowRight className="w-4 h-4" />
+            </>
+        )}
+    </button>
+)}

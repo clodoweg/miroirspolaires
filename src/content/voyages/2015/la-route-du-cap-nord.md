@@ -1,0 +1,32 @@
+---
+title: "La route du Cap Nord"
+description: ""
+image: "../../../assets/voyages/2015/la-route-du-cap-nord/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-1.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-2.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-3.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-4.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-5.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-6.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-7.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-8.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-9.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-10.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-11.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-12.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-13.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-14.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-15.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-16.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-17.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-18.jpg"
+  - "../../../assets/voyages/2015/la-route-du-cap-nord/img-19.jpg"
+country:
+  - "Norvège"
+  - "Suède"
+  - "Finlande"
+  - "Danemark"
+season: "Été"
+year: 2015
+---

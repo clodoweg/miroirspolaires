@@ -1,0 +1,46 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:53 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:53	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f110A%2ftable3&-out.max=6&-out=ACO%2cRAB1950%2cDEB1950%2cBMtype%2cCount%2cz	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7110
+#Name: VII/110A
+#Title: Rich Clusters of Galaxies (Abell+ 1989)
+#INFO	ivoid=ivo://cds.vizier/vii/110a	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/110a	    IVOID of underlying data collection
+#INFO	creator=Abell G.O.	    First author or institution
+#INFO	cites=bibcode:1989ApJS...70....1A	    Article or Data origin sources
+#INFO	journal=ApJS	    Journal name
+#INFO	original_date=1989	    Year of the article publication
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/110A	    Dataset landing page
+#INFO	publication_date=2012-11-12	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1950:	eq_FK4 B1950
+#Table	VII_110A_table3:
+#Name: VII/110A/table3
+#Title: Revised northern "Abell Catalog"
+#Column	ACO	(I4)	[1,2712]+ "Abell" number	[ucd=meta.id;meta.main]
+#Column	RAB1950	(A7)	right ascension (B1950)	[ucd=pos.eq.ra;meta.main]
+#Column	DEB1950	(A6)	declination (B1950)	[ucd=pos.eq.dec;meta.main]
+#Column	BMtype	(a7)	[- I:] cluster classification in the Bautz- Morgan system	[ucd=src.class.struct]
+#Column	Count	(I3)	[0,] number of cluster members between m3 and m3+2, corrected for background	[ucd=meta.number]
+#Column	z	(F7.4)	? cluster redshift from Struble and Rood (1987ApJS...63..555S)	[ucd=src.redshift]
+ACO	RAB1950	DEB1950	BMtype	Count	z
+ 	"h:m:s"	"d:m:s"	 	ct	
+----	-------	------	-------	---	-------
+   1	00 05.0	+16 14	III    	 51	 0.1249
+   2	00 05.9	-19 55	II     	 72	
+   3	00 06.7	+03 45	II:    	 65	
+   4	00 06.8	+06 30	III    	 55	
+   5	00 07.7	+32 49	       	 66	
+   6	00 07.9	+17 25	II-III 	116	
+

@@ -1,0 +1,42 @@
+#
+#   VizieR Astronomical Server vizier.nao.ac.jp
+#    Date: 2026-11-05T06:47:44 [V7.6.1]
+#   In case of problem, please report to:	cds-question@unistra.fr
+#
+#
+#Coosys	J2000:	eq_FK5 J2000
+#INFO	service_protocol=ASU	  IVOID of the protocol through which the data was retrieved
+#INFO	request_date=2026-11-05T06:47:44	  Query execution date
+#INFO	request=https://vizier.nao.ac.jp/viz-bin/asu-tsv?-source=VII%2f220A%2fbarnard&-out.max=6&-out=Barn%2cRA1875%2cDE1875%2cDiam	  Full request URL
+#INFO	contact=cds-question@unistra.fr	  Email or URL to contact publisher
+#INFO	server_software=VizieR/7.6.1	  Software version
+#INFO	publisher=CDS	  Data centre that produced the VOTable
+
+#RESOURCE=yCat_7220
+#Name: VII/220A
+#Title: Barnard's Catalogue of 349 Dark Objects in the Sky (Barnard, 1927)
+#INFO	ivoid=ivo://cds.vizier/vii/220a	    IVOID of underlying data collection
+#INFO	data_ivoid=ivo://cds.vizier/vii/220a	    IVOID of underlying data collection
+#INFO	creator=Barnard E.E.	    First author or institution
+#INFO	cites=1927cdos.book.....B	    Article or Data origin sources
+#INFO	reference_url=https://cdsarc.cds.unistra.fr/viz-bin/cat/VII/220A	    Dataset landing page
+#INFO	publication_date=2012-11-13	    Date of first publication in the data centre
+#INFO	rights_uri=https://cds.unistra.fr/vizier-org/licences_vizier.html	    Licence URI
+#Coosys	B1875:	eq_FK4 B1875
+#Table	VII_220A_barnard:
+#Name: VII/220A/barnard
+#Title: Positions and Diameters
+#Column	Barn	(A4)	[ 0-9a]! Barnard number	[ucd=meta.id;meta.main]
+#Column	RA1875	(A8)	Right Ascension 1875	[ucd=pos.eq.ra;meta.main]
+#Column	DE1875	(A6)	Declination 1875	[ucd=pos.eq.dec;meta.main]
+#Column	Diam	(F5.1)	? Diameter of the nebula	[ucd=phys.angSize]
+Barn	RA1875	DE1875	Diam
+ 	"h:m:s"	"d:m:s"	arcmin
+----	--------	------	-----
+  1 	03 25 14	+30 44	 30.0
+  2 	03 25 44	+31 54	 20.0
+  3 	03 32 14	+31 34	 20.0
+  4 	03 36 14	+31 24	
+  5 	03 40 00	+32 30	 60.0
+  6 	03 46 30	+55 45	
+

@@ -1,0 +1,30 @@
+---
+title: "La Transylvanie"
+description: ""
+image: "../../../assets/voyages/2026/la-transylvanie/cover.jpg"
+gallery:
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1042-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1070.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1085-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1095-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1105-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1145-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1155-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1245-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1380-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1450-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1461-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1501-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1531-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1551-hdr-2.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1571-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1698-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1703-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1747-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1757-hdr.jpg"
+  - "../../../assets/voyages/2026/la-transylvanie/_dsc1767-hdr.jpg"
+country: "Roumanie"
+season: "Printemps"
+year: 2026
+---
+

@@ -1,0 +1,39 @@
+{
+    "Ha": [
+        "Ha",
+        "H-alpha",
+        "H_alpha"
+    ],
+    "OIII": [
+        "OIII",
+        "O-III",
+        "Oxygen"
+    ],
+    "SII": [
+        "SII",
+        "S-II",
+        "Sulfur"
+    ],
+    "L": [
+        "Luminance",
+        "Lum",
+        "UV/IR Cut",
+        "Clear",
+        "L-Pro"
+    ],
+    "R": [
+        "Red",
+        "R-CCD",
+        "Rouge"
+    ],
+    "G": [
+        "Green",
+        "G-CCD",
+        "Vert"
+    ],
+    "B": [
+        "Blue",
+        "B-CCD",
+        "Bleu"
+    ]
+}
