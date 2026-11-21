@@ -11,7 +11,7 @@ title: La route des fjords
 
 ## Lundi 10 août 2026 ##
 
-Arrivés à Oslo la veille vers minuit, on a juste eu le temps de récupérer les bagages, sauter dans la navette et filer à l’hôtel pour une dernière nuit avec un vrai matelas. Au matin, retour à l’aéroport pour récupérer notre compagne de route : une petite Yaris hybride toute neuve, avec plein de boutons et de trucs qui font bip partout. Bon, tant que ça roule…
+Arrivé.e.s à Oslo la veille vers minuit, on a juste eu le temps de récupérer les bagages, sauter dans la navette et filer à l’hôtel pour une dernière nuit avec un vrai matelas. Au matin, retour à l’aéroport pour récupérer notre compagne de route : une petite Yaris hybride toute neuve, avec plein de boutons et de trucs qui font bip partout. Bon, tant que ça roule…
 
 Cap vers le sud-ouest et le Telemark. On passe à travers Oslo (en vrai, surtout en dessous : tout se traverse en souterrain, sans feu ni problème de circulation, un vrai plaisir). En chemin, on s'arrête visiter deux églises en bois debout, Heddal et Eidsborg, avant d'aller planter la tente à Rjukan.
 
@@ -216,4 +216,3 @@ Des boutiques, des souvenirs, des restos, des bars, et nous voilà prêts à par
 ![Silhouette d'explorateur polaire vêtu de fourrures, dont le visage est celui d'un visiteur, au musée du Fram.](/assets/blog/2026/la-route-des-fjords/img_20260822_101710897_hdr.jpg)
 ![Rue d'Oslo aux façades de briques couvertes de graffitis, sous une passerelle métallique.](/assets/blog/2026/la-route-des-fjords/pxl_20260822_155822639.jpg)
 ![Homme et femme posant pour un selfie dans un musée d'Oslo, devant les mâts d'un navire.](/assets/blog/2026/la-route-des-fjords/pxl_20260822_091738642.jpg)
-
