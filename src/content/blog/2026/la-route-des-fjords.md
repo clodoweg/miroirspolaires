@@ -216,4 +216,3 @@ Des boutiques, des souvenirs, des restos, des bars, et nous voilà prêts à par
 ![Silhouette d'explorateur polaire vêtu de fourrures, dont le visage est celui d'un visiteur, au musée du Fram.](/assets/blog/2026/la-route-des-fjords/img_20260822_101710897_hdr.jpg)
 ![Rue d'Oslo aux façades de briques couvertes de graffitis, sous une passerelle métallique.](/assets/blog/2026/la-route-des-fjords/pxl_20260822_155822639.jpg)
 ![Homme et femme posant pour un selfie dans un musée d'Oslo, devant les mâts d'un navire.](/assets/blog/2026/la-route-des-fjords/pxl_20260822_091738642.jpg)
-
