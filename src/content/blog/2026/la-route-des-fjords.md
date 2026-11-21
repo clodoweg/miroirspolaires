@@ -11,7 +11,7 @@ title: La route des fjords
 
 ## Lundi 10 août 2026 ##
 
-Arrivé.e.s à Oslo la veille vers minuit, on a juste eu le temps de récupérer les bagages, sauter dans la navette et filer à l’hôtel pour une dernière nuit avec un vrai matelas. Au matin, retour à l’aéroport pour récupérer notre compagne de route : une petite Yaris hybride toute neuve, avec plein de boutons et de trucs qui font bip partout. Bon, tant que ça roule…
+Arrivés à Oslo la veille vers minuit, on a juste eu le temps de récupérer les bagages, sauter dans la navette et filer à l’hôtel pour une dernière nuit avec un vrai matelas. Au matin, retour à l’aéroport pour récupérer notre compagne de route : une petite Yaris hybride toute neuve, avec plein de boutons et de trucs qui font bip partout. Bon, tant que ça roule…
 
 Cap vers le sud-ouest et le Telemark. On passe à travers Oslo (en vrai, surtout en dessous : tout se traverse en souterrain, sans feu ni problème de circulation, un vrai plaisir). En chemin, on s'arrête visiter deux églises en bois debout, Heddal et Eidsborg, avant d'aller planter la tente à Rjukan.
 
