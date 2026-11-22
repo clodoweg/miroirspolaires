@@ -18,6 +18,15 @@ describe('jsonResponse', () => {
         expect(response.headers.get('Cache-Control')).toBe('max-age=60');
         expect(await response.json()).toEqual({ ok: true });
     });
+
+    it('échappe <, > et & sans changer la valeur lue', async () => {
+        const error = 'Aucun objet trouvé pour "<script>alert(1)</script> & co".';
+        const response = jsonResponse({ error });
+        const body = await response.clone().text();
+        expect(body).not.toMatch(/[<>&]/);
+        expect(body).toContain('\\u003cscript\\u003e');
+        expect(await response.json()).toEqual({ error });
+    });
 });
 
 describe('errorResponse', () => {

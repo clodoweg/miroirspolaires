@@ -112,6 +112,58 @@ const robotsDirective = isPreviewEnv ? "noindex, nofollow" : "index, follow";
                 }
             });
         </script>
+        {/*
+            POURQUOI : remplace les gestionnaires `onerror`/`onload` inline des images (ResponsiveImage,
+            rehype-masonry, rehype-image-loading, fiche astrophoto), que la CSP ne peut autoriser sans
+            `'unsafe-inline'`. Les événements `error` et `load` ne remontent pas, mais un écouteur en capture
+            sur `document` les reçoit. Il est posé dans `<head>`, donc avant toute image du `<body>`, et
+            survit aux navigations du ClientRouter (même `document`).
+            - `data-fallback-src` : une seule bascule vers cette URL, sources du `<picture>` retirées.
+            - `data-hide-on-error="<libellé>"` : l'image est masquée et l'échec journalisé.
+            WARNING: script inline autorisé par son empreinte, calculée au build par
+            `src/integrations/security-headers.mjs`. Il doit rester identique sur toutes les pages
+            (aucune interpolation), y compris les pages rendues côté serveur.
+        */}
+        <script is:inline>
+            (function () {
+                if (window.__mpImageFallback) return;
+                window.__mpImageFallback = true;
+                function applyFallback(img) {
+                    const fallbackSrc = img.dataset.fallbackSrc;
+                    if (!fallbackSrc || img.dataset.fallbackApplied) return;
+                    img.dataset.fallbackApplied = "true";
+                    const picture = img.closest("picture");
+                    if (picture) {
+                        picture.querySelectorAll("source").forEach(function (source) {
+                            source.remove();
+                        });
+                    }
+                    if (img.getAttribute("src") !== fallbackSrc) img.src = fallbackSrc;
+                }
+                document.addEventListener(
+                    "error",
+                    function (event) {
+                        const img = event.target;
+                        if (!(img instanceof HTMLImageElement)) return;
+                        if (img.hasAttribute("data-hide-on-error")) {
+                            console.error("Échec de chargement (" + img.dataset.hideOnError + ") :", img.src);
+                            img.style.display = "none";
+                            return;
+                        }
+                        applyFallback(img);
+                    },
+                    true,
+                );
+                document.addEventListener(
+                    "load",
+                    function (event) {
+                        const img = event.target;
+                        if (img instanceof HTMLImageElement && img.naturalWidth === 0) applyFallback(img);
+                    },
+                    true,
+                );
+            })();
+        </script>
 
         {/* Open the connection to the image CDN early so the first image
         request doesn't pay the TLS handshake (~150–250 ms saved on cold). */}

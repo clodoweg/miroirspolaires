@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, Component, type ReactNode } from 'react';
 import { useCollapsible } from '@/lib/useCollapsible';
+import { useIsHydrated } from '@/lib/useIsHydrated';
 import { ExternalLink, Camera, ChevronDown } from 'lucide-react';
 import type { ResolvedObject, SkyImage } from '@/lib/objects/types';
 import { getConstellationName } from '@/lib/constellations';
@@ -441,6 +442,13 @@ function ImagePanel({
 
 function AladinPanel({ data, camera }: { data: ResolvedObject; camera: ReturnType<typeof useUserSettings>['camera'] }) {
     const [expanded, setExpanded] = useCollapsible('obj-aladin');
+    // POURQUOI : `AladinViewer` (lazy) n'est rendu qu'après l'hydratation, voir `useIsHydrated`.
+    const isHydrated = useIsHydrated();
+    const loadingPlaceholder = (
+        <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-mp-glass-border bg-mp-glass-solid text-sm text-mp-text-muted">
+            Chargement d'Aladin Lite…
+        </div>
+    );
     return (
         <section className="space-y-3 rounded-lg border border-mp-glass-border bg-mp-glass-solid p-4">
             <button
@@ -453,23 +461,20 @@ function AladinPanel({ data, camera }: { data: ResolvedObject; camera: ReturnTyp
                     className={`h-4 w-4 shrink-0 text-mp-text-muted transition-transform ${expanded ? 'rotate-180' : ''}`}
                 />
             </button>
-            {expanded && (
-                <Suspense
-                    fallback={
-                        <div className="flex aspect-video w-full items-center justify-center rounded-lg border border-mp-glass-border bg-mp-glass-solid text-sm text-mp-text-muted">
-                            Chargement d'Aladin Lite…
-                        </div>
-                    }
-                >
-                    <AladinViewer
-                        ra={data.coords.ra}
-                        dec={data.coords.dec}
-                        fovDeg={data.defaultFovDeg}
-                        targetName={data.canonicalName}
-                        camera={camera}
-                    />
-                </Suspense>
-            )}
+            {expanded &&
+                (isHydrated ? (
+                    <Suspense fallback={loadingPlaceholder}>
+                        <AladinViewer
+                            ra={data.coords.ra}
+                            dec={data.coords.dec}
+                            fovDeg={data.defaultFovDeg}
+                            targetName={data.canonicalName}
+                            camera={camera}
+                        />
+                    </Suspense>
+                ) : (
+                    loadingPlaceholder
+                ))}
         </section>
     );
 }
@@ -478,6 +483,13 @@ function SkyChartPanel({ data }: { data: ResolvedObject }) {
     const [expanded, setExpanded] = useCollapsible('obj-skychart');
     const radius = Math.max(2, data.defaultFovDeg);
     const fieldSize = `${data.defaultFovDeg.toFixed(2)}° × ${data.defaultFovDeg.toFixed(2)}°`;
+    // POURQUOI : `StaticSkyMap` (lazy) n'est rendu qu'après l'hydratation, voir `useIsHydrated`.
+    const isHydrated = useIsHydrated();
+    const loadingPlaceholder = (
+        <div className="flex aspect-2/1 w-full items-center justify-center bg-mp-glass-solid text-sm text-mp-text-muted">
+            Chargement de la carte du ciel…
+        </div>
+    );
     return (
         <section className="space-y-3 rounded-lg border border-mp-glass-border bg-mp-glass-solid p-4">
             <button
@@ -494,22 +506,20 @@ function SkyChartPanel({ data }: { data: ResolvedObject }) {
             </button>
             {expanded && (
                 <div className="overflow-hidden rounded-lg border border-mp-glass-border">
-                    <Suspense
-                        fallback={
-                            <div className="flex aspect-2/1 w-full items-center justify-center bg-mp-glass-solid text-sm text-mp-text-muted">
-                                Chargement de la carte du ciel…
-                            </div>
-                        }
-                    >
-                        <StaticSkyMap
-                            key={`${data.coords.ra}-${data.coords.dec}`}
-                            raVal={data.coords.ra}
-                            decVal={data.coords.dec}
-                            radius={radius}
-                            fieldSize={fieldSize}
-                            title={data.canonicalName}
-                        />
-                    </Suspense>
+                    {isHydrated ? (
+                        <Suspense fallback={loadingPlaceholder}>
+                            <StaticSkyMap
+                                key={`${data.coords.ra}-${data.coords.dec}`}
+                                raVal={data.coords.ra}
+                                decVal={data.coords.dec}
+                                radius={radius}
+                                fieldSize={fieldSize}
+                                title={data.canonicalName}
+                            />
+                        </Suspense>
+                    ) : (
+                        loadingPlaceholder
+                    )}
                 </div>
             )}
         </section>

@@ -222,7 +222,7 @@ if (photo.constellation) {
                         src={annotationUrl}
                         alt={getAltText(annotationUrl, `Annotation pour ${photo.title}`)}
                         class="annotation-layer absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0 transition-opacity duration-300 z-10"
-                        onerror="console.error('Failed to load mobile annotation:', this.src); this.style.display='none';"
+                        data-hide-on-error="mobile annotation"
                         width={1920}
                         height={1280}
                         isOverlay={true}
@@ -269,7 +269,7 @@ if (photo.constellation) {
                                 alt={getAltText(annotationUrl, `Annotation pour ${photo.title}`)}
                                 id="annotation-layer-desktop"
                                 class="annotation-layer absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0 transition-opacity duration-300 z-10"
-                                onerror="console.error('Failed to load desktop annotation:', this.src); this.style.display='none';"
+                                data-hide-on-error="desktop annotation"
                                 width={1920}
                                 height={1280}
                                 isOverlay={true}
@@ -348,7 +348,7 @@ if (photo.constellation) {
                                                 )}
                                                 class="w-full h-auto"
                                                 loading="lazy"
-                                                onerror="console.error('Failed to load finding chart:', this.src); this.style.display='none';"
+                                                data-hide-on-error="finding chart"
                                                 width={600}
                                                 height={400}
                                             />

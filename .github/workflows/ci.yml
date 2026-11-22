@@ -2,6 +2,7 @@ name: CI
 
 # Vérifications de chaque push et pull request vers dev et main :
 # format, lint, types, tests avec seuils de couverture, puis build.
+# Lancement manuel possible depuis l'onglet Actions (« Run workflow »), sur n'importe quelle branche.
 # Secrets optionnels (Settings > Secrets and variables > Actions) : TURSO_DATABASE_URL, TURSO_AUTH_TOKEN.
 # POURQUOI : le build prérend des routes qui lisent Turso ; sans ces secrets, l'étape est sautée
 # avec un avertissement plutôt que d'échouer.
@@ -11,6 +12,7 @@ on:
     branches: [dev, main]
   pull_request:
     branches: [dev, main]
+  workflow_dispatch:
 
 permissions:
   contents: read
