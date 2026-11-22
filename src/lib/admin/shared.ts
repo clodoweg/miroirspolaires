@@ -131,6 +131,27 @@ export function jsonResponse(data: unknown, status = 200, extraHeaders: Record<s
     });
 }
 
+/** Types MIME acceptés à l'envoi d'une image d'article ou de voyage (admin local et distant). */
+export const ARTICLE_IMAGE_TYPE_RE = /^image\/(png|jpe?g|webp|gif|avif)$/i;
+const SVG_FILENAME_RE = /\.svgz?$/i;
+
+/**
+ * Indique si un fichier peut être envoyé comme image d'article ou de voyage.
+ *
+ * WARNING: sécurité. Le SVG est refusé : `compressImage()` le publie tel quel, et un SVG ouvert à son
+ * adresse sur R2 peut exécuter un script. Le type MIME est déclaré par le navigateur, et le traitement se
+ * fie à l'extension : les deux sont vérifiés. Les annotations SVG des astrophotos ne passent pas par là
+ * (pipeline `scripts/pipeline/update-photos.mjs`).
+ *
+ * @param filename - Nom du fichier envoyé.
+ * @param contentType - Type MIME annoncé, ou `null` s'il n'est pas connu à cette étape.
+ * @returns `true` si le fichier est accepté.
+ */
+export function isAcceptedArticleImage(filename: string, contentType: string | null): boolean {
+    if (SVG_FILENAME_RE.test(filename)) return false;
+    return contentType === null || ARTICLE_IMAGE_TYPE_RE.test(contentType);
+}
+
 export const MIME_BY_EXT: Record<string, string> = {
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',

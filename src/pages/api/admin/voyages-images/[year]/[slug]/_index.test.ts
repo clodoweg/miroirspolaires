@@ -83,6 +83,16 @@ describe('POST /api/admin/voyages-images/[year]/[slug]', () => {
         expect(text.status).toBe(415);
         expect(await text.json()).toEqual({ error: 'notes.txt: unsupported type text/plain' });
 
+        // POURQUOI : un SVG est publié tel quel et peut porter un script ; refusé aussi sous un type d'image.
+        for (const [filename, type] of [
+            ['logo.svg', 'image/svg+xml'],
+            ['logo.svg', 'image/png'],
+        ]) {
+            const svgForm = new FormData();
+            svgForm.append('files', image(filename, type));
+            expect((await upload(svgForm)).status).toBe(415);
+        }
+
         const big = image('big.jpg');
         Object.defineProperty(big, 'size', { value: 150 * 1024 * 1024 + 1 });
         const bigForm = new FormData();

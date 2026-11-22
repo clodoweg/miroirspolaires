@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import {
+    isAcceptedArticleImage,
     requireAdmin,
     validateYear,
     validateSlug,
@@ -164,5 +165,28 @@ describe('ensureDir', () => {
         await ensureDir(nested);
         expect((await fs.stat(nested)).isDirectory()).toBe(true);
         await fs.rm(directory, { recursive: true });
+    });
+});
+
+describe('isAcceptedArticleImage', () => {
+    it.each([
+        ['photo.jpg', 'image/jpeg'],
+        ['Photo.JPEG', 'image/jpeg'],
+        ['anim.gif', 'image/gif'],
+        ['a.webp', 'image/webp'],
+        ['a.avif', 'image/avif'],
+        ['a.png', null],
+    ])('accepte %s (%s)', (filename, contentType) => {
+        expect(isAcceptedArticleImage(filename, contentType)).toBe(true);
+    });
+
+    it.each([
+        ['logo.svg', 'image/svg+xml'],
+        ['logo.SVG', 'image/png'],
+        ['logo.svgz', null],
+        ['photo.jpg', 'image/svg+xml'],
+        ['doc.pdf', 'application/pdf'],
+    ])('refuse %s (%s)', (filename, contentType) => {
+        expect(isAcceptedArticleImage(filename, contentType)).toBe(false);
     });
 });

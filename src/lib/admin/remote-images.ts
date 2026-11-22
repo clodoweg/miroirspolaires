@@ -32,7 +32,15 @@ import sharp from 'sharp';
 import { normalizeAssetKey, planWebImageWidths, webImageKey, WEB_IMAGES_PREFIX } from '@/utils/webImages.mjs';
 import { compressImage, THUMB_SUFFIX } from './image-process';
 import { getR2Target } from './r2-sync';
-import { jsonResponse, MIME_BY_EXT, sanitizeFilename, validateFilename, validateSlug, validateYear } from './shared';
+import {
+    isAcceptedArticleImage,
+    jsonResponse,
+    MIME_BY_EXT,
+    sanitizeFilename,
+    validateFilename,
+    validateSlug,
+    validateYear,
+} from './shared';
 import type { ContentReader } from './stores/content-reader';
 import type { FileChange } from './stores/content-writer';
 
@@ -62,7 +70,6 @@ export interface FinalizedImage {
 const UPLOAD_URL_TTL_SECONDS = 10 * 60;
 /** POURQUOI 150 Mo : même plafond que l'envoi local, pour les panoramas sphériques. */
 export const MAX_UPLOAD_BYTES = 150 * 1024 * 1024;
-const ALLOWED_TYPE_RE = /^image\/(png|jpe?g|webp|gif|avif|svg\+xml)$/i;
 /** Images comptées dans les manifestes (même périmètre que compute-image-dimensions.mjs). */
 const MANIFEST_SOURCE_RE = /\.(jpe?g|png|webp|avif)$/i;
 const WEB_SOURCE_RE = /\.(jpe?g|png)$/i;
@@ -206,7 +213,7 @@ export async function createImageUpload(
     slug: string,
     file: { filename: string; contentType: string; size: number },
 ): Promise<{ uploadUrl: string; uploadKey: string }> {
-    if (!ALLOWED_TYPE_RE.test(file.contentType)) {
+    if (!isAcceptedArticleImage(file.filename, file.contentType)) {
         throw new InvalidImageRequestError(`Type non pris en charge : ${file.contentType}`);
     }
     if (!Number.isSafeInteger(file.size) || file.size <= 0 || file.size > MAX_UPLOAD_BYTES) {
@@ -289,6 +296,10 @@ export async function finalizeImageUpload(
     // WARNING: sécurité. Seule une clé temporaire de cette entrée peut être lue puis supprimée.
     if (!upload.uploadKey.startsWith(incomingPrefix) || !validateFilename(temporaryName)) {
         throw new InvalidImageRequestError('Clé d’envoi invalide');
+    }
+    // POURQUOI : `compressImage()` choisit son traitement d'après ce nom, fourni à part de l'envoi.
+    if (!isAcceptedArticleImage(upload.filename, null) || !isAcceptedArticleImage(temporaryName, null)) {
+        throw new InvalidImageRequestError('Type non pris en charge');
     }
     const { client, bucket } = requireR2();
     const original = await readObject(client, bucket, upload.uploadKey);
