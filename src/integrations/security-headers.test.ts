@@ -124,6 +124,17 @@ describe('analyse du HTML', () => {
         expect(analyzeHtml(html).inlineHandlers).toEqual(['onerror="this.src=1"', 'href="javascript:void(0)"']);
     });
 
+    it('suit le découpage du navigateur (casse, guillemets absents, template, fins de ligne)', () => {
+        const html =
+            '<SCRIPT>a()</SCRIPT ><img src=x ONERROR=alert(1)><a href=" JavaScript:x()">y</a>' +
+            '<template><script>inert()</script><img onerror="z()"></template>' +
+            '<script>b()\r\nc()</script>';
+        const result = analyzeHtml(html);
+        // POURQUOI : le navigateur normalise CRLF en LF avant de calculer l'empreinte.
+        expect(result.scriptHashes).toEqual([cspHash('a()'), cspHash('b()\nc()')]);
+        expect(result.inlineHandlers).toEqual(['onerror="alert(1)"', 'href="JavaScript:x()"']);
+    });
+
     it('agrège les pages d’un dossier', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mp-html-'));
         fs.mkdirSync(path.join(dir, 'blog'));

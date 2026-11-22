@@ -200,6 +200,12 @@ function escapeAlt(alt: string): string {
     return alt.replace(/([[\]\\])/g, '\\$1');
 }
 
+// POURQUOI : la barre oblique inverse doit être échappée avec le guillemet, sinon un titre qui finit par `\`
+// fermerait mal la chaîne (`"titre\"`) et casserait l'image (alerte CodeQL « Incomplete string escaping »).
+function escapeTitle(title: string): string {
+    return title.replace(/(["\\])/g, '\\$1');
+}
+
 /**
  * Écrit une image Markdown à partir de ses attributs.
  * @param item Image (src, alt, title).
@@ -207,7 +213,7 @@ function escapeAlt(alt: string): string {
  */
 export function buildImageMarkdown(item: Pick<ImageGroupItem, 'src' | 'alt' | 'title'>): string {
     const src = /[\s()]/.test(item.src) ? `<${item.src}>` : item.src;
-    const title = item.title ? ` "${item.title.replace(/"/g, '\\"')}"` : '';
+    const title = item.title ? ` "${escapeTitle(item.title)}"` : '';
     return `![${escapeAlt(item.alt)}](${src}${title})`;
 }
 

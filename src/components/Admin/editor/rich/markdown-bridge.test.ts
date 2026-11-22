@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import type { JSONContent } from '@tiptap/core';
 import { parseFrontmatter } from '@/lib/admin/shared';
 import {
+    buildImageMarkdown,
     createMarkdownBridge,
     parseMarkdownBody,
     parseMarkdownFragment,
@@ -157,4 +158,16 @@ describe('markdown-bridge : édition', () => {
         };
         expect(serializeMarkdownBody(bridge, doc)).toBe('**gras** et [lien](/blog)\n\n<div>x</div>\n');
     });
+});
+
+describe('buildImageMarkdown', () => {
+    it.each(['Fjord', 'Le "grand" fjord', 'chemin C:\\photos\\', 'fin par \\', 'mélange \\" et "'])(
+        'écrit un titre que marked relit à l’identique : %s',
+        (title) => {
+            const markdown = buildImageMarkdown({ src: '/a.jpg', alt: 'Vue', title });
+            const token = marked.lexer(markdown)[0] as { tokens?: { type: string; title?: string | null }[] };
+            const image = token.tokens?.find((child) => child.type === 'image');
+            expect(image?.title).toBe(title);
+        },
+    );
 });
