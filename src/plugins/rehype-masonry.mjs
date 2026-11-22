@@ -223,19 +223,6 @@ function transformImage(node, isGrid, options, caption = null, captionNodes = []
         // Here we just ensure we have "some" loading attribute if missing.
         const loadingStrategy = width && height ? 'lazy' : 'eager';
 
-        // Fallback function as a string to inject - handles errors
-        const fallbackScript = `
-            (function(img) {
-                if(img.dataset.fallbackApplied) return;
-                img.dataset.fallbackApplied='true';
-                var picture = img.closest('picture');
-                if(picture) picture.querySelectorAll('source').forEach(function(s){s.remove();});
-                img.src = img.dataset.fallbackSrc;
-            })(this)
-        `
-            .replace(/\s+/g, ' ')
-            .trim();
-
         // Create the img element that will be inside picture
         // Worker URL for optimization, R2 as fallback
         if (captionNodes && captionNodes.length > 0) {
@@ -257,26 +244,15 @@ function transformImage(node, isGrid, options, caption = null, captionNodes = []
                 ...(captionNodes && captionNodes.length > 0
                     ? { 'data-caption-safe-markup': encodeURIComponent(hastToHtml(captionNodes)) }
                     : {}),
-                onerror: fallbackScript, // Auto-fallback on load error
-                onload: `if(this.naturalWidth===0){${fallbackScript}}`,
                 className: imgClasses,
                 loading: loadingStrategy,
             },
             children: [],
         };
 
-        // Source error handler
-        const sourceErrorHandler = `
-            var img = this.parentElement.querySelector('img');
-            if(img && !img.dataset.fallbackApplied) {
-                img.dataset.fallbackApplied='true';
-                this.parentElement.querySelectorAll('source').forEach(function(s){s.remove();});
-                img.src = img.dataset.fallbackSrc;
-                console.warn('[Source Fallback] Switched to R2:', img.dataset.fallbackSrc);
-            }
-        `
-            .replace(/\s+/g, ' ')
-            .trim();
+        // POURQUOI : pas de gestionnaire `onerror`/`onload` inline (refusés par la CSP sans `'unsafe-inline'`).
+        // Le repli vers `data-fallback-src` (retrait des <source>, bascule sur R2) est assuré par l'écouteur
+        // `error`/`load` en capture posé dans le <head> de BaseLayout.astro.
 
         // Mobile Source (< 768px) - Quality form Config
         const mobileSource = {
@@ -289,7 +265,6 @@ function transformImage(node, isGrid, options, caption = null, captionNodes = []
                 sizes: sizes,
                 width: width,
                 height: height,
-                onerror: sourceErrorHandler,
             },
             children: [],
         };
@@ -305,7 +280,6 @@ function transformImage(node, isGrid, options, caption = null, captionNodes = []
                 sizes: sizes,
                 width: width,
                 height: height,
-                onerror: sourceErrorHandler,
             },
             children: [],
         };

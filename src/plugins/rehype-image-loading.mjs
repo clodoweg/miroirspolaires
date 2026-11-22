@@ -59,9 +59,9 @@ export function rehypeImageLoading() {
                             // We set data-fallback-src to the same relative path.
                             // If Astro/Remark transforms the src to a worker URL, the fallback will remain as the relative local path (or whatever Astro resolves it to).
                             // This gives us a safety net.
+                            // POURQUOI : le repli est appliqué par l'écouteur `error` du <head> de BaseLayout.astro
+                            // (pas de `onerror` inline, refusé par la CSP sans `'unsafe-inline'`).
                             node.properties['data-fallback-src'] = newSrc;
-                            node.properties.onerror =
-                                "this.onerror=null; console.warn('[Fallback Triggered]', this.dataset.fallbackSrc); this.src=this.dataset.fallbackSrc || this.src;";
 
                             // console.log(`[rehype-image-loading] Rewrote ${src} to ${newSrc}`);
                         } catch (e) {

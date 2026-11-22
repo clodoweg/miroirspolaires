@@ -172,17 +172,8 @@ if (aspectRatio) {
     }
 }
 
-// POURQUOI : gestionnaires `onerror` inline (repli R2 immédiat, avant le chargement de image-fallback.js).
-// Passés par objet car la règle a11y `no-noninteractive-element-interactions` compare `onerror` à sa
-// liste blanche `onError` en tenant compte de la casse : ce n'est pas une interaction utilisateur.
-const thumbFallbackHandler = {
-    onerror:
-        "this.onerror=null; if(this.dataset.fallbackSrc && this.src!==this.dataset.fallbackSrc) this.src=this.dataset.fallbackSrc;",
-};
-const pictureFallbackHandler = {
-    onerror:
-        "this.onerror=null; this.closest('picture')?.querySelectorAll('source').forEach(e => e.remove()); this.src=this.dataset.fallbackSrc;",
-};
+// POURQUOI : le repli vers `data-fallback-src` en cas d'échec est assuré par l'écouteur `error` posé
+// dans le <head> de BaseLayout.astro (pas de gestionnaire inline : la CSP n'autorise plus `'unsafe-inline'`).
 ---
 
 {usePlainImg ? (
@@ -190,7 +181,6 @@ const pictureFallbackHandler = {
         src={defaultSrc}
         alt={alt}
         data-fallback-src={`${R2_URL}${imagePath}`}
-        {...thumbFallbackHandler}
         loading={loading}
         fetchpriority={fetchPriority}
         class:list={[!isOverlay && "bg-mp-glass-bg", className]}
@@ -207,7 +197,6 @@ const pictureFallbackHandler = {
             data-fallback-src={`${R2_URL}${imagePath}`}
             data-full-src={`${R2_URL}${imagePath}`}
             data-caption={caption}
-            {...pictureFallbackHandler}
             loading={loading}
             fetchpriority={fetchPriority}
             class:list={[

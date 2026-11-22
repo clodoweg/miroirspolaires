@@ -64,14 +64,27 @@ export default defineConfig({
         rehypePlugins: [
             // Probe MUST run before rehypeMasonry: masonry copies width/height
             // from img.properties into the picture/source/img it generates.
-            // POURQUOI : ces deux plugins lisent des JSON générés. Le cache de contenu d'Astro
-            // (.astro/data-store.json, aussi conservé entre builds) ne se vide que si la config change :
-            // passer l'empreinte des JSON en option l'invalide quand ils changent, sinon les articles
-            // gardent d'anciennes dimensions ou ignorent les versions web.
-            [rehypeProbeDimensions, { dimensionsDigest: fileDigest('./src/data/image-dimensions.json') }],
-            [rehypeMasonry, { webImagesDigest: fileDigest('./src/data/web-images.json') }],
-            rehypeImageLoading,
-            rehypeFigure,
+            // POURQUOI : le cache de contenu d'Astro (.astro/data-store.json, aussi conservé entre builds)
+            // ne se vide que si la config change. Passer en option l'empreinte des JSON générés et celle du
+            // code de chaque plugin l'invalide quand l'un d'eux change ; sinon les articles gardent un ancien
+            // rendu (dimensions, versions web, ou gestionnaires inline que la CSP refuse et que
+            // `security-headers.mjs` fait échouer au build). Les plugins ignorent `sourceDigest`.
+            [
+                rehypeProbeDimensions,
+                {
+                    dimensionsDigest: fileDigest('./src/data/image-dimensions.json'),
+                    sourceDigest: fileDigest('./src/plugins/rehype-probe-dimensions.mjs'),
+                },
+            ],
+            [
+                rehypeMasonry,
+                {
+                    webImagesDigest: fileDigest('./src/data/web-images.json'),
+                    sourceDigest: fileDigest('./src/plugins/rehype-masonry.mjs'),
+                },
+            ],
+            [rehypeImageLoading, { sourceDigest: fileDigest('./src/plugins/rehype-image-loading.mjs') }],
+            [rehypeFigure, { sourceDigest: fileDigest('./src/plugins/rehype-figure.mjs') }],
         ],
     },
     output: 'static',
@@ -83,6 +96,13 @@ export default defineConfig({
     },
     vite: {
         plugins: [tailwindcss(), quietPipelineData()],
+        build: {
+            // POURQUOI : Astro recopie dans le HTML les scripts de moins de 4 Ko. Inline, chacun exigerait
+            // son empreinte dans la CSP, impossible à collecter pour les pages rendues côté serveur.
+            // Servis en fichiers, ils passent par `'self'`. `undefined` garde le seuil de Vite pour le reste.
+            // WARNING: sécurité. Ne pas retirer sans revoir `src/integrations/security-headers.mjs`.
+            assetsInlineLimit: (filePath) => (filePath.endsWith('.js') ? false : undefined),
+        },
         server: {
             watch: {
                 // POURQUOI: Empêche Vite de recharger la page pendant les scripts qui écrivent ces images.
