@@ -31,6 +31,8 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fromHtml } from 'hast-util-from-html';
+import { visit } from 'unist-util-visit';
 import astroIslandScript from '@astrojs/runtime/_internal/server/astro-island.prebuilt.js';
 import idleDirectiveScript from '@astrojs/runtime/_internal/client/idle.prebuilt.js';
 import loadDirectiveScript from '@astrojs/runtime/_internal/client/load.prebuilt.js';
@@ -245,44 +247,53 @@ export function cspHash(content) {
     return `'sha256-${createHash('sha256').update(content, 'utf8').digest('base64')}'`;
 }
 
-const SCRIPT_RE = /<script\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script\s*>/gi;
-const TAG_RE = /<[a-zA-Z][^\s/>]*((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
-const ATTRIBUTE_RE = /([^\s=/>"']+)(?:\s*=\s*("[^"]*"|'[^']*'|[^\s>"']+))?/g;
 // POURQUOI : types exécutés par le navigateur (et donc soumis à `script-src`). Les blocs de données
 // (`application/ld+json`, `application/json`) ne s'exécutent pas.
 const EXECUTABLE_SCRIPT_TYPES = new Set(['', 'module', 'importmap', 'text/javascript', 'application/javascript']);
+// POURQUOI : hast nomme les gestionnaires en camelCase (`onError`) ; un attribut inconnu garde sa casse.
+const EVENT_HANDLER_PROPERTY_RE = /^on[a-z]/i;
+const JAVASCRIPT_URL_RE = /^\s*javascript:/i;
 
-function readAttribute(attributes, name) {
-    for (const [, attributeName, rawValue] of attributes.matchAll(ATTRIBUTE_RE)) {
-        if (attributeName.toLowerCase() === name) return (rawValue ?? '').replace(/^["']|["']$/g, '');
-    }
-    return null;
+/**
+ * Texte d'un élément `<script>`, tel que le navigateur l'empreinte.
+ *
+ * @param {import('hast').Element} element - Élément `<script>`.
+ * @returns {string} Contenu brut du script.
+ */
+function scriptText(element) {
+    return element.children.map((child) => (child.type === 'text' ? child.value : '')).join('');
 }
 
 /**
  * Analyse une page HTML : empreintes de ses scripts inline exécutables, gestionnaires inline et URLs
  * `javascript:` (que la CSP stricte refuserait).
  *
+ * POURQUOI un vrai analyseur HTML (parse5, celui que suivent les navigateurs) plutôt que des expressions
+ * régulières : il découpe balises, attributs et contenu des scripts exactement comme le navigateur, et
+ * normalise les fins de ligne comme lui avant le calcul de l'empreinte. Le contenu des `<template>`, inerte,
+ * n'est pas parcouru.
+ *
  * @param {string} html - Contenu de la page.
  * @returns {{ scriptHashes: string[], inlineHandlers: string[] }} Empreintes et attributs fautifs.
  */
 export function analyzeHtml(html) {
     const scriptHashes = [];
-    for (const [, attributes, content] of html.matchAll(SCRIPT_RE)) {
-        if (readAttribute(attributes, 'src') !== null) continue;
-        const type = (readAttribute(attributes, 'type') ?? '').trim().toLowerCase();
-        if (!EXECUTABLE_SCRIPT_TYPES.has(type)) continue;
-        scriptHashes.push(cspHash(content));
-    }
     const inlineHandlers = [];
-    for (const [, attributes] of html.replace(SCRIPT_RE, '').matchAll(TAG_RE)) {
-        for (const [, attributeName, rawValue = ''] of attributes.matchAll(ATTRIBUTE_RE)) {
-            const value = rawValue.replace(/^["']|["']$/g, '').trim();
-            if (/^on[a-z]+$/i.test(attributeName) || /^javascript:/i.test(value)) {
-                inlineHandlers.push(`${attributeName}="${value.slice(0, 60)}"`);
+    visit(fromHtml(html), 'element', (element) => {
+        const properties = element.properties ?? {};
+        if (element.tagName === 'script' && properties.src === undefined) {
+            const type = String(properties.type ?? '')
+                .trim()
+                .toLowerCase();
+            if (EXECUTABLE_SCRIPT_TYPES.has(type)) scriptHashes.push(cspHash(scriptText(element)));
+        }
+        for (const [name, value] of Object.entries(properties)) {
+            const text = Array.isArray(value) ? value.join(' ') : String(value ?? '');
+            if (EVENT_HANDLER_PROPERTY_RE.test(name) || JAVASCRIPT_URL_RE.test(text)) {
+                inlineHandlers.push(`${name.toLowerCase()}="${text.trim().slice(0, 60)}"`);
             }
         }
-    }
+    });
     return { scriptHashes, inlineHandlers };
 }
 
