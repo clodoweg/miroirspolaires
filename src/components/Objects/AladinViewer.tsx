@@ -153,6 +153,10 @@ export default function AladinViewer({ ra, dec, fovDeg, targetName, camera }: Pr
                     // POURQUOI : le pointeur interroge SIMBAD à Strasbourg en dur. Si le fond du CDS ne répond pas,
                     // le CDS est très probablement en panne et le pointeur échouerait à chaque clic.
                     showSimbadPointerControl: skyRoute.id === 'cds',
+                    // POURQUOI : sinon Aladin envoie au démarrage des statistiques d'usage (URL de la page
+                    // comprise) à alasky.unistra.fr, hôte absent de `connect-src` : requête bloquée par la CSP
+                    // et erreur « Failed to fetch » dans la console.
+                    log: false,
                 });
                 setReady(true);
             })

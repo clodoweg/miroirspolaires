@@ -170,6 +170,9 @@ describe('createImageUpload', () => {
 
     it.each([
         [{ filename: 'a.pdf', contentType: 'application/pdf', size: 10 }, 'Type non pris en charge'],
+        [{ filename: 'logo.svg', contentType: 'image/svg+xml', size: 10 }, 'Type non pris en charge'],
+        // POURQUOI : le type est déclaré par le navigateur ; l'extension est vérifiée à part.
+        [{ filename: 'logo.svg', contentType: 'image/png', size: 10 }, 'Type non pris en charge'],
         [{ filename: 'a.jpg', contentType: 'image/jpeg', size: 0 }, 'Taille'],
         [{ filename: 'a.jpg', contentType: 'image/jpeg', size: 151 * 1024 * 1024 }, 'Taille'],
     ])('refuse %o', async (file, message) => {
@@ -209,6 +212,24 @@ describe('finalizeImageUpload', () => {
             is360: true,
         });
         expect(renamed.name).toBe('panorama-360.jpg');
+    });
+
+    it('refuse un SVG, même déposé sous un nom d’image, sans l’écrire', async () => {
+        put('incoming/blog/2026/aurores/tmp.jpg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
+        await expect(
+            finalizeImageUpload('blog', '2026', 'aurores', {
+                uploadKey: 'incoming/blog/2026/aurores/tmp.jpg',
+                filename: 'logo.svg',
+            }),
+        ).rejects.toThrow('Type non pris en charge');
+        put('incoming/blog/2026/aurores/tmp.svg', '<svg xmlns="http://www.w3.org/2000/svg"/>');
+        await expect(
+            finalizeImageUpload('blog', '2026', 'aurores', {
+                uploadKey: 'incoming/blog/2026/aurores/tmp.svg',
+                filename: 'logo.jpg',
+            }),
+        ).rejects.toThrow('Type non pris en charge');
+        expect([...bucket.objects.keys()].filter((key) => key.startsWith('blog/'))).toEqual([]);
     });
 
     it.each(['incoming/blog/2026/autre/tmp.jpg', 'blog/2026/aurores/a.jpg', 'incoming/blog/2026/aurores/../x.jpg'])(

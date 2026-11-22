@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { requireAdmin, jsonResponse, validateSlug, validateYear } from '@/lib/admin/shared';
+import { isAcceptedArticleImage, requireAdmin, jsonResponse, validateSlug, validateYear } from '@/lib/admin/shared';
 import { listImages, saveImage, mark360Image, publicImagePath } from '@/lib/admin/blog-files';
 import { compressImage } from '@/lib/admin/image-process';
 import { isLocalAdmin } from '@/lib/admin/auth/access';
@@ -10,7 +10,6 @@ export const prerender = false;
 // POURQUOI : 150 Mo permet d'uploader directement les panoramas sphériques géants
 // assemblés issus de boîtiers reflex sans rejet HTTP 413.
 const MAX_BYTES = 150 * 1024 * 1024;
-const ALLOWED = /^image\/(png|jpe?g|webp|gif|avif|svg\+xml)$/i;
 
 export const GET: APIRoute = async ({ params, locals }) => {
     const blocked = requireAdmin(locals);
@@ -44,7 +43,7 @@ export const POST: APIRoute = async ({ params, request, locals }) => {
     const saved: { name: string; path: string; originalBytes: number; compressedBytes: number; is360?: boolean }[] = [];
     for (const file of files) {
         if (file.size > MAX_BYTES) return jsonResponse({ error: `${file.name} exceeds ${MAX_BYTES} bytes` }, 413);
-        if (!ALLOWED.test(file.type))
+        if (!isAcceptedArticleImage(file.name, file.type))
             return jsonResponse({ error: `${file.name}: unsupported type ${file.type}` }, 415);
         const buf = Buffer.from(await file.arrayBuffer());
 

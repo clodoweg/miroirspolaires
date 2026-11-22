@@ -27,7 +27,21 @@ export const UPSTREAM_TIMEOUT_MS = { tap: 25_000, lookup: 10_000 } as const;
 export function jsonResponse(data: unknown, init: { status?: number; headers?: HeadersInit } = {}): Response {
     const headers = new Headers(init.headers);
     headers.set('Content-Type', JSON_CONTENT_TYPE);
-    return new Response(JSON.stringify(data), { status: init.status ?? 200, headers });
+    return new Response(toSafeJson(data), { status: init.status ?? 200, headers });
+}
+
+/**
+ * Sérialise en JSON en échappant `<`, `>` et `&`.
+ *
+ * WARNING: sécurité. Certaines réponses renvoient la saisie de l'utilisateur (« Aucun objet trouvé pour
+ * "…" »). Échappées, ces valeurs ne peuvent former aucune balise si la réponse était un jour interprétée
+ * comme du HTML (type MIME perdu, cache, client qui l'insère dans le DOM). Le JSON lu reste identique.
+ *
+ * @param data - Valeur à sérialiser.
+ * @returns Le JSON, sans `<`, `>` ni `&` littéraux.
+ */
+export function toSafeJson(data: unknown): string {
+    return JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
 }
 
 /**
