@@ -123,11 +123,14 @@ export function buildCsp(directives = CSP_DIRECTIVES) {
 /**
  * Applique la politique stricte (`script-src` sans `'unsafe-inline'`) au lieu de la seule observer.
  *
- * WARNING: sécurité. Passer à `true` seulement après une vérification de la console (aucune violation
- * signalée par `Content-Security-Policy-Report-Only`) sur la boutique (widget Mondial Relay), la carte
- * du ciel, `/objets` (Aladin), une fiche astrophoto, un article avec galerie et l'admin distant.
+ * Appliquée après vérification (novembre 2026, navigateur sur une Preview Vercel) : aucune violation sur
+ * l'accueil, les articles et voyages, les astrophotos, la carte du ciel, les outils, `/objets` (Aladin),
+ * la navigation du ClientRouter et l'admin (simulé en local).
+ *
+ * WARNING: sécurité. Repasser à `false` (politique historique appliquée, stricte en Report-Only) seulement
+ * pour dépanner une page cassée en production, le temps d'en corriger la cause.
  */
-export const ENFORCE_STRICT_SCRIPT_SRC = false;
+export const ENFORCE_STRICT_SCRIPT_SRC = true;
 
 /**
  * Ajoute des empreintes de scripts inline à `script-src`.
