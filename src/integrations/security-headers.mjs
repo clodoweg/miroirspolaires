@@ -31,6 +31,22 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import astroIslandScript from '@astrojs/runtime/_internal/server/astro-island.prebuilt.js';
+import idleDirectiveScript from '@astrojs/runtime/_internal/client/idle.prebuilt.js';
+import loadDirectiveScript from '@astrojs/runtime/_internal/client/load.prebuilt.js';
+import mediaDirectiveScript from '@astrojs/runtime/_internal/client/media.prebuilt.js';
+import onlyDirectiveScript from '@astrojs/runtime/_internal/client/only.prebuilt.js';
+import visibleDirectiveScript from '@astrojs/runtime/_internal/client/visible.prebuilt.js';
+
+// POURQUOI : textes exacts des scripts inline qu'Astro insère avec les îlots (`getPrescripts`).
+const ASTRO_RUNTIME_INLINE_SCRIPTS = [
+    astroIslandScript,
+    idleDirectiveScript,
+    loadDirectiveScript,
+    mediaDirectiveScript,
+    onlyDirectiveScript,
+    visibleDirectiveScript,
+];
 
 const CDS_HOSTS = ['https://cds.unistra.fr', 'https://*.cds.unistra.fr', 'https://*.u-strasbg.fr'];
 const R2_HOSTS = [
@@ -310,14 +326,7 @@ export function collectInlineScripts(directory) {
  * @returns {Promise<string[]>} Empreintes au format CSP.
  */
 export async function getAstroRuntimeScriptHashes() {
-    const modules = [
-        '@astrojs/runtime/_internal/server/astro-island.prebuilt.js',
-        ...['idle', 'load', 'media', 'only', 'visible'].map(
-            (directive) => `@astrojs/runtime/_internal/client/${directive}.prebuilt.js`,
-        ),
-    ];
-    const contents = await Promise.all(modules.map(async (specifier) => (await import(specifier)).default));
-    return contents.map(cspHash);
+    return ASTRO_RUNTIME_INLINE_SCRIPTS.map(cspHash);
 }
 
 /**
