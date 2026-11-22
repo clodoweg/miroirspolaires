@@ -15,7 +15,19 @@
  * fetch, WebSocket) doit être ajoutée à la directive CSP correspondante ci-dessous, sinon
  * elle sera bloquée en production. Les appels faits côté serveur (routes /api, Stripe) et les
  * redirections de page (Stripe Checkout) ne sont pas concernés.
+ *
+ * Scripts inline (retrait de `'unsafe-inline'`, plan dans `docs/architecture.md`) :
+ * - `script-src` strict = `CSP_DIRECTIVES['script-src']` + empreintes SHA-256 de chaque script inline.
+ *   Elles sont collectées au build dans le HTML prérendu, plus celles des scripts d'amorçage des îlots
+ *   d'Astro (constants, présents aussi dans les pages rendues côté serveur).
+ * - Le build échoue si le HTML prérendu contient un gestionnaire inline (`onerror="…"`) ou une URL
+ *   `javascript:` : aucune empreinte ne les autorise.
+ * - Tant que `ENFORCE_STRICT_SCRIPT_SRC` vaut `false`, la politique stricte part en
+ *   `Content-Security-Policy-Report-Only` (violations visibles dans la console, rien n'est bloqué)
+ *   et la politique appliquée garde `'unsafe-inline'`, sans empreinte : un navigateur ignore
+ *   `'unsafe-inline'` dès qu'une empreinte figure dans la même directive.
  */
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,14 +50,10 @@ const MONDIAL_RELAY_HOSTS = ['https://widget.mondialrelay.com', 'https://ajax.go
 export const CSP_DIRECTIVES = {
     'default-src': ["'self'"],
     // POURQUOI : 'wasm-unsafe-eval' est requis par le moteur Stellarium et Aladin Lite (WebAssembly).
-    // 'unsafe-inline' reste nécessaire (audit 2026-10, plan dans docs/audits/2026-10-audit.md) :
-    // scripts is:inline, gestionnaires `onerror`/`onload` posés par les plugins rehype et
-    // ResponsiveImage (une empreinte ne les couvre pas sans `'unsafe-hashes'`), CSP native d'Astro
-    // incompatible avec <ClientRouter />, scripts des pages SSR et des widgets tiers (Mondial Relay,
-    // Aladin) non vérifiables au build.
+    // Pas de 'unsafe-inline' : les scripts inline sont autorisés un par un par leur empreinte, ajoutée au
+    // build (`withScriptHashes`). Voir `ENFORCE_STRICT_SCRIPT_SRC` pour la politique appliquée.
     'script-src': [
         "'self'",
-        "'unsafe-inline'",
         "'wasm-unsafe-eval'",
         'https://umami.miroirspolaires.fr',
         'https://challenges.cloudflare.com',
@@ -112,22 +120,205 @@ export function buildCsp(directives = CSP_DIRECTIVES) {
         .join('; ');
 }
 
-/** En-têtes posés sur toutes les réponses. HSTS est déjà ajouté par Vercel. */
-export const SECURITY_HEADERS = {
-    'content-security-policy': buildCsp(),
-    'x-frame-options': 'DENY',
-    'x-content-type-options': 'nosniff',
-    'referrer-policy': 'strict-origin-when-cross-origin',
-    // POURQUOI : geolocation=(self) car UserSettingsBar propose « ma position » ;
-    // fullscreen=(self) pour le plein écran de la carte du ciel.
-    'permissions-policy': 'geolocation=(self), fullscreen=(self), camera=(), microphone=(), payment=(), usb=()',
-    // POURQUOI `allow-popups` : isole la fenêtre des pages tierces tout en laissant les liens
-    // de partage et les fenêtres de paiement ouvrir des popups.
-    'cross-origin-opener-policy': 'same-origin-allow-popups',
-};
+/**
+ * Applique la politique stricte (`script-src` sans `'unsafe-inline'`) au lieu de la seule observer.
+ *
+ * WARNING: sécurité. Passer à `true` seulement après une vérification de la console (aucune violation
+ * signalée par `Content-Security-Policy-Report-Only`) sur la boutique (widget Mondial Relay), la carte
+ * du ciel, `/objets` (Aladin), une fiche astrophoto, un article avec galerie et l'admin distant.
+ */
+export const ENFORCE_STRICT_SCRIPT_SRC = false;
 
 /**
- * Intégration Astro qui injecte SECURITY_HEADERS dans la config Build Output API de Vercel.
+ * Ajoute des empreintes de scripts inline à `script-src`.
+ *
+ * @param {Record<string, string[]>} directives - Directives de base.
+ * @param {Iterable<string>} scriptHashes - Empreintes au format CSP (`'sha256-…'`).
+ * @returns {Record<string, string[]>} Copie des directives, empreintes triées et dédoublonnées.
+ */
+export function withScriptHashes(directives, scriptHashes) {
+    return {
+        ...directives,
+        'script-src': [...directives['script-src'], ...[...new Set(scriptHashes)].sort()],
+    };
+}
+
+/**
+ * Pages qui gardent `'unsafe-inline'` dans `script-src`, même une fois la politique stricte appliquée.
+ *
+ * WARNING: sécurité. N'y ajouter qu'une page sans contenu saisi par un tiers, et pour un code tiers qu'on ne
+ * peut pas adapter. `/boutique` : le widget Mondial Relay (jQuery, `MondialRelayModal.tsx`) insère ses
+ * propres scripts inline et attributs `onclick`, dont le contenu ne nous appartient pas.
+ */
+export const RELAXED_SCRIPT_SRC_PATHS = ['/boutique'];
+
+/**
+ * Construit les en-têtes de sécurité. HSTS est déjà ajouté par Vercel.
+ *
+ * @param {{ scriptHashes?: Iterable<string>, enforceStrictScriptSrc?: boolean, relaxedScriptSrc?: boolean }} [options]
+ *   Empreintes des scripts inline, choix de la politique appliquée (`ENFORCE_STRICT_SCRIPT_SRC` par défaut), et
+ *   `relaxedScriptSrc` pour une page de `RELAXED_SCRIPT_SRC_PATHS` (politique historique seule).
+ * @returns {Record<string, string>} En-têtes, noms en minuscules.
+ */
+export function buildSecurityHeaders({
+    scriptHashes = [],
+    enforceStrictScriptSrc = ENFORCE_STRICT_SCRIPT_SRC,
+    relaxedScriptSrc = false,
+} = {}) {
+    const strictCsp = buildCsp(withScriptHashes(CSP_DIRECTIVES, scriptHashes));
+    // POURQUOI sans empreinte : un navigateur ignore `'unsafe-inline'` dès qu'une empreinte est présente.
+    const legacyCsp = buildCsp({
+        ...CSP_DIRECTIVES,
+        'script-src': [...CSP_DIRECTIVES['script-src'], "'unsafe-inline'"],
+    });
+    const isStrict = enforceStrictScriptSrc && !relaxedScriptSrc;
+    return {
+        'content-security-policy': isStrict ? strictCsp : legacyCsp,
+        ...(isStrict || relaxedScriptSrc ? {} : { 'content-security-policy-report-only': strictCsp }),
+        'x-frame-options': 'DENY',
+        'x-content-type-options': 'nosniff',
+        'referrer-policy': 'strict-origin-when-cross-origin',
+        // POURQUOI : geolocation=(self) car UserSettingsBar propose « ma position » ;
+        // fullscreen=(self) pour le plein écran de la carte du ciel.
+        'permissions-policy': 'geolocation=(self), fullscreen=(self), camera=(), microphone=(), payment=(), usb=()',
+        // POURQUOI `allow-popups` : isole la fenêtre des pages tierces tout en laissant les liens
+        // de partage et les fenêtres de paiement ouvrir des popups.
+        'cross-origin-opener-policy': 'same-origin-allow-popups',
+    };
+}
+
+/** En-têtes sans empreinte (référence pour les tests ; le build ajoute les empreintes). */
+export const SECURITY_HEADERS = buildSecurityHeaders();
+
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Routes Build Output API de Vercel qui posent les en-têtes de sécurité.
+ *
+ * POURQUOI deux routes qui s'excluent : chaque réponse ne reçoit qu'un seul jeu d'en-têtes, sans dépendre
+ * de l'ordre dans lequel Vercel fusionne deux routes `continue: true` qui poseraient le même en-tête.
+ *
+ * @param {{ scriptHashes?: Iterable<string>, enforceStrictScriptSrc?: boolean }} [options] - Voir
+ *   `buildSecurityHeaders`.
+ * @returns {{ src: string, headers: Record<string, string>, continue: true }[]} Routes à placer en tête.
+ */
+export function buildHeaderRoutes(options = {}) {
+    const relaxedPattern = `(?:${RELAXED_SCRIPT_SRC_PATHS.map(escapeRegExp).join('|')})/?`;
+    return [
+        { src: `^(?!${relaxedPattern}$).*$`, headers: buildSecurityHeaders(options), continue: true },
+        {
+            src: `^${relaxedPattern}$`,
+            headers: buildSecurityHeaders({ ...options, relaxedScriptSrc: true }),
+            continue: true,
+        },
+    ];
+}
+
+/**
+ * Empreinte CSP d'un contenu de script.
+ *
+ * @param {string} content - Texte exact du script (entre les balises).
+ * @returns {string} `'sha256-<base64>'`.
+ */
+export function cspHash(content) {
+    return `'sha256-${createHash('sha256').update(content, 'utf8').digest('base64')}'`;
+}
+
+const SCRIPT_RE = /<script\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/script\s*>/gi;
+const TAG_RE = /<[a-zA-Z][^\s/>]*((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
+const ATTRIBUTE_RE = /([^\s=/>"']+)(?:\s*=\s*("[^"]*"|'[^']*'|[^\s>"']+))?/g;
+// POURQUOI : types exécutés par le navigateur (et donc soumis à `script-src`). Les blocs de données
+// (`application/ld+json`, `application/json`) ne s'exécutent pas.
+const EXECUTABLE_SCRIPT_TYPES = new Set(['', 'module', 'importmap', 'text/javascript', 'application/javascript']);
+
+function readAttribute(attributes, name) {
+    for (const [, attributeName, rawValue] of attributes.matchAll(ATTRIBUTE_RE)) {
+        if (attributeName.toLowerCase() === name) return (rawValue ?? '').replace(/^["']|["']$/g, '');
+    }
+    return null;
+}
+
+/**
+ * Analyse une page HTML : empreintes de ses scripts inline exécutables, gestionnaires inline et URLs
+ * `javascript:` (que la CSP stricte refuserait).
+ *
+ * @param {string} html - Contenu de la page.
+ * @returns {{ scriptHashes: string[], inlineHandlers: string[] }} Empreintes et attributs fautifs.
+ */
+export function analyzeHtml(html) {
+    const scriptHashes = [];
+    for (const [, attributes, content] of html.matchAll(SCRIPT_RE)) {
+        if (readAttribute(attributes, 'src') !== null) continue;
+        const type = (readAttribute(attributes, 'type') ?? '').trim().toLowerCase();
+        if (!EXECUTABLE_SCRIPT_TYPES.has(type)) continue;
+        scriptHashes.push(cspHash(content));
+    }
+    const inlineHandlers = [];
+    for (const [, attributes] of html.replace(SCRIPT_RE, '').matchAll(TAG_RE)) {
+        for (const [, attributeName, rawValue = ''] of attributes.matchAll(ATTRIBUTE_RE)) {
+            const value = rawValue.replace(/^["']|["']$/g, '').trim();
+            if (/^on[a-z]+$/i.test(attributeName) || /^javascript:/i.test(value)) {
+                inlineHandlers.push(`${attributeName}="${value.slice(0, 60)}"`);
+            }
+        }
+    }
+    return { scriptHashes, inlineHandlers };
+}
+
+function listHtmlFiles(directory) {
+    const files = [];
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+        const entryPath = path.join(directory, entry.name);
+        if (entry.isDirectory()) files.push(...listHtmlFiles(entryPath));
+        else if (entry.name.endsWith('.html')) files.push(entryPath);
+    }
+    return files;
+}
+
+/**
+ * Analyse tout le HTML prérendu d'un dossier.
+ *
+ * @param {string} directory - Dossier de sortie client du build.
+ * @returns {{ scriptHashes: Set<string>, violations: { file: string, attribute: string }[], pageCount: number }}
+ */
+export function collectInlineScripts(directory) {
+    const scriptHashes = new Set();
+    const violations = [];
+    const files = listHtmlFiles(directory);
+    for (const file of files) {
+        const analysis = analyzeHtml(fs.readFileSync(file, 'utf8'));
+        for (const hash of analysis.scriptHashes) scriptHashes.add(hash);
+        for (const attribute of analysis.inlineHandlers) {
+            violations.push({ file: path.relative(directory, file), attribute });
+        }
+    }
+    return { scriptHashes, violations, pageCount: files.length };
+}
+
+/**
+ * Empreintes des scripts inline qu'Astro insère avec les îlots (`astro-island` et directives `client:*`).
+ *
+ * POURQUOI : les pages rendues côté serveur (boutique, `/objets`, admin) ne passent pas par le HTML
+ * prérendu ; leurs seuls scripts inline sont ceux-ci et ceux de BaseLayout, constants. On les lit dans
+ * `@astrojs/runtime`, exactement comme Astro les insère (`getPrescripts`).
+ *
+ * @returns {Promise<string[]>} Empreintes au format CSP.
+ */
+export async function getAstroRuntimeScriptHashes() {
+    const modules = [
+        '@astrojs/runtime/_internal/server/astro-island.prebuilt.js',
+        ...['idle', 'load', 'media', 'only', 'visible'].map(
+            (directive) => `@astrojs/runtime/_internal/client/${directive}.prebuilt.js`,
+        ),
+    ];
+    const contents = await Promise.all(modules.map(async (specifier) => (await import(specifier)).default));
+    return contents.map(cspHash);
+}
+
+/**
+ * Intégration Astro qui injecte les en-têtes de sécurité dans la config Build Output API de Vercel.
  * Sans effet si le build ne produit pas `.vercel/output/config.json` (ex. autre adaptateur).
  * @returns {import('astro').AstroIntegration}
  */
@@ -139,17 +330,33 @@ export default function securityHeaders() {
             'astro:config:done': ({ config }) => {
                 root = fileURLToPath(config.root);
             },
-            'astro:build:done': ({ logger }) => {
+            'astro:build:done': async ({ dir, logger }) => {
                 const configPath = path.join(root, '.vercel/output/config.json');
                 if (!fs.existsSync(configPath)) {
                     logger.warn(`${configPath} introuvable : en-têtes de sécurité non ajoutés.`);
                     return;
                 }
+                const { scriptHashes, violations, pageCount } = collectInlineScripts(fileURLToPath(dir));
+                if (violations.length > 0) {
+                    const sample = violations
+                        .slice(0, 10)
+                        .map(({ file, attribute }) => `  ${file} : ${attribute}`)
+                        .join('\n');
+                    throw new Error(
+                        `${violations.length} gestionnaire(s) inline ou URL javascript: dans le HTML, refusés par la CSP ` +
+                            `(utiliser un écouteur, voir l'écouteur d'images de BaseLayout.astro) :\n${sample}`,
+                    );
+                }
+                for (const hash of await getAstroRuntimeScriptHashes()) scriptHashes.add(hash);
+
                 const vercelConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
                 vercelConfig.routes = vercelConfig.routes ?? [];
-                vercelConfig.routes.unshift({ src: '/(.*)', headers: SECURITY_HEADERS, continue: true });
+                vercelConfig.routes.unshift(...buildHeaderRoutes({ scriptHashes }));
                 fs.writeFileSync(configPath, JSON.stringify(vercelConfig, null, '\t'));
-                logger.info('En-têtes de sécurité ajoutés à .vercel/output/config.json');
+                logger.info(
+                    `En-têtes de sécurité ajoutés à .vercel/output/config.json (${scriptHashes.size} empreintes de ` +
+                        `scripts inline, ${pageCount} pages ; politique stricte ${ENFORCE_STRICT_SCRIPT_SRC ? 'appliquée' : 'en Report-Only'}).`,
+                );
             },
         },
     };
