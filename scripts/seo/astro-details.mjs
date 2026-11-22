@@ -22,6 +22,25 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+/**
+ * Indique si une URL pointe vers Wikipédia (toute langue).
+ *
+ * POURQUOI : `url.includes('wikipedia.org')` accepterait `https://exemple.com/wikipedia.org` ; on vérifie le
+ * nom d'hôte, seul à décider où part la requête.
+ *
+ * @param {unknown} url - URL à tester.
+ * @returns {boolean} `true` pour une URL https de wikipedia.org ou d'un de ses sous-domaines.
+ */
+function isWikipediaUrl(url) {
+    if (typeof url !== 'string') return false;
+    try {
+        const { protocol, hostname } = new URL(url);
+        return protocol === 'https:' && (hostname === 'wikipedia.org' || hostname.endsWith('.wikipedia.org'));
+    } catch {
+        return false;
+    }
+}
+
 const CSV_PATH = path.join(__dirname, '../../data/astrobin_clodoweg_gallery_python.csv');
 const JSON_PATH = path.join(__dirname, '../../src/data/astro_details.json');
 
@@ -248,8 +267,7 @@ async function syncAstroDetails() {
     const targets = Object.keys(details).filter((id) => {
         const e = details[id];
         return (
-            e.source_url &&
-            e.source_url.includes('wikipedia.org') &&
+            isWikipediaUrl(e.source_url) &&
             (e.distance_ly === null || e.dimensions_ly === null || e.apparent_magnitude === null)
         );
     });
