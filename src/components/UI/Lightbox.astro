@@ -60,6 +60,8 @@ const { defaultCaption } = Astro.props;
 </dialog>
 
 <script>
+    import { renderCaptionMarkup } from "@/utils/captionMarkup";
+
     const GALLERY_IMAGE_SELECTOR =
         ".prose figure img, .prose > p > img, .prose picture img, .prose img, .gallery-image, img[data-full-src]";
 
@@ -138,7 +140,8 @@ const { defaultCaption } = Astro.props;
                     img.dataset.caption || img.getAttribute("data-caption") || lightbox?.dataset.defaultCaption;
 
                 if (captionHtml && lightboxCaption) {
-                    lightboxCaption.innerHTML = captionHtml;
+                    // POURQUOI : pas d'`innerHTML` : la légende vient du Markdown, qui accepte du HTML brut.
+                    renderCaptionMarkup(lightboxCaption, captionHtml);
                     lightboxCaption.classList.remove("hidden");
                 } else if (caption && lightboxCaption) {
                     lightboxCaption.textContent = caption;

@@ -76,11 +76,27 @@ function loadUmdScript(route: UpstreamRoute): Promise<AladinApi> {
     });
 }
 
+/**
+ * URL absolue d'un module servi par ce site.
+ *
+ * WARNING: sécurité. Un import dynamique exécute le module avec les droits de la page : seule une URL du
+ * même site est acceptée. Déclarée comme fonction d'échappement de la règle `no-unsanitized/method`
+ * (`eslint.config.js`), qui refuse sinon tout `import()` d'une valeur calculée.
+ *
+ * @param path - Chemin ou URL du module.
+ * @returns L'URL absolue (POURQUOI : en dev, Vite ajoute `?import` aux imports d'un chemin du site et refuse
+ *   alors un fichier de `public/` ; il laisse passer une URL complète, servie telle quelle).
+ * @throws Si l'URL n'est pas sur le même site.
+ */
+function toSameOriginModuleUrl(path: string): string {
+    const url = new URL(path, window.location.href);
+    if (url.origin !== window.location.origin) throw new Error(`Module hors du site refusé : ${url.origin}`);
+    return url.href;
+}
+
 /** Charge une version en module ES (copie auto-hébergée). Ses styles sont inclus dans le module. */
 async function loadEsmScript(route: UpstreamRoute): Promise<AladinApi> {
-    // POURQUOI une URL absolue : en dev, Vite ajoute `?import` aux imports d'un chemin du site et refuse alors
-    // un fichier de `public/` (erreur 500). Il laisse passer une URL complète, servie telle quelle.
-    const module = await import(/* @vite-ignore */ new URL(route.baseUrl, window.location.href).href);
+    const module = await import(/* @vite-ignore */ toSameOriginModuleUrl(route.baseUrl));
     window.A = module.default;
     return module.default;
 }
