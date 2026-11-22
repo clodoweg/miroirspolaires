@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import securityHeaders, {
     CSP_DIRECTIVES,
+    ENFORCE_STRICT_SCRIPT_SRC,
     SECURITY_HEADERS,
     analyzeHtml,
     buildCsp,
@@ -52,6 +53,11 @@ describe('buildCsp', () => {
 
 describe('politique des scripts', () => {
     const scriptSrc = (csp: string) => csp.split('; ').find((directive) => directive.startsWith('script-src ')) ?? '';
+
+    it('applique la politique stricte (WARNING: ne repasser à false que pour un dépannage)', () => {
+        expect(ENFORCE_STRICT_SCRIPT_SRC).toBe(true);
+        expect(scriptSrc(SECURITY_HEADERS['content-security-policy'])).not.toContain("'unsafe-inline'");
+    });
 
     it('n’autorise pas les scripts inline dans la politique de base', () => {
         expect(CSP_DIRECTIVES['script-src']).not.toContain("'unsafe-inline'");
@@ -168,10 +174,10 @@ describe('intégration securityHeaders', () => {
         const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
         expect(config.routes).toHaveLength(3);
         expect(config.routes[0].continue).toBe(true);
-        expect(config.routes[0].headers['content-security-policy-report-only']).toContain(cspHash('theme()'));
-        for (const hash of await getAstroRuntimeScriptHashes()) {
-            expect(config.routes[0].headers['content-security-policy-report-only']).toContain(hash);
-        }
+        const appliedCsp = config.routes[0].headers['content-security-policy'];
+        expect(appliedCsp).toContain(cspHash('theme()'));
+        for (const hash of await getAstroRuntimeScriptHashes()) expect(appliedCsp).toContain(hash);
+        expect(config.routes[0].headers['content-security-policy-report-only']).toBeUndefined();
         expect(config.routes[1].src).toContain('boutique');
         expect(config.routes[2]).toEqual({ handle: 'filesystem' });
         fs.rmSync(root, { recursive: true });
