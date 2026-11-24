@@ -57,6 +57,12 @@ function ensureDirectoryExists(dir) {
  * @param {string} targetPath - Output directory for 'mini' versions.
  */
 async function processImageDirectory(sourcePath, targetPath) {
+    // POURQUOI : en CI (update-photos.mjs --ci) sans nouvelle photo, src/assets/astrophotographies/ n'existe
+    // pas ; il n'y a alors rien à faire, ce n'est pas une erreur.
+    if (!fs.existsSync(sourcePath)) {
+        console.log(`Aucun dossier source (${sourcePath}) : rien à traiter.`);
+        return;
+    }
     const files = fs.readdirSync(sourcePath);
 
     for (const file of files) {
