@@ -3,7 +3,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { findIncompletePhotos, needsCopy, planAstrobinImport } from './astrobin-import.mjs';
+import {
+    findIncompletePhotos,
+    findIncompletePhotosWith,
+    needsCopy,
+    planAltYearMigration,
+    planAstrobinImport,
+} from './astrobin-import.mjs';
 
 let root;
 let source;
@@ -86,5 +92,68 @@ describe('findIncompletePhotos', () => {
                 { 'astrophotographies/m31-10': 'seo' },
             ),
         ).toEqual([]);
+    });
+});
+
+describe('findIncompletePhotosWith', () => {
+    const row = { ID: '10', Title: 'M31', Uploaded: '2026-01-02' };
+
+    it('vérifie les fichiers par la fonction fournie, avec les clés relatives à astrophotographies/', async () => {
+        const asked = [];
+        const fileExists = async (key) => {
+            asked.push(key);
+            return key !== 'mini/2026/10_raw.jpg';
+        };
+        expect(await findIncompletePhotosWith([row], fileExists, {}, { 'astrophotographies/m31-10': 'seo' })).toEqual([
+            { id: '10', title: 'M31', missing: ['mini', 'alt'] },
+        ]);
+        expect(asked).toEqual(['2026/10_raw.jpg', 'mini/2026/10_raw.jpg', 'annotations/2026/10_annotation.svg']);
+    });
+
+    it('ne renvoie rien pour une photo complète', async () => {
+        const result = await findIncompletePhotosWith(
+            [row],
+            async () => true,
+            { '/assets/astrophotographies/2026/10_raw.jpg': 'alt' },
+            { 'astrophotographies/m31-10': 'seo' },
+        );
+        expect(result).toEqual([]);
+    });
+});
+
+describe('planAltYearMigration', () => {
+    const previousRows = [
+        { ID: '10', Uploaded: '2025-12-30' },
+        { ID: '11', Uploaded: '2026-01-02' },
+    ];
+
+    it("renomme les clés du raw et des skyplots d'une photo dont l'année a changé, sans toucher aux autres", () => {
+        const rows = [
+            { ID: '10', Uploaded: '2026-01-05' },
+            { ID: '11', Uploaded: '2026-01-02' },
+        ];
+        const altData = {
+            '/assets/astrophotographies/2025/10_raw.jpg': 'raw',
+            '/assets/astrophotographies/skyplots/2025/10_skyplot.jpg': 'skyplot',
+            '/assets/astrophotographies/2025/100_raw.jpg': 'autre photo, même début d’ID',
+            '/assets/astrophotographies/2026/11_raw.jpg': 'inchangée',
+        };
+        expect(planAltYearMigration(previousRows, rows, altData)).toEqual([
+            ['/assets/astrophotographies/2025/10_raw.jpg', '/assets/astrophotographies/2026/10_raw.jpg'],
+            [
+                '/assets/astrophotographies/skyplots/2025/10_skyplot.jpg',
+                '/assets/astrophotographies/skyplots/2026/10_skyplot.jpg',
+            ],
+        ]);
+    });
+
+    it("n'écrase pas une clé déjà présente, ignore les nouvelles photos et une année invalide", () => {
+        const altData = {
+            '/assets/astrophotographies/2025/10_raw.jpg': 'ancien',
+            '/assets/astrophotographies/2026/10_raw.jpg': 'déjà là',
+        };
+        expect(planAltYearMigration(previousRows, [{ ID: '10', Uploaded: '2026-01-05' }], altData)).toEqual([]);
+        expect(planAltYearMigration(previousRows, [{ ID: '12', Uploaded: '2026-01-05' }], altData)).toEqual([]);
+        expect(planAltYearMigration(previousRows, [{ ID: '10', Uploaded: '' }], altData)).toEqual([]);
     });
 });
