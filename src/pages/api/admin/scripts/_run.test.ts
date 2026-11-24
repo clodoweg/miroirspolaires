@@ -54,6 +54,12 @@ describe('GET /api/admin/scripts/run', () => {
         expect(await response.text()).toBe('Missing id');
     });
 
+    it("refuse en local un script réservé à l'admin distant, sans lancer de processus", async () => {
+        const response = await callGet('?id=update-photos-ci');
+        expect(response.status).toBe(400);
+        expect(spawn).not.toHaveBeenCalled();
+    });
+
     it('refuse un script non déclaré', async () => {
         const response = await callGet('?id=rm-rf');
         expect(response.status).toBe(404);

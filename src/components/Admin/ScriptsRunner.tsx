@@ -17,6 +17,7 @@ interface ScriptDef {
     writes: boolean;
     commandPreview: string;
     needsTarget?: boolean;
+    remoteOnly?: boolean;
 }
 
 const CATEGORY_LABEL: Record<Category | 'all', string> = {
@@ -60,7 +61,7 @@ function ScriptsRunnerInner() {
 
         fetch('/api/admin/scripts')
             .then((r) => r.json() as Promise<ScriptDef[]>)
-            .then((all) => setScripts(all.filter((script) => !script.needsTarget)))
+            .then((all) => setScripts(all.filter((script) => !script.needsTarget && !script.remoteOnly)))
             .catch((e) => toast.error(String(e), { title: 'Chargement impossible' }));
     }, [toast]);
 
