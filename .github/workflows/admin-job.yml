@@ -76,6 +76,9 @@ jobs:
         # WARNING: les secrets R2 et du worker ne sont transmis qu'au script qui en a besoin.
         env:
           ASTROBIN_DIR: _astrobin
+          # POURQUOI : sans lui, Python garde sa sortie en tampon (stdout n'est pas un terminal) et le
+          # journal de l'admin reste figé pendant tout le scrape.
+          PYTHONUNBUFFERED: '1'
           R2_ACCOUNT_ID: ${{ inputs.script_id == 'update-photos-ci' && secrets.R2_ACCOUNT_ID || '' }}
           R2_ACCESS_KEY_ID: ${{ inputs.script_id == 'update-photos-ci' && secrets.R2_ACCESS_KEY_ID || '' }}
           R2_SECRET_ACCESS_KEY: ${{ inputs.script_id == 'update-photos-ci' && secrets.R2_SECRET_ACCESS_KEY || '' }}
