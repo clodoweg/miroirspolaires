@@ -17,7 +17,7 @@ interface FakeOptions {
     ahead?: number;
     openPulls?: number[];
     mergeable?: boolean | null;
-    runs?: { status: string; conclusion: string | null }[];
+    runs?: { name?: string; status: string; conclusion: string | null }[];
     headSha?: string;
     mergeStatus?: number;
 }
@@ -51,7 +51,9 @@ function fakeClient(options: FakeOptions = {}) {
             });
         }
         if (path.includes('/check-runs'))
-            return Response.json({ check_runs: options.runs ?? [{ status: 'completed', conclusion: 'success' }] });
+            return Response.json({
+                check_runs: options.runs ?? [{ name: 'verify', status: 'completed', conclusion: 'success' }],
+            });
         if (path.endsWith('/merge')) {
             return options.mergeStatus
                 ? new Response('{}', { status: options.mergeStatus })
@@ -68,18 +70,21 @@ describe('summarizeChecks', () => {
         [[{ status: 'in_progress', conclusion: null }], 'pending'],
         [
             [
-                { status: 'completed', conclusion: 'success' },
-                { status: 'completed', conclusion: 'skipped' },
+                { name: 'verify', status: 'completed', conclusion: 'success' },
+                { name: 'CodeQL', status: 'completed', conclusion: 'neutral' },
+                { name: 'Analyze', status: 'completed', conclusion: 'skipped' },
             ],
             'success',
         ],
         [
             [
-                { status: 'completed', conclusion: 'success' },
-                { status: 'completed', conclusion: 'failure' },
+                { name: 'verify', status: 'completed', conclusion: 'success' },
+                { name: 'Analyze', status: 'completed', conclusion: 'failure' },
             ],
             'failure',
         ],
+        // POURQUOI : juste après l'ouverture de la PR, seule la vérification de Vercel existe.
+        [[{ name: 'Vercel Preview Comments', status: 'completed', conclusion: 'success' }], 'pending'],
     ])('%j → %s', (runs, expected) => {
         expect(summarizeChecks(runs)).toBe(expected);
     });
@@ -138,7 +143,16 @@ describe('mergeReleasePullRequest', () => {
     it.each([
         ['tête changée', { headSha: 'b'.repeat(40) }, 'nouveaux commits'],
         ['CI en cours', { runs: [{ status: 'queued', conclusion: null }] }, 'pas entièrement verte'],
-        ['CI rouge', { runs: [{ status: 'completed', conclusion: 'failure' }] }, 'pas entièrement verte'],
+        [
+            'CI rouge',
+            { runs: [{ name: 'verify', status: 'completed', conclusion: 'failure' }] },
+            'pas entièrement verte',
+        ],
+        [
+            'verify pas encore démarré',
+            { runs: [{ name: 'Vercel Preview Comments', status: 'completed', conclusion: 'success' }] },
+            'pas entièrement verte',
+        ],
         ['conflit', { mergeable: false }, 'conflit'],
         ['refus GitHub', { mergeStatus: 405 }, 'refuse la fusion'],
     ])('refuse : %s', async (_label, options, message) => {
