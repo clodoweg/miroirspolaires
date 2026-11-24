@@ -20,6 +20,7 @@ export const GET: APIRoute = async ({ url, request, locals }) => {
     if (!id) return new Response('Missing id', { status: 400 });
     const script = getScript(id);
     if (!script) return new Response('Unknown script', { status: 404 });
+    if (script.remoteOnly) return new Response('Script réservé à l’admin distant (GitHub Actions)', { status: 400 });
 
     const enc = new TextEncoder();
     let proc: ReturnType<typeof spawn> | null = null;
