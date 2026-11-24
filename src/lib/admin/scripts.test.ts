@@ -67,10 +67,14 @@ describe('SCRIPTS (console de scripts de l’admin)', () => {
 
     it('réserve à distance la mise à jour des photos en mode --ci, et seulement elle', () => {
         const remoteOnly = SCRIPTS.filter((script) => script.remoteOnly);
-        expect(remoteOnly.map((script) => script.id)).toEqual(['update-photos-ci']);
+        expect(remoteOnly.map((script) => script.id)).toEqual(['update-photos-ci', 'update-photos-ci-force']);
         expect(getScript('update-photos-ci')).toMatchObject({
             remote: true,
             args: ['scripts/pipeline/update-photos.mjs', '--ci'],
+        });
+        expect(getScript('update-photos-ci-force')).toMatchObject({
+            remote: true,
+            args: ['scripts/pipeline/update-photos.mjs', '--ci', '--force-media'],
         });
         // POURQUOI : la version locale garde son comportement (lit src/assets/ et ../astrobin).
         expect(getScript('update-photos')).toMatchObject({

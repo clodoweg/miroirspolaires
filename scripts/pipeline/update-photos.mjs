@@ -25,7 +25,8 @@
  *
  * Mode --ci (GitHub Actions, dossier src/assets/astrophotographies/ vide au départ) :
  *  1. Lancer le scrape : scrape_astrobin.py --incremental --check-r2 --no-sync. Seuls les médias absents
- *     de R2 sont téléchargés. Un scrape incomplet arrête tout.
+ *     de R2 sont téléchargés (avec --force-media : tous, scrape en mode complet). Un scrape incomplet
+ *     arrête tout.
  *  2. Importer le CSV, le HTML et les nouveaux médias ; faire suivre les clés de alt.json des photos dont
  *     l'année a changé (les fichiers de la nouvelle année viennent du scrape) ; alts manquants.
  *  3. Miniatures, fiches techniques et descriptions Wikipedia, versions web en local (temp/web-images/),
@@ -46,7 +47,11 @@
  * Options disponibles (toute autre option est refusée, code de sortie 1) :
  *   --dry-run : Simule : rien n'est écrit, ni en local ni sur R2 (R2 est seulement interrogé). Les
  *               étapes sans simulation (miniatures, SEO, dimensions) sont signalées et sautées.
- *   --ci      : Mode GitHub Actions décrit ci-dessus. Incompatible avec --dry-run.
+ *   --ci          : Mode GitHub Actions décrit ci-dessus. Incompatible avec --dry-run.
+ *   --force-media : Avec --ci seulement. Retélécharge tous les médias d'AstroBin (2,8 Go) et régénère
+ *                   miniatures et versions web, même si R2 les a déjà. Seuls les fichiers dont le contenu
+ *                   diffère de R2 sont envoyés (et remplacés, cache du worker purgé) ; les identiques sont
+ *                   laissés tels quels. Long (de 30 min à 1 h en GitHub Actions).
  *
  * Variables d'environnement :
  *   ASTROBIN_DIR : dossier du dépôt astrobin (défaut : ../astrobin). S'il manque, les imports sont sautés
@@ -58,6 +63,7 @@
  *   node scripts/pipeline/update-photos.mjs --dry-run
  *   node scripts/pipeline/update-photos.mjs
  *   ASTROBIN_DIR=../astrobin node scripts/pipeline/update-photos.mjs --ci   # GitHub Actions
+ *   ASTROBIN_DIR=../astrobin node scripts/pipeline/update-photos.mjs --ci --force-media   # tout recopier
  */
 
 import fs from 'node:fs';
@@ -355,9 +361,10 @@ function limitConcurrency(fn, limit) {
 /**
  * Mode --ci : scrape, traitements locaux, envoi sur R2 en deux temps, manifeste et contrôle final.
  *
+ * @param {{ forceMedia?: boolean }} [options] - `forceMedia` : retélécharger tous les médias (--force-media).
  * @returns {Promise<void>} Se termine par process.exit(1) en cas d'échec.
  */
-async function runCiPipeline() {
+async function runCiPipeline({ forceMedia = false } = {}) {
     // POURQUOI : vérifier R2 avant le scrape, pour ne pas découvrir un secret manquant après 6 minutes.
     const r2Config = requireR2Config();
     const s3 = createR2Client(r2Config);
@@ -366,8 +373,16 @@ async function runCiPipeline() {
         failCi(`scrape_astrobin.py introuvable dans ${ASTROBIN_DIR} (voir ASTROBIN_DIR).`);
     }
 
-    console.log('\n=== Scrape AstroBin (nouvelles photos seulement) ===');
-    const scrapeArgs = [path.join(ASTROBIN_DIR, 'scrape_astrobin.py'), '--incremental', '--check-r2', '--no-sync'];
+    // POURQUOI : sans --incremental ni --check-r2, le scrape retélécharge tous les médias ; la comparaison
+    // au contenu de R2 (stageFiles) n'envoie ensuite que ceux qui ont changé.
+    console.log(
+        `\n=== Scrape AstroBin (${forceMedia ? 'tous les médias, --force-media' : 'nouvelles photos seulement'}) ===`,
+    );
+    const scrapeArgs = [
+        path.join(ASTROBIN_DIR, 'scrape_astrobin.py'),
+        ...(forceMedia ? [] : ['--incremental', '--check-r2']),
+        '--no-sync',
+    ];
     if ((await runCommand(process.env.PYTHON || 'python3', scrapeArgs, ASTROBIN_DIR)) !== 0) {
         exitIfStopped();
         failCi('Scrape en échec ou incomplet : arrêt avant tout import.');
@@ -467,12 +482,14 @@ async function runCiPipeline() {
 async function main() {
     let parsed;
     try {
-        parsed = parseCliArgs(process.argv.slice(2), { flags: { dryRun: ['--dry-run'], ci: ['--ci'] } });
+        parsed = parseCliArgs(process.argv.slice(2), {
+            flags: { dryRun: ['--dry-run'], ci: ['--ci'], forceMedia: ['--force-media'] },
+        });
     } catch (error) {
         console.error(`❌ ${error.message}`);
         process.exit(1);
     }
-    const { dryRun, ci } = parsed.flags;
+    const { dryRun, ci, forceMedia } = parsed.flags;
     if (parsed.positionals.length > 0) {
         console.error('❌ Ce script ne prend aucun argument positionnel.');
         process.exit(1);
@@ -481,8 +498,12 @@ async function main() {
         console.error('❌ --ci et --dry-run sont incompatibles.');
         process.exit(1);
     }
+    if (forceMedia && !ci) {
+        console.error('❌ --force-media ne s’utilise qu’avec --ci.');
+        process.exit(1);
+    }
     if (ci) {
-        await runCiPipeline();
+        await runCiPipeline({ forceMedia });
         return;
     }
 
