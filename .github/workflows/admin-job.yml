@@ -5,6 +5,9 @@ name: Admin job
 # `remote: true` de src/lib/admin/scripts.ts ; ce que le script écrit sous src/data/ ou data/ est
 # committé sur dev. Journal et état du job : tables Turso admin_jobs et admin_job_logs.
 # Secrets requis : TURSO_DATABASE_URL, TURSO_AUTH_TOKEN (jeton en écriture).
+# Pour `update-photos-ci` et `update-photos-ci-force` seulement : ASTROBIN_DEPLOY_KEY (clé SSH privée d'une deploy key en lecture seule
+# du dépôt privé clodoweg/astrobin), R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME ;
+# facultatifs : IMAGE_WORKER_URL, IMAGE_WORKER_PURGE_KEY (purge du cache des images remplacées).
 # POURQUOI le workflow doit exister sur main : GitHub ne déclenche un workflow_dispatch que pour un
 # fichier présent sur la branche par défaut, même quand le run cible dev.
 
@@ -24,8 +27,9 @@ permissions:
   contents: write
 
 # POURQUOI : deux runs du même script écriraient en même temps dans Turso ou dans les mêmes fichiers.
+# Les deux variantes de la mise à jour des photos partagent un groupe : elles écrivent les mêmes fichiers et sur R2.
 concurrency:
-  group: admin-job-${{ inputs.script_id }}
+  group: admin-job-${{ startsWith(inputs.script_id, 'update-photos-ci') && 'update-photos-ci' || inputs.script_id }}
   cancel-in-progress: false
 
 jobs:
@@ -33,12 +37,14 @@ jobs:
     # WARNING: ne committe que sur dev ; un lancement manuel sur une autre branche est ignoré.
     if: github.ref_name == 'dev'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # POURQUOI 180 : update-photos-ci-force retélécharge et retraite toute la galerie (2,8 Go).
+    timeout-minutes: 180
     env:
       TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
       TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
       JOB_ID: ${{ inputs.job_id }}
       SCRIPT_ID: ${{ inputs.script_id }}
+      IS_PHOTO_UPDATE: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' }}
 
     steps:
       - name: Checkout repository
@@ -53,7 +59,35 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # POURQUOI : le scrape AstroBin vit dans un dépôt privé distinct ; une deploy key en lecture seule
+      # n'ouvre que ce dépôt. Le dossier n'est jamais committé (seuls src/data et data le sont).
+      - name: Checkout astrobin
+        if: env.IS_PHOTO_UPDATE == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: clodoweg/astrobin
+          ssh-key: ${{ secrets.ASTROBIN_DEPLOY_KEY }}
+          path: _astrobin
+          persist-credentials: false
+
+      # POURQUOI : apt plutôt que pip, que le Python système d'Ubuntu refuse (PEP 668).
+      - name: Install Pillow
+        if: env.IS_PHOTO_UPDATE == 'true'
+        run: sudo apt-get update -q && sudo apt-get install -y -q python3-pil
+
       - name: Run script
+        # WARNING: les secrets R2 et du worker ne sont transmis qu'au script qui en a besoin.
+        env:
+          ASTROBIN_DIR: _astrobin
+          # POURQUOI : sans lui, Python garde sa sortie en tampon (stdout n'est pas un terminal) et le
+          # journal de l'admin reste figé pendant tout le scrape.
+          PYTHONUNBUFFERED: '1'
+          R2_ACCOUNT_ID: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_ACCOUNT_ID || '' }}
+          R2_ACCESS_KEY_ID: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_ACCESS_KEY_ID || '' }}
+          R2_SECRET_ACCESS_KEY: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_SECRET_ACCESS_KEY || '' }}
+          R2_BUCKET_NAME: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_BUCKET_NAME || '' }}
+          IMAGE_WORKER_URL: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.IMAGE_WORKER_URL || '' }}
+          IMAGE_WORKER_PURGE_KEY: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.IMAGE_WORKER_PURGE_KEY || '' }}
         run: node scripts/admin/run-admin-job.mjs --job="$JOB_ID" --script="$SCRIPT_ID"
 
       - name: Commit results

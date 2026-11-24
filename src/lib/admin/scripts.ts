@@ -25,6 +25,12 @@ export interface ScriptDef {
      * `devOnly` ni `needsTarget` (aucun argument n'est transmis à distance).
      */
     remote?: boolean;
+    /**
+     * Réservé à l'admin distant : masqué de /admin/scripts en local et refusé par `api/admin/scripts/run.ts`.
+     * POURQUOI : `update-photos-ci` (et sa variante `-force`) est conçu pour un disque vide (GitHub Actions) ; lancé en local, il
+     * comparerait tout `src/assets/astrophotographies/` à R2 et écrirait sur le R2 de production.
+     */
+    remoteOnly?: boolean;
 }
 
 /**
@@ -42,6 +48,32 @@ export const SCRIPTS: ScriptDef[] = [
         args: ['scripts/pipeline/update-photos.mjs'],
         writes: true,
         devOnly: true,
+    },
+    {
+        // WARNING: écrit sur le R2 de production (après envoi complet sous incoming/astro/) et lit AstroBin.
+        id: 'update-photos-ci',
+        label: 'Astrophotos : mettre à jour les photos (GitHub Actions)',
+        description:
+            'Lance le scrape AstroBin (nouvelles photos seulement), génère miniatures, alts, descriptions Wikipedia, versions web et dimensions, envoie tout sur R2 sous un préfixe temporaire puis le copie vers les clés définitives si tout a réussi, et committe le CSV et les manifestes sur dev. Ne supprime rien sur R2. Les descriptions SEO restent à écrire via Claude Code.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/pipeline/update-photos.mjs', '--ci'],
+        writes: true,
+        remote: true,
+        remoteOnly: true,
+    },
+    {
+        // WARNING: retélécharge toute la galerie (2,8 Go) et remplace sur R2 les fichiers dont le contenu a changé.
+        id: 'update-photos-ci-force',
+        label: 'Astrophotos : tout recopier depuis AstroBin (GitHub Actions)',
+        description:
+            'Comme la mise à jour des photos, mais retélécharge tous les médias d’AstroBin (raws, annotations, skyplots) et régénère miniatures et versions web, même s’ils sont déjà sur R2. Seuls les fichiers dont le contenu a changé remplacent ceux de R2 (cache du worker purgé) ; rien n’est supprimé. Long : de 30 min à 1 h.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/pipeline/update-photos.mjs', '--ci', '--force-media'],
+        writes: true,
+        remote: true,
+        remoteOnly: true,
     },
     {
         id: 'sync-r2',

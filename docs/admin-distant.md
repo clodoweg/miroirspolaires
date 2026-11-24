@@ -44,9 +44,25 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 - L'admin relit l'état et le journal toutes les 3 s (`GET /api/admin/jobs/<id>?after=<n>`) et peut annuler (`POST …/cancel` : annule le run, ou marque le job annulé avant son démarrage, que le runner refuse alors de lancer). Un seul job actif par script.
 - Prérequis : le workflow doit exister sur `main` (GitHub ne déclenche un `workflow_dispatch` que pour un fichier de la branche par défaut) ; secrets Actions `TURSO_DATABASE_URL` et `TURSO_AUTH_TOKEN` (jeton en écriture) ; jeton Turso en écriture aussi dans Vercel (Preview de `dev`) pour créer les jobs ; permission Actions (Read and write) de la GitHub App.
 
+### Phase 5 : mise à jour des astrophotos dans GitHub Actions
+
+- Entrée `update-photos-ci` de `SCRIPTS` (`remote: true`, `remoteOnly: true` : masquée et refusée en local), lancée depuis `/admin/scripts`. Elle exécute `scripts/pipeline/update-photos.mjs --ci` :
+  1. scrape AstroBin du dépôt privé `clodoweg/astrobin` (`scrape_astrobin.py --incremental --check-r2 --no-sync`) : seuls les médias absents de R2 sont téléchargés ;
+  2. import du CSV, du HTML et des nouveaux médias, alts (clés déplacées si l'année d'une photo change), miniatures, fiches techniques et descriptions Wikipedia, versions web en local, dimensions ;
+  3. envoi des fichiers nouveaux ou modifiés sous `incoming/astro/<run>/` (`scripts/lib/r2-staging.mjs`), puis, si tout est envoyé, copie côté serveur vers les clés définitives et suppression du préfixe temporaire ;
+  4. ajout des nouvelles versions web à `web-images.json` (aucune entrée retirée), purge du cache du worker pour les images remplacées, contrôle sur R2 qu'aucune photo n'a perdu son raw ou sa miniature.
+  Le workflow ne committe le CSV et les manifestes sur `dev` que si le script réussit. Un échec avant l'étape 3 n'écrit rien sur R2. Les descriptions SEO manquantes restent signalées (`/generate-seo astro`).
+- Variante `update-photos-ci-force` (`--ci --force-media`) : le scrape retélécharge tous les médias (2,8 Go) et miniatures et versions web sont régénérées ; seuls les fichiers dont le contenu diffère de R2 sont envoyés et remplacent l'existant (cache du worker purgé). Rien n'est supprimé. Durée : de 30 min à 1 h. Les deux variantes partagent un groupe de concurrence du workflow : l'une attend la fin de l'autre.
+- Le CSV reste écrit par le seul scrape AstroBin : l'admin ne l'édite jamais.
+- Prérequis, en plus de la phase 4 :
+  - le dépôt `astrobin` doit contenir sur sa branche par défaut les options `--check-r2` et `--no-sync` de `scrape_astrobin.py` ;
+  - une deploy key en lecture seule sur `clodoweg/astrobin`, dont la clé privée est le secret Actions `ASTROBIN_DEPLOY_KEY` de ce dépôt ;
+  - secrets Actions `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` ; facultatifs : `IMAGE_WORKER_URL`, `IMAGE_WORKER_PURGE_KEY`. Le workflow ne les transmet qu'à `update-photos-ci` ;
+  - conseillé : règle de cycle de vie R2 supprimant `incoming/` après un jour (runs interrompus).
+
 ### Phase 6 : mise en production, journal, limitation
 
-- `/admin/publication` (`ReleasePanel.tsx`, `src/lib/admin/github/release.ts`, routes `/api/admin/release` et `/api/admin/release/merge`) : commits de `dev` absents de `main`, ouverture de la PR `dev` → `main` (`chore: release dev to production`), suivi de sa CI, puis fusion après confirmation. WARNING: la fusion déploie le site public ; le serveur la refuse si la CI n'est pas entièrement verte, si GitHub signale un conflit ou si la PR a reçu un commit depuis l'affichage. Branche de production : `ADMIN_PRODUCTION_BRANCH` (défaut `main`).
+- `/admin/publication` (`ReleasePanel.tsx`, `src/lib/admin/github/release.ts`, routes `/api/admin/release` et `/api/admin/release/merge`) : commits de `dev` absents de `main`, ouverture de la PR `dev` → `main` (`chore: release dev to production`), suivi de sa CI, puis fusion après confirmation. WARNING: la fusion déploie le site public ; le serveur la refuse si la CI n'est pas entièrement verte (le job `verify` doit figurer parmi les vérifications : tant qu'il n'a pas démarré, la CI reste « en cours », `REQUIRED_CHECK_NAMES` de `release.ts`), si GitHub signale un conflit ou si la PR a reçu un commit depuis l'affichage. Branche de production : `ADMIN_PRODUCTION_BRANCH` (défaut `main`).
 - Journal d'audit (`src/lib/admin/audit-log.ts`, table Turso `admin_audit_log` créée au premier usage) : le middleware enregistre chaque écriture (méthode autre que GET) de l'admin distant avec le compte, le chemin et le statut. `/admin/journal` affiche les 200 dernières. Sans Turso, ou si le jeton Turso est en lecture seule, rien n'est enregistré et les actions passent.
 - Limitation : au-delà de 120 écritures par minute pour un compte, le middleware répond 429 (`Retry-After: 60`), d'après le journal. Sans Turso, pas de limitation.
 
@@ -93,5 +109,5 @@ Si l'admin répond 404 sur la Preview de `dev`, une variable manque ou est inval
 2. ~~Écriture~~ : en place (articles, voyages, priorité amont).
 3. ~~Images~~ : en place.
 4. ~~Scripts~~ : en place.
-5. ~~Astrophotos~~ : abandonnée. Le CSV `data/astrobin_clodoweg_gallery_python.csv` n'est écrit que par le scrape AstroBin (local) ; aucune édition depuis l'admin, locale ou distante.
+5. ~~Astrophotos~~ : en place par GitHub Actions (`update-photos-ci`). Le CSV `data/astrobin_clodoweg_gallery_python.csv` reste écrit par le seul scrape AstroBin ; aucune édition depuis l'admin, locale ou distante.
 6. ~~Durcissement~~ : en place.

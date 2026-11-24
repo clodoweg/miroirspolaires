@@ -39,8 +39,21 @@ export function isStopRequested() {
  * @returns {Promise<number>} Le code de sortie (1 si le processus n'a pas pu démarrer ou a été tué).
  */
 export function runScript(args) {
+    return runCommand(process.execPath, args);
+}
+
+/**
+ * Lance une commande (ex. le scrape Python), sa sortie étant celle de ce processus. Un arrêt demandé
+ * lui est relayé comme aux scripts Node.
+ *
+ * @param {string} command - Exécutable.
+ * @param {string[]} args - Arguments.
+ * @param {string} [cwd] - Répertoire de travail (racine du dépôt par défaut).
+ * @returns {Promise<number>} Le code de sortie (1 si le processus n'a pas pu démarrer ou a été tué).
+ */
+export function runCommand(command, args, cwd = PROJECT_ROOT) {
     return new Promise((resolve) => {
-        currentChild = spawn(process.execPath, args, { cwd: PROJECT_ROOT, stdio: 'inherit' });
+        currentChild = spawn(command, args, { cwd, stdio: 'inherit' });
         currentChild.on('error', (error) => {
             console.error(`❌ ${error.message}`);
             resolve(1);
