@@ -60,14 +60,29 @@ async function readJson<T>(response: Response, context: string): Promise<T> {
 }
 
 /**
+ * Vérifications qui doivent figurer parmi les check runs avant toute mise en production : le job `verify`
+ * de `.github/workflows/ci.yml` (lint, types, tests, build).
+ *
+ * POURQUOI : juste après l'ouverture de la PR, GitHub n'a souvent enregistré que la vérification de Vercel.
+ * Sans cette liste, l'admin affichait « CI verte » avant même le démarrage de `verify`.
+ */
+export const REQUIRED_CHECK_NAMES = ['verify'];
+
+/**
  * Résume les vérifications (check runs) d'un commit.
  *
  * @param runs - Check runs renvoyés par GitHub.
- * @returns `none` sans vérification, `pending` si l'une tourne encore, `failure` si l'une échoue, sinon `success`.
+ * @param requiredNames - Vérifications attendues ; tant que l'une manque, la CI est considérée en cours.
+ * @returns `none` sans vérification, `pending` si l'une tourne encore ou si une vérification attendue n'est
+ *   pas encore apparue, `failure` si l'une échoue, sinon `success`.
  */
-export function summarizeChecks(runs: { status?: string; conclusion?: string | null }[]): ChecksState {
+export function summarizeChecks(
+    runs: { name?: string; status?: string; conclusion?: string | null }[],
+    requiredNames: readonly string[] = REQUIRED_CHECK_NAMES,
+): ChecksState {
     if (runs.length === 0) return 'none';
     if (runs.some((run) => run.status !== 'completed')) return 'pending';
+    if (requiredNames.some((name) => !runs.some((run) => run.name === name))) return 'pending';
     const passing = new Set(['success', 'neutral', 'skipped']);
     return runs.every((run) => passing.has(String(run.conclusion))) ? 'success' : 'failure';
 }
@@ -91,7 +106,7 @@ async function readPullRequest(client: GitHubAppClient, number: number): Promise
         await client.request(`${client.repoPath}/pulls/${number}`),
         'Lecture de la PR',
     );
-    const checks = await readJson<{ check_runs: { status?: string; conclusion?: string | null }[] }>(
+    const checks = await readJson<{ check_runs: { name?: string; status?: string; conclusion?: string | null }[] }>(
         await client.request(`${client.repoPath}/commits/${pull.head.sha}/check-runs?per_page=100`),
         'Lecture de la CI',
     );
