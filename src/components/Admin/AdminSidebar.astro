@@ -2,16 +2,19 @@
 /**
  * Barre latérale de l'administration.
  *
- * Responsabilité : afficher les sections et les pages du registre (`src/config/admin-sections.ts`), marquer la
- * page courante et griser, avec un badge, les pages qui ne fonctionnent pas dans le mode courant (« local »
- * sur l'admin distant, « distant » en `npm run dev`). Elles restent listées pour que le menu soit le même partout.
+ * Responsabilité : afficher les sections, les groupes (« Blog ») et les pages du registre
+ * (`src/config/admin-sections.ts`), marquer la page courante et griser, avec un badge, les pages qui ne
+ * fonctionnent pas dans le mode courant (« local » sur l'admin distant, « distant » en `npm run dev`). Elles
+ * restent listées pour que le menu soit le même partout.
  *
- * Rendu côté serveur, sans JavaScript : le repli sur mobile passe par `<details>`.
+ * Rendu côté serveur, sans JavaScript : le repli sur mobile passe par `<details>` (`AdminLayout.astro`).
+ * POURQUOI `block` sur les `<li>` : `base.css` met tout `<li>` en flex horizontal, ce qui alignerait l'en-tête de
+ * groupe à côté de ses liens et rétrécirait les liens à leur texte.
  */
+import AdminSidebarLink from "./AdminSidebarLink.astro";
 import {
     ADMIN_DASHBOARD,
     ADMIN_SECTIONS,
-    isAdminPageAvailable,
     type AdminDisplayMode,
     type AdminPage,
     type AdminPageId,
@@ -24,18 +27,25 @@ interface Props {
 
 const { active, mode } = Astro.props;
 
-const unavailableBadge = mode === "remote" ? "local" : "distant";
-
-function linkState(page: AdminPage) {
-    return {
-        isActive: page.id === active,
-        isUnavailable: !isAdminPageAvailable(page, mode),
-    };
+/** Regroupe les pages consécutives d'un même groupe ; une page sans groupe forme une entrée seule. */
+function groupPages(pages: AdminPage[]): { group?: string; pages: AdminPage[] }[] {
+    const entries: { group?: string; pages: AdminPage[] }[] = [];
+    for (const page of pages) {
+        const last = entries[entries.length - 1];
+        if (page.group && last?.group === page.group) last.pages.push(page);
+        else entries.push({ group: page.group, pages: [page] });
+    }
+    return entries;
 }
+
+const sections = [{ id: "accueil", label: null, pages: [ADMIN_DASHBOARD] }, ...ADMIN_SECTIONS].map((section) => ({
+    ...section,
+    entries: groupPages(section.pages),
+}));
 ---
 
 <nav aria-label="Navigation de l'admin" class="flex flex-col gap-1 py-4 text-sm">
-    {[{ label: null, pages: [ADMIN_DASHBOARD] }, ...ADMIN_SECTIONS].map((section) => (
+    {sections.map((section) => (
         <div class="flex flex-col gap-0.5">
             {section.label && (
                 <p class="px-3 pt-4 pb-1 font-mono text-xs tracking-wider text-mp-text-muted uppercase">
@@ -43,31 +53,24 @@ function linkState(page: AdminPage) {
                 </p>
             )}
             <ul class="flex flex-col gap-0.5">
-                {section.pages.map((page) => {
-                    const { isActive, isUnavailable } = linkState(page);
-                    return (
-                        <li>
-                            <a
-                                href={page.href}
-                                title={page.description}
-                                aria-current={isActive ? "page" : undefined}
-                                class:list={[
-                                    "flex min-h-touch items-center gap-2 rounded-md px-3 transition-colors mouse:hover:bg-mp-accent/10 mouse:hover:text-mp-accent",
-                                    isActive && "bg-mp-accent/15 font-semibold text-mp-accent",
-                                    !isActive && isUnavailable && "text-mp-text-muted",
-                                    !isActive && !isUnavailable && "text-mp-text-body",
-                                ]}
-                            >
-                                <span class="flex-1">{page.label}</span>
-                                {isUnavailable && (
-                                    <span class="rounded border border-mp-border-light px-1.5 font-mono text-xs text-mp-text-muted">
-                                        {unavailableBadge}
-                                    </span>
-                                )}
-                            </a>
+                {section.entries.map((entry) =>
+                    entry.group ? (
+                        <li class="block">
+                            <p class="px-3 pt-2 pb-0.5 font-semibold text-mp-text-heading">{entry.group}</p>
+                            <ul class="flex flex-col gap-0.5">
+                                {entry.pages.map((page) => (
+                                    <li class="block">
+                                        <AdminSidebarLink page={page} active={active} mode={mode} />
+                                    </li>
+                                ))}
+                            </ul>
                         </li>
-                    );
-                })}
+                    ) : (
+                        <li class="block">
+                            <AdminSidebarLink page={entry.pages[0]} active={active} mode={mode} />
+                        </li>
+                    ),
+                )}
             </ul>
         </div>
     ))}

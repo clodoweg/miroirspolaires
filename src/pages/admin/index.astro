@@ -3,7 +3,7 @@ import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import Dashboard from "@/components/Admin/Dashboard";
 import WebImagesReminder from "@/components/Admin/WebImagesReminder";
-import { ADMIN_SECTIONS, isAdminPageAvailable } from "@/config/admin-sections";
+import { ADMIN_SECTIONS, getAdminPageTitle, isAdminPageAvailable } from "@/config/admin-sections";
 
 export const prerender = false;
 
@@ -33,12 +33,14 @@ const remoteSections = ADMIN_SECTIONS.map((section) => ({
                     <h2 class="font-mono text-xs tracking-wider text-mp-text-muted uppercase">{section.label}</h2>
                     <ul class="grid gap-4 sm:grid-cols-2">
                         {section.pages.map((page) => (
-                            <li>
+                            <li class="block">
                                 <a
                                     href={page.href}
                                     class="block min-h-touch rounded-md border border-mp-border px-4 py-4 mouse:hover:border-mp-border-accent"
                                 >
-                                    <span class="block font-semibold text-mp-text-heading">{page.label}</span>
+                                    <span class="block font-semibold text-mp-text-heading">
+                                        {getAdminPageTitle(page)}
+                                    </span>
                                     <span class="block text-sm text-mp-text-muted">{page.description}</span>
                                 </a>
                             </li>

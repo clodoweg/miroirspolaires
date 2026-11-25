@@ -143,9 +143,9 @@ const QUICK_ACTIONS = [
         accent: false,
     },
     {
-        href: '/admin/astrophotos',
-        title: 'Pipeline photo',
-        description: 'Déposer un raw + traitement',
+        href: '/admin/astrophotos/importer',
+        title: 'Importer des photos',
+        description: 'Mise à jour depuis AstroBin',
         icon: 'upload',
         accent: false,
     },

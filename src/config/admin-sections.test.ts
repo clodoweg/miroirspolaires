@@ -6,6 +6,7 @@ import {
     ADMIN_PAGES,
     ADMIN_SECTIONS,
     getAdminPage,
+    getAdminPageTitle,
     getAdminSectionOf,
     isAdminPageAvailable,
     resolveLegacyAdminHref,
@@ -70,6 +71,13 @@ describe('registre des pages de l’admin', () => {
 
     it('lève une erreur pour un identifiant inconnu', () => {
         expect(() => getAdminPage('inconnu' as never)).toThrow();
+    });
+});
+
+describe('getAdminPageTitle', () => {
+    it('préfixe le groupe quand la page en a un', () => {
+        expect(getAdminPageTitle(getAdminPage('blog-images'))).toBe('Blog › Images & textes');
+        expect(getAdminPageTitle(getAdminPage('upstream'))).toBe('Routes CDS');
     });
 });
 

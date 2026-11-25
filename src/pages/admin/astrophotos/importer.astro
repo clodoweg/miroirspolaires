@@ -1,0 +1,29 @@
+---
+/**
+ * Import des astrophotos depuis AstroBin : `update-photos.mjs` en local, job GitHub Actions à distance.
+ */
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import AstroImportPanel from "@/components/Admin/AstroImportPanel";
+import WebImagesReminder from "@/components/Admin/WebImagesReminder";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+const isLocal = isLocalAdmin(Astro.locals);
+---
+
+<AdminLayout
+    title="Admin · Astrophotos · Importer"
+    description="Mise à jour des astrophotos depuis AstroBin."
+    active="astro-import"
+    heading
+>
+    {
+        // POURQUOI : le rappel lance un script local ; à distance, le job génère lui-même les versions web.
+        isLocal && <WebImagesReminder scope="astro" client:only="react" />
+    }
+    <AstroImportPanel client:only="react" remote={!isLocal} />
+</AdminLayout>

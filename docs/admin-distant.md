@@ -46,7 +46,7 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 
 ### Phase 5 : mise à jour des astrophotos dans GitHub Actions
 
-- Entrée `update-photos-ci` de `SCRIPTS` (`remote: true`, `remoteOnly: true` : masquée et refusée en local), lancée depuis `/admin/infra/scripts`. Elle exécute `scripts/pipeline/update-photos.mjs --ci` :
+- Entrée `update-photos-ci` de `SCRIPTS` (`remote: true`, `remoteOnly: true` : masquée et refusée en local), lancée depuis `/admin/astrophotos/importer` (case « Tout recopier » pour la variante `--force-media`) ou `/admin/infra/scripts`. Elle exécute `scripts/pipeline/update-photos.mjs --ci` :
   1. scrape AstroBin du dépôt privé `clodoweg/astrobin` (`scrape_astrobin.py --incremental --check-r2 --no-sync`) : seuls les médias absents de R2 sont téléchargés ;
   2. import du CSV, du HTML et des nouveaux médias, alts (clés déplacées si l'année d'une photo change), miniatures, fiches techniques et descriptions Wikipedia, versions web en local, dimensions ;
   3. envoi des fichiers nouveaux ou modifiés sous `incoming/astro/<run>/` (`scripts/lib/r2-staging.mjs`), puis, si tout est envoyé, copie côté serveur vers les clés définitives et suppression du préfixe temporaire ;

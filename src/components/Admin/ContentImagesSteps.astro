@@ -1,0 +1,47 @@
+---
+/**
+ * Étapes, dans l'ordre, entre l'enregistrement d'un article ou d'un voyage et sa mise en production.
+ *
+ * Responsabilité : rappeler le workflow en tête de `/admin/blog/images` et `/admin/voyages/images`, pour que
+ * l'ordre ne dépende pas de la mémoire de l'utilisateur. Les actions elles-mêmes sont dans les panneaux de la page.
+ */
+interface Props {
+    scope: "blog" | "voyages";
+}
+
+const { scope } = Astro.props;
+const isBlog = scope === "blog";
+const textCommands = isBlog ? "/generate-alts blog" : "/generate-alts voyages et /generate-seo voyages";
+const committedFiles = isBlog
+    ? "le Markdown, src/data/image-dimensions.json, web-images.json, blog.json et alt.json"
+    : "le Markdown, src/data/image-dimensions.json, web-images.json, alt.json et seo.json";
+
+const steps = [
+    {
+        title: isBlog ? "Enregistrer l'article" : "Enregistrer le voyage",
+        detail: isBlog
+            ? "Dans l'éditeur : Markdown, temps de lecture et copie du dossier de l'article sur R2."
+            : "Dans l'éditeur : Markdown et copie du dossier du voyage sur R2.",
+    },
+    {
+        title: "Préparer les images pour le site",
+        detail: "Bouton ci-dessous : renvoi sur R2 des fichiers modifiés, dimensions, puis versions web. Inutile de générer les versions web à part : elles sont incluses.",
+    },
+    {
+        title: "Écrire les alts et le SEO",
+        detail: `Dans Claude Code : ${textCommands}. Les textes manquants sont listés ci-dessous.`,
+    },
+    { title: "Committer", detail: `Après les étapes 2 et 3 : ${committedFiles}.` },
+    { title: "Mettre en production", detail: "Depuis l'admin distant : Publication › Mise en production." },
+];
+---
+
+<ol class="mb-6 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+    {steps.map((step, index) => (
+        <li class="flex flex-col items-start gap-1 rounded-xl border border-mp-glass-border p-4">
+            <span class="font-mono text-xs text-mp-accent">{index + 1}</span>
+            <span class="font-semibold text-mp-text-heading">{step.title}</span>
+            <span class="text-sm text-mp-text-secondary">{step.detail}</span>
+        </li>
+    ))}
+</ol>

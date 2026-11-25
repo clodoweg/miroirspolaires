@@ -3,7 +3,7 @@
  * AdminLayout - coque commune à toutes les pages sous /admin.
  *
  * Responsabilité : barre latérale par sections (`AdminSidebar.astro`, alimentée par le registre
- * `src/config/admin-sections.ts`), fil d'Ariane « Admin › Section › Page », bandeau de l'admin distant, et
+ * `src/config/admin-sections.ts`), fil d'Ariane « Admin › Section › Groupe › Page », bandeau de l'admin distant, et
  * remplacement du contenu par une explication quand la page ne fonctionne pas dans le mode courant.
  *
  * Usage :
@@ -21,6 +21,7 @@ import { getRemoteAdminConfig } from "@/lib/admin/auth/config";
 import {
     ADMIN_DASHBOARD,
     getAdminPage,
+    getAdminPageTitle,
     getAdminSectionOf,
     isAdminPageAvailable,
     type AdminPageId,
@@ -65,7 +66,7 @@ const unavailableMessage =
         <details class:list={["group px-3", !bleed && "lg:hidden"]}>
             <summary class="flex min-h-touch cursor-pointer items-center gap-2 px-3 text-sm text-mp-text-body">
                 <span class="font-mono text-xs tracking-wider text-mp-text-muted uppercase">Menu de l'admin</span>
-                <span class="text-mp-text-heading">{page.label}</span>
+                <span class="text-mp-text-heading">{getAdminPageTitle(page)}</span>
             </summary>
             <AdminSidebar active={active} mode={mode} />
         </details>
@@ -93,6 +94,12 @@ const unavailableMessage =
                         <li class="flex items-center gap-1.5">
                             <span aria-hidden="true">›</span>
                             <span>{section.label}</span>
+                        </li>
+                    )}
+                    {page.group && (
+                        <li class="flex items-center gap-1.5">
+                            <span aria-hidden="true">›</span>
+                            <span>{page.group}</span>
                         </li>
                     )}
                     {active !== "dashboard" && (
@@ -123,7 +130,9 @@ const unavailableMessage =
         <main class:list={["admin-main", !(bleed && !isUnavailable) && "w-full px-4 py-6 md:px-8"]}>
             {heading && !isUnavailable && (
                 <div class="mb-6">
-                    <h1 class="font-serif text-2xl font-light text-mp-text-heading md:text-3xl">{page.label}</h1>
+                    <h1 class="font-serif text-2xl font-light text-mp-text-heading md:text-3xl">
+                        {getAdminPageTitle(page)}
+                    </h1>
                     <p class="text-mp-text-muted">{page.description}</p>
                 </div>
             )}

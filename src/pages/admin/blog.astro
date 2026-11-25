@@ -2,8 +2,6 @@
 import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import BlogEditor from "@/components/Admin/BlogEditor";
-import WebImagesReminder from "@/components/Admin/WebImagesReminder";
-import ContentUpdatePanel from "@/components/Admin/ContentUpdatePanel";
 
 export const prerender = false;
 
@@ -14,14 +12,5 @@ const isWritable = isLocalAdmin(Astro.locals);
 ---
 
 <AdminLayout title="Admin · Blog" description="Édition des articles de blog." active="blog">
-    {
-        // POURQUOI : ces panneaux lancent des scripts locaux ; à distance, ils ne renverraient que des 501.
-        isWritable && (
-            <>
-                <WebImagesReminder scope="blog" client:only="react" />
-                <ContentUpdatePanel scope="blog" client:only="react" />
-            </>
-        )
-    }
     <BlogEditor client:only="react" remote={!isWritable} />
 </AdminLayout>

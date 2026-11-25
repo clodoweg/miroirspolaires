@@ -1,0 +1,37 @@
+---
+/**
+ * Lien d'une page dans la barre latérale de l'admin : état courant, retrait sous un groupe, badge quand la page
+ * ne fonctionne pas dans le mode courant.
+ */
+import { isAdminPageAvailable, type AdminDisplayMode, type AdminPage, type AdminPageId } from "@/config/admin-sections";
+
+interface Props {
+    page: AdminPage;
+    active: AdminPageId;
+    mode: AdminDisplayMode;
+}
+
+const { page, active, mode } = Astro.props;
+const isActive = page.id === active;
+const isUnavailable = !isAdminPageAvailable(page, mode);
+---
+
+<a
+    href={page.href}
+    title={page.description}
+    aria-current={isActive ? "page" : undefined}
+    class:list={[
+        "flex min-h-touch w-full items-center gap-2 rounded-md pr-3 transition-colors mouse:hover:bg-mp-accent/10 mouse:hover:text-mp-accent",
+        page.group ? "pl-6" : "pl-3",
+        isActive && "bg-mp-accent/15 font-semibold text-mp-accent",
+        !isActive && isUnavailable && "text-mp-text-muted",
+        !isActive && !isUnavailable && "text-mp-text-body",
+    ]}
+>
+    <span class="flex-1">{page.label}</span>
+    {isUnavailable && (
+        <span class="rounded border border-mp-border-light px-1.5 font-mono text-xs text-mp-text-muted">
+            {mode === "remote" ? "local" : "distant"}
+        </span>
+    )}
+</a>

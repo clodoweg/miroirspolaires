@@ -1,5 +1,5 @@
 /**
- * Mise à jour complète des astrophotos (bouton « Mettre à jour les photos » de /admin/astrophotos)
+ * Mise à jour complète des astrophotos (bouton « Mettre à jour les photos » de /admin/astrophotos/importer)
  *
  * Responsabilité principale, dans l'ordre :
  *  1. Importer depuis le dépôt voisin `astrobin` le CSV et le HTML (s'ils sont plus récents).

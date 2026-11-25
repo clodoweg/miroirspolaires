@@ -24,6 +24,8 @@ export interface AdminPage {
     id: AdminPageId;
     /** Libellé du menu et du fil d'Ariane. */
     label: string;
+    /** Sous-groupe de la section (« Blog » dans « Contenu ») ; la barre latérale le montre en en-tête. */
+    group?: string;
     /** URL de la page. */
     href: string;
     /** Une phrase : à quoi sert la page. */
@@ -44,8 +46,11 @@ export interface AdminSection {
 export type AdminPageId =
     | 'dashboard'
     | 'astrophotos'
+    | 'astro-import'
     | 'blog'
+    | 'blog-images'
     | 'voyages'
+    | 'voyages-images'
     | 'database'
     | 'upstream'
     | 'seo'
@@ -75,27 +80,54 @@ export const ADMIN_SECTIONS: AdminSection[] = [
         pages: [
             {
                 id: 'astrophotos',
-                label: 'Astrophotographies',
+                label: "Vue d'ensemble",
+                group: 'Astrophotographies',
                 href: '/admin/astrophotos',
-                description: 'Catalogue des astrophotos, mise à jour depuis AstroBin et fiches.',
+                description: 'Catalogue des astrophotos, complétude et fiches.',
                 availability: 'local',
                 inNavbar: true,
             },
             {
+                id: 'astro-import',
+                label: 'Importer',
+                group: 'Astrophotographies',
+                href: '/admin/astrophotos/importer',
+                description: 'Mise à jour depuis AstroBin : scrape, traitement, envoi sur R2.',
+                availability: 'both',
+            },
+            {
                 id: 'blog',
-                label: 'Blog',
+                label: "Vue d'ensemble",
+                group: 'Blog',
                 href: '/admin/blog',
                 description: 'Articles : liste, édition et images.',
                 availability: 'both',
                 inNavbar: true,
             },
             {
+                id: 'blog-images',
+                label: 'Images & textes',
+                group: 'Blog',
+                href: '/admin/blog/images',
+                description: 'Images sur R2, dimensions, versions web, alts et SEO manquants.',
+                availability: 'local',
+            },
+            {
                 id: 'voyages',
-                label: 'Voyages',
+                label: "Vue d'ensemble",
+                group: 'Voyages',
                 href: '/admin/voyages',
                 description: 'Récits de voyage : liste, édition et galeries.',
                 availability: 'both',
                 inNavbar: true,
+            },
+            {
+                id: 'voyages-images',
+                label: 'Images & textes',
+                group: 'Voyages',
+                href: '/admin/voyages/images',
+                description: 'Images sur R2, dimensions, versions web, alts et SEO manquants.',
+                availability: 'local',
             },
         ],
     },
@@ -207,6 +239,16 @@ export const ADMIN_SECTIONS: AdminSection[] = [
 
 /** Toutes les pages, tableau de bord compris. */
 export const ADMIN_PAGES: AdminPage[] = [ADMIN_DASHBOARD, ...ADMIN_SECTIONS.flatMap((section) => section.pages)];
+
+/**
+ * Nom complet d'une page, groupe compris (« Blog › Images & textes »).
+ *
+ * @param page - Page du registre.
+ * @returns Le libellé, préfixé du groupe s'il y en a un.
+ */
+export function getAdminPageTitle(page: AdminPage): string {
+    return page.group ? `${page.group} › ${page.label}` : page.label;
+}
 
 /**
  * Retrouve une page du registre.

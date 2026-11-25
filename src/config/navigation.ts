@@ -92,5 +92,5 @@ export function getAdminNavItem(mode: AdminAccessMode): NavItem | null {
     if (mode === 'disabled') return null;
     // POURQUOI : quelques raccourcis seulement ; la navigation complète est la barre latérale de l'admin.
     const entries = ADMIN_PAGES.filter((page) => page.inNavbar && isAdminPageAvailable(page, mode));
-    return { label: 'Admin', children: entries.map(({ label, href }) => ({ label, href })) };
+    return { label: 'Admin', children: entries.map((page) => ({ label: page.group ?? page.label, href: page.href })) };
 }
