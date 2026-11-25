@@ -47,6 +47,8 @@ export type AdminPageId =
     | 'dashboard'
     | 'astrophotos'
     | 'astro-import'
+    | 'astro-textes'
+    | 'pages'
     | 'blog'
     | 'blog-images'
     | 'voyages'
@@ -101,6 +103,14 @@ export const ADMIN_SECTIONS: AdminSection[] = [
                 availability: 'both',
             },
             {
+                id: 'astro-textes',
+                label: 'Fiches & textes',
+                group: 'Astrophotographies',
+                href: '/admin/astrophotos/textes',
+                description: 'Descriptions SEO et alts des astrophotos, photo par photo.',
+                availability: 'both',
+            },
+            {
                 id: 'blog',
                 label: "Vue d'ensemble",
                 group: 'Blog',
@@ -132,6 +142,13 @@ export const ADMIN_SECTIONS: AdminSection[] = [
                 group: 'Voyages',
                 href: '/admin/voyages/images',
                 description: 'Images sur R2, dimensions, versions web, alts et SEO manquants.',
+                availability: 'both',
+            },
+            {
+                id: 'pages',
+                label: 'Pages du site',
+                href: '/admin/pages',
+                description: 'Descriptions SEO des pages fixes (accueil, index des sections, à propos…).',
                 availability: 'both',
             },
         ],
@@ -203,7 +220,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
                 label: 'Audit SEO',
                 href: '/admin/qualite/seo',
                 description: 'Couverture des descriptions, des alts et des données structurées.',
-                availability: 'local',
+                availability: 'both',
                 legacyHrefs: ['/admin/seo'],
             },
             {

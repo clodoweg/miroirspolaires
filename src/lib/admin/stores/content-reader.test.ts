@@ -23,11 +23,20 @@ describe('splitSafeRelativePath', () => {
             'a-b.md',
         ]);
         expect(splitSafeRelativePath('')).toEqual([]);
+        expect(splitSafeRelativePath('src/pages/blog/[...slug].astro')).toEqual([
+            'src',
+            'pages',
+            'blog',
+            '[...slug].astro',
+        ]);
     });
 
-    it.each(['../secret', 'a/../b', '/etc/passwd', 'a//b', 'a/b?ref=main', 'a/./b'])('refuse %s', (candidate) => {
-        expect(() => splitSafeRelativePath(candidate)).toThrow('Chemin refusé');
-    });
+    it.each(['../secret', 'a/../b', '/etc/passwd', 'a//b', 'a/b?ref=main', 'a/./b', 'a/[..]/..', 'a/b%2F..'])(
+        'refuse %s',
+        (candidate) => {
+            expect(() => splitSafeRelativePath(candidate)).toThrow('Chemin refusé');
+        },
+    );
 });
 
 describe('createFsContentReader', () => {

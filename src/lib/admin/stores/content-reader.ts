@@ -39,7 +39,9 @@ export interface ContentReader {
     listDir(relativePath: string): Promise<ContentDirEntry[] | null>;
 }
 
-const SAFE_SEGMENT_RE = /^[A-Za-z0-9._~-]+$/;
+// POURQUOI les crochets : noms des routes dynamiques d'Astro (`[slug].astro`), lus par l'audit SEO. Ils sont encodés
+// dans l'URL de l'API GitHub (`encodeURIComponent`) et ne permettent aucune traversée (`..` reste refusé).
+const SAFE_SEGMENT_RE = /^[A-Za-z0-9._~[\]-]+$/;
 
 /**
  * Valide un chemin relatif lu par l'admin.

@@ -1,5 +1,5 @@
 ---
-import { isAdminGranted } from "@/lib/admin/auth/access";
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import SEOPanel from "@/components/Admin/SEOPanel";
 
@@ -8,12 +8,13 @@ export const prerender = false;
 if (!isAdminGranted(Astro.locals)) {
     return new Response("Not Found", { status: 404 });
 }
+const isLocal = isLocalAdmin(Astro.locals);
 ---
 
 <AdminLayout
-    title="Admin · Bilan SEO & Référencement"
-    description="Bilan de couverture des méta-descriptions seo.json, des textes alternatifs alt.json et des sitemaps."
+    title="Admin · Audit SEO"
+    description="Couverture SEO, contrôles techniques et données structurées."
     active="seo"
 >
-    <SEOPanel client:only="react" />
+    <SEOPanel client:only="react" scope="all" remote={!isLocal} />
 </AdminLayout>

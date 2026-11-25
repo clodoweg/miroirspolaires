@@ -1,0 +1,19 @@
+---
+/**
+ * Pages du site : descriptions SEO des pages fixes (accueil, index des sections, à propos…), vue limitée de l'audit.
+ */
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import SEOPanel from "@/components/Admin/SEOPanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+const isLocal = isLocalAdmin(Astro.locals);
+---
+
+<AdminLayout title="Admin · Pages du site" description="Descriptions SEO des pages fixes du site." active="pages">
+    <SEOPanel client:only="react" scope="page" remote={!isLocal} />
+</AdminLayout>
