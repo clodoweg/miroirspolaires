@@ -3,6 +3,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { requireAdmin, jsonResponse, fileExists } from '@/lib/admin/shared';
 import { readCatalogueSnapshotStatus } from '@/lib/admin/catalogue-snapshots';
+import { getContentReader } from '@/lib/admin/stores/content-reader';
 import { db } from '@/lib/db';
 
 export const prerender = false;
@@ -276,7 +277,7 @@ export const GET: APIRoute = async ({ locals }) => {
 
         const stats = {
             progress,
-            catalogueSnapshots: await readCatalogueSnapshotStatus(ROOT),
+            catalogueSnapshots: await readCatalogueSnapshotStatus(getContentReader()),
             exoplanets: {
                 exists: dbExists,
                 sizeBytes: getCatalogueSize('exoplanets'),

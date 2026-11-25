@@ -1,0 +1,20 @@
+---
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import DatabasePanel from "@/components/Admin/DatabasePanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+const isLocal = isLocalAdmin(Astro.locals);
+---
+
+<AdminLayout
+    title="Admin · Étoiles variables"
+    description="Étoiles variables : statistiques et mise à jour."
+    active="db-variable-stars"
+>
+    <DatabasePanel client:only="react" view="variableStars" remote={!isLocal} />
+</AdminLayout>

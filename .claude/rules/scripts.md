@@ -37,7 +37,7 @@ paths:
 
 Sans effet distant : `pipeline/check-variable-stars.mjs`, `audit/seo-coverage.mjs`, `build/compute-image-dimensions.mjs` (écrit seulement le JSON local), `pipeline/migrate-asset-years.mjs --dry-run`, `db/create-indexes.mjs --check`.
 
-Écrivent des fichiers versionnés ou locaux : `build/update-catalogue-snapshots.mjs` (`src/data/catalogues/`, lit le CDS ou ses miroirs selon `src/data/upstream-priority.json` ; boutons dans `/admin/donnees`), `audit/lighthouse-runner.mjs` (`src/data/lighthouse-results.json`), `pipeline/migrate-asset-years.mjs` (déplace des fichiers, réécrit `alt.json`), `pipeline/generate-mini.mjs`, `stellarium/build.sh` (`public/js`, `public/data`). Réseau seulement : `r2/warm-cache.mjs`.
+Écrivent des fichiers versionnés ou locaux : `build/update-catalogue-snapshots.mjs` (`src/data/catalogues/`, lit le CDS ou ses miroirs selon `src/data/upstream-priority.json` ; boutons dans `/admin/donnees/catalogues`), `audit/lighthouse-runner.mjs` (`src/data/lighthouse-results.json`), `pipeline/migrate-asset-years.mjs` (déplace des fichiers, réécrit `alt.json`), `pipeline/generate-mini.mjs`, `stellarium/build.sh` (`public/js`, `public/data`). Réseau seulement : `r2/warm-cache.mjs`.
 
 ## Pièges connus
 

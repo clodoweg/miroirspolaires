@@ -60,9 +60,10 @@ async function fetchJobs(): Promise<{ data?: JobsResponse; error?: string }> {
  * Scripts, jobs et journal du job choisi.
  *
  * @param scriptIds - Restreint scripts et jobs à ces identifiants ; absent, tout est gardé.
+ * @param settings.enabled - `false` : aucun appel (admin local, où l'API des jobs répond 501).
  * @returns L'état et les actions.
  */
-export function useRemoteJobs(scriptIds?: readonly string[]) {
+export function useRemoteJobs(scriptIds?: readonly string[], { enabled = true }: { enabled?: boolean } = {}) {
     const [data, setData] = useState<JobsResponse | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
@@ -91,6 +92,7 @@ export function useRemoteJobs(scriptIds?: readonly string[]) {
     const refresh = useCallback(() => fetchJobs().then(applyJobs), [applyJobs]);
 
     useEffect(() => {
+        if (!enabled) return;
         let cancelled = false;
         void fetchJobs().then((result) => {
             if (!cancelled) applyJobs(result);
@@ -98,7 +100,7 @@ export function useRemoteJobs(scriptIds?: readonly string[]) {
         return () => {
             cancelled = true;
         };
-    }, [applyJobs]);
+    }, [applyJobs, enabled]);
 
     const hasActiveJob = data?.jobs.some(isJobActive) ?? false;
 

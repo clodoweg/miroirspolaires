@@ -1,5 +1,5 @@
 ---
-import { isAdminGranted } from "@/lib/admin/auth/access";
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import DatabasePanel from "@/components/Admin/DatabasePanel";
 
@@ -8,12 +8,13 @@ export const prerender = false;
 if (!isAdminGranted(Astro.locals)) {
     return new Response("Not Found", { status: 404 });
 }
+const isLocal = isLocalAdmin(Astro.locals);
 ---
 
 <AdminLayout
     title="Admin · Base de données"
-    description="Supervision des catalogues d'exoplanètes et d'étoiles variables, statistiques astronomiques et scripts de synchronisation."
+    description="Base de données : statistiques et mise à jour."
     active="database"
 >
-    <DatabasePanel client:only="react" />
+    <DatabasePanel client:only="react" view="overview" remote={!isLocal} />
 </AdminLayout>

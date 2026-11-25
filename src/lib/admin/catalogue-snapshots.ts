@@ -5,9 +5,8 @@
  * les catalogues encore servis par le CDS et non par un fichier versionné.
  */
 
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
 import { CATALOGUES } from '@/lib/catalogues/registry';
+import type { ContentReader } from './stores/content-reader';
 
 export interface CatalogueSnapshotStatus {
     /** Nombre de catalogues du registre. */
@@ -27,10 +26,10 @@ export interface CatalogueSnapshotStatus {
 /**
  * Lit l'état des instantanés.
  *
- * @param rootDirectory - Racine du projet.
+ * @param reader - Source des fichiers (`getContentReader()` : disque en local, branche dev à distance).
  * @returns L'état de chaque catalogue du registre, agrégé.
  */
-export async function readCatalogueSnapshotStatus(rootDirectory: string): Promise<CatalogueSnapshotStatus> {
+export async function readCatalogueSnapshotStatus(reader: ContentReader): Promise<CatalogueSnapshotStatus> {
     const status: CatalogueSnapshotStatus = {
         totalCount: CATALOGUES.length,
         generatedCount: 0,
@@ -40,10 +39,14 @@ export async function readCatalogueSnapshotStatus(rootDirectory: string): Promis
         missing: [],
     };
 
-    for (const catalogue of CATALOGUES) {
-        const snapshotPath = path.join(rootDirectory, 'src/data/catalogues', `${catalogue.slug}.json`);
+    // POURQUOI : à distance, chaque lecture est un appel à GitHub ; les lancer ensemble évite d'additionner les latences.
+    const contents = await Promise.all(
+        CATALOGUES.map((catalogue) => reader.readText(`src/data/catalogues/${catalogue.slug}.json`).catch(() => null)),
+    );
+    for (const [index, catalogue] of CATALOGUES.entries()) {
         try {
-            const content = await fs.readFile(snapshotPath, 'utf-8');
+            const content = contents[index];
+            if (content === null) throw new Error('absent');
             const snapshot: { generatedAt: string; entries: unknown[] } = JSON.parse(content);
             status.generatedCount += 1;
             status.entryCount += snapshot.entries.length;

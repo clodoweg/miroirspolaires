@@ -52,6 +52,11 @@ export type AdminPageId =
     | 'voyages'
     | 'voyages-images'
     | 'database'
+    | 'db-exoplanets'
+    | 'db-variable-stars'
+    | 'db-comets'
+    | 'db-asteroids'
+    | 'db-catalogues'
     | 'upstream'
     | 'seo'
     | 'lighthouse'
@@ -137,11 +142,47 @@ export const ADMIN_SECTIONS: AdminSection[] = [
         pages: [
             {
                 id: 'database',
-                label: 'Base de données',
+                label: "Vue d'ensemble",
                 href: '/admin/donnees',
-                description: 'Tables Turso (exoplanètes, étoiles variables, comètes, astéroïdes) et catalogues.',
-                availability: 'local',
+                description: 'Tables Turso et instantanés de catalogues : volumes et dernières mises à jour.',
+                availability: 'both',
                 legacyHrefs: ['/admin/database'],
+            },
+            {
+                id: 'db-exoplanets',
+                label: 'Exoplanètes',
+                href: '/admin/donnees/exoplanetes',
+                description: 'Table Turso des exoplanètes (NASA, VarAstro) : statistiques et mise à jour.',
+                availability: 'both',
+            },
+            {
+                id: 'db-variable-stars',
+                label: 'Étoiles variables',
+                href: '/admin/donnees/etoiles-variables',
+                description:
+                    'Table Turso des étoiles variables (AAVSO VSX, Gaia) : statistiques, contrôle, cross-match.',
+                availability: 'both',
+            },
+            {
+                id: 'db-comets',
+                label: 'Comètes',
+                href: '/admin/donnees/cometes',
+                description: 'Table Turso des comètes : statistiques et mise à jour.',
+                availability: 'both',
+            },
+            {
+                id: 'db-asteroids',
+                label: 'Astéroïdes',
+                href: '/admin/donnees/asteroides',
+                description: 'Table Turso des astéroïdes : statistiques et mise à jour.',
+                availability: 'both',
+            },
+            {
+                id: 'db-catalogues',
+                label: 'Catalogues du ciel profond',
+                href: '/admin/donnees/catalogues',
+                description: 'Instantanés versionnés des catalogues (src/data/catalogues/).',
+                availability: 'both',
             },
             {
                 id: 'upstream',
