@@ -110,7 +110,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
                 group: 'Blog',
                 href: '/admin/blog/images',
                 description: 'Images sur R2, dimensions, versions web, alts et SEO manquants.',
-                availability: 'local',
+                availability: 'both',
             },
             {
                 id: 'voyages',
@@ -127,7 +127,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
                 group: 'Voyages',
                 href: '/admin/voyages/images',
                 description: 'Images sur R2, dimensions, versions web, alts et SEO manquants.',
-                availability: 'local',
+                availability: 'both',
             },
         ],
     },

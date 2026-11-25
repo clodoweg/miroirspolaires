@@ -31,6 +31,7 @@ vi.mock('lucide-react', () => ({
     ArrowUpDown: () => <div data-testid="arrow-up-down-icon" />,
     ArrowUp: () => <div data-testid="arrow-up-icon" />,
     ArrowDown: () => <div data-testid="arrow-down-icon" />,
+    CheckCircle2: () => <div data-testid="check-circle2-icon" />,
     Loader2: () => <div data-testid="loader2-icon" />,
     Sparkles: () => <div data-testid="sparkles-icon" />,
     Plus: () => <div data-testid="plus-icon" />,

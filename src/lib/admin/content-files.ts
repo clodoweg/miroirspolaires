@@ -96,16 +96,35 @@ export async function listMarkdownEntries(contentRoot: string): Promise<Markdown
  * @returns Les entrées dans l'ordre de la source, ou un tableau vide si la racine n'existe pas.
  */
 export async function listMarkdownEntriesWith(reader: ContentReader, relativeRoot: string): Promise<MarkdownEntry[]> {
+    const sources = await listMarkdownSources(reader, relativeRoot);
+    return sources.map(({ year, slug, markdown }) => ({ year, slug, data: parseFrontmatter(markdown).data }));
+}
+
+export interface MarkdownSource {
+    year: string;
+    slug: string;
+    /** Contenu brut du fichier, frontmatter compris. */
+    markdown: string;
+}
+
+/**
+ * Lit le contenu brut des fichiers `<année>/<slug>.md` d'une racine lue par un `ContentReader`.
+ *
+ * @param reader - Source des fichiers (disque ou GitHub).
+ * @param relativeRoot - Racine relative (`src/content/blog`), ou `''` si le lecteur y est déjà enraciné.
+ * @returns Les fichiers dans l'ordre de la source, ou un tableau vide si la racine n'existe pas.
+ */
+export async function listMarkdownSources(reader: ContentReader, relativeRoot: string): Promise<MarkdownSource[]> {
     const markdownFiles = await listMarkdownFiles(reader, relativeRoot);
     // POURQUOI : en lecture GitHub, chaque fichier est un appel réseau ; les lancer ensemble évite
     // d'additionner les latences (une soixantaine d'articles).
-    const entries = await Promise.all(
+    const sources = await Promise.all(
         markdownFiles.map(async ({ year, slug, sha }) => {
-            const raw = await reader.readText(joinRelative(relativeRoot, year, `${slug}.md`), sha);
-            return raw === null ? null : { year, slug, data: parseFrontmatter(raw).data };
+            const markdown = await reader.readText(joinRelative(relativeRoot, year, `${slug}.md`), sha);
+            return markdown === null ? null : { year, slug, markdown };
         }),
     );
-    return entries.filter((entry): entry is MarkdownEntry => entry !== null);
+    return sources.filter((source): source is MarkdownSource => source !== null);
 }
 
 /**

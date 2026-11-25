@@ -11,6 +11,7 @@ describe('isAvailableRemotely', () => {
         ['GET', '/api/admin/upstream'],
         ['GET', '/api/admin/cache/status'],
         ['GET', '/api/admin/diagnostics'],
+        ['GET', '/api/admin/content-gaps'],
     ])('ouvre %s %s', (method, pathname) => {
         expect(isAvailableRemotely(method, pathname)).toBe(true);
     });

@@ -37,6 +37,8 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 - Manifestes : à l'enregistrement d'un article ou d'un voyage, `computeImageManifestChanges` met à jour `image-dimensions.json` et `web-images.json` pour ce dossier d'après R2, dans le même commit que le texte. Supprimer une photo d'un voyage committe aussitôt la galerie nettoyée ; pour le blog, les manifestes sont corrigés au prochain enregistrement.
 - Prérequis : variables `R2_*` et `PUBLIC_R2_URL` sur la Preview de `dev` ; règle CORS du bucket autorisant `PUT` depuis `https://dev.miroirspolaires.fr` (en-tête `content-type`) ; `https://*.r2.cloudflarestorage.com` est dans `connect-src` (`src/integrations/security-headers.mjs`). Conseillé : règle de cycle de vie R2 qui supprime `incoming/` après un jour (envois abandonnés).
 
+- `/admin/blog/images` et `/admin/voyages/images` fonctionnent aussi à distance : les étapes y sont adaptées (images traitées à l'envoi, enregistrement par commit) et les textes manquants sont lus sur la branche dev (`GET /api/admin/content-gaps`, `content-gaps-reader.ts`). Les panneaux de versions web et de mise à jour des images restent réservés au local.
+
 ### Phase 4 : scripts dans GitHub Actions
 
 - `/admin/infra/scripts` (`RemoteJobsPanel.tsx`) liste les entrées `remote: true` de `SCRIPTS` (`src/lib/admin/scripts.ts`) : données Turso (exoplanètes, comètes, astéroïdes, croisement Gaia, contrôle des étoiles variables), instantanés de catalogues, Lighthouse, SEO et Wikipedia. Jamais les scripts `devOnly`, ceux qui demandent un dossier (`needsTarget`) ni l'import des étoiles variables (son mode par défaut vide la table ; il garde son workflow dédié). Aucun argument n'est transmis.
