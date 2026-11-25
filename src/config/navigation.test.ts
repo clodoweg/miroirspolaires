@@ -16,6 +16,12 @@ describe('getAdminNavItem', () => {
     });
 
     it('à distance, ne propose que des pages servies par l’admin distant', () => {
-        expect(hrefs('remote')).toEqual(['/admin', '/admin/blog', '/admin/voyages', '/admin/publication']);
+        expect(hrefs('remote')).toEqual([
+            '/admin',
+            '/admin/astrophotos',
+            '/admin/blog',
+            '/admin/voyages',
+            '/admin/publication',
+        ]);
     });
 });

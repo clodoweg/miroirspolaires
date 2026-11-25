@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { requireAdmin, jsonResponse } from '@/lib/admin/shared';
 import { updatePhotoMetadata } from '@/lib/admin/astrophotos';
+import { toWriteErrorResponse } from '@/lib/admin/stores/content-writer';
 
 export const prerender = false;
 
@@ -29,6 +30,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
         await updatePhotoMetadata(id, year, title, { alt, wiki, tech, seo, draft });
         return jsonResponse({ ok: true });
     } catch (e) {
-        return jsonResponse({ error: (e as Error).message }, 500);
+        // POURQUOI : à distance, l'enregistrement est un commit ; un refus de GitHub répond 502 (toWriteErrorResponse).
+        try {
+            return toWriteErrorResponse(e);
+        } catch {
+            return jsonResponse({ error: (e as Error).message }, 500);
+        }
     }
 };

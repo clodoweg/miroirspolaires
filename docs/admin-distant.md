@@ -16,7 +16,7 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 
 - Login GitHub : OAuth utilisateur de la GitHub App, état signé et PKCE. Seul `ADMIN_GITHUB_USER_ID` est accepté ; session signée de 12 h (`mp_admin_session`, `HttpOnly`, `Secure`, `SameSite=Lax`).
 - Routes ouvertes à distance (`src/lib/admin/remote-capabilities.ts`) : listes et lecture des articles et voyages, rapport Lighthouse, priorité des routes amont, état du cache. Toutes les autres répondent 501.
-- La barre latérale, le fil d'Ariane et le bouton de déconnexion sont affichés par `AdminLayout.astro`, d'après le registre `src/config/admin-sections.ts`. Une page dont `availability` vaut `local` (panneaux qui exigent le disque ou des scripts : astrophotos, SEO, R2, base de données) reste dans le menu avec le badge « local » et affiche un message au lieu d'erreurs 501 ; le tableau de bord liste les pages disponibles, par section.
+- La barre latérale, le fil d'Ariane et le bouton de déconnexion sont affichés par `AdminLayout.astro`, d'après le registre `src/config/admin-sections.ts`. Une page dont `availability` vaut `local` (panneaux qui exigent le disque ou des scripts : SEO, R2, base de données) reste dans le menu avec le badge « local » et affiche un message au lieu d'erreurs 501 ; le tableau de bord liste les pages disponibles, par section.
 
 - Menu « Admin » dans la barre de navigation du site (`getAdminNavItem`, `src/config/navigation.ts`) : en `npm run dev` et dans le build de la Preview de `dev`, avec les seules pages qui fonctionnent dans ce mode ; absent de la production et des autres Previews.
 
@@ -38,6 +38,8 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 - Prérequis : variables `R2_*` et `PUBLIC_R2_URL` sur la Preview de `dev` ; règle CORS du bucket autorisant `PUT` depuis `https://dev.miroirspolaires.fr` (en-tête `content-type`) ; `https://*.r2.cloudflarestorage.com` est dans `connect-src` (`src/integrations/security-headers.mjs`). Conseillé : règle de cycle de vie R2 qui supprime `incoming/` après un jour (envois abandonnés).
 
 - `/admin/blog/images` et `/admin/voyages/images` fonctionnent aussi à distance : les étapes y sont adaptées (images traitées à l'envoi, enregistrement par commit) et les textes manquants sont lus sur la branche dev (`GET /api/admin/content-gaps`, `content-gaps-reader.ts`). Les panneaux de versions web et de mise à jour des images restent réservés au local.
+
+- `/admin/astrophotos` fonctionne aussi à distance : le CSV et les JSON de métadonnées sont lus sur la branche dev, la présence des raws, miniatures et annotations est lue sur R2 (`astro-asset-index.ts`, une liste du préfixe `astrophotographies/`), et l'enregistrement d'une fiche est un seul commit des JSON modifiés (`updatePhotoMetadata`). L'envoi d'un raw (`POST /api/admin/astrophotos/upload`) reste local.
 
 ### Phase 4 : scripts dans GitHub Actions
 

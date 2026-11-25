@@ -84,7 +84,7 @@ export const ADMIN_SECTIONS: AdminSection[] = [
                 group: 'Astrophotographies',
                 href: '/admin/astrophotos',
                 description: 'Catalogue des astrophotos, complétude et fiches.',
-                availability: 'local',
+                availability: 'both',
                 inNavbar: true,
             },
             {

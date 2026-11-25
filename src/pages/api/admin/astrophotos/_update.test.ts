@@ -42,6 +42,13 @@ describe('POST /api/admin/astrophotos/update', () => {
         });
     });
 
+    it('renvoie 502 si GitHub refuse le commit', async () => {
+        const { GitHubApiError } = await import('@/lib/admin/github/app-client');
+        astro.updatePhotoMetadata.mockRejectedValue(new GitHubApiError(422, 'refus'));
+        const response = await post({ id: '123', year: '2024', title: 'M42' });
+        expect(response.status).toBe(502);
+    });
+
     it('renvoie 500 avec le message si l’écriture échoue', async () => {
         astro.updatePhotoMetadata.mockRejectedValue(new Error('disque plein'));
         const response = await post({ id: '123', year: '2024', title: 'M42' });
