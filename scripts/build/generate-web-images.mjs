@@ -23,6 +23,11 @@
  * Options disponibles (toute autre option est refusée, code de sortie 1) :
  *   --only=astro,blog,voyages : limite les dossiers traités (défaut : les trois). Les entrées du
  *                               manifeste des autres dossiers sont conservées.
+ *   --prefix=<préfixe>        : limite aux sources dont la clé commence par ce préfixe, dans un dossier de
+ *                               --only (ex. blog/2026/mon-article/). Seules ses entrées du manifeste sont
+ *                               remplacées. Lettres minuscules, chiffres, `-`, `_` et `/` seulement.
+ *   --purge                   : purge ensuite le cache du worker pour les sources traitées (IMAGE_WORKER_URL et
+ *                               IMAGE_WORKER_PURGE_KEY ; sans elles, la purge est sautée avec un avertissement).
  *   --force                   : régénère les versions locales et, avec --upload, les réécrit sur R2.
  *   --upload                  : envoie les versions absentes de R2 et met à jour le manifeste.
  *   --dry-run                 : compte les sources et les versions prévues, sans rien écrire.
@@ -34,6 +39,8 @@
  *   node scripts/build/generate-web-images.mjs --only=astro --upload
  *   node scripts/build/generate-web-images.mjs --upload            # après l'ajout d'images
  *   node scripts/build/generate-web-images.mjs --force --upload    # après un changement de réglages
+ *   node scripts/build/generate-web-images.mjs --only=blog --prefix=blog/2026/mon-article/ --force --upload --purge
+ *                                                                   # images d'un article remplacées sous le même nom
  */
 
 import fs from 'node:fs';
@@ -43,6 +50,7 @@ import { HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { PROJECT_ROOT, loadEnv } from '../lib/env.mjs';
 import { createR2Client, requireR2Config } from '../lib/r2.mjs';
 import { parseCliArgs } from '../lib/args.mjs';
+import { purgeImageKeys } from '../lib/worker-cache.mjs';
 import { planWebImageWidths, webImageKey } from '../../src/utils/webImages.mjs';
 import { WEB_IMAGE_SCOPES, getDisplayWidth, listWebImageSources } from '../../src/lib/admin/web-image-sources.mjs';
 
@@ -93,14 +101,14 @@ async function main() {
     let args;
     try {
         args = parseCliArgs(process.argv.slice(2), {
-            flags: { force: ['--force'], upload: ['--upload'], dryRun: ['--dry-run'] },
-            valueOptions: ['--only'],
+            flags: { force: ['--force'], upload: ['--upload'], dryRun: ['--dry-run'], purge: ['--purge'] },
+            valueOptions: ['--only', '--prefix'],
         });
     } catch (error) {
         console.error(`❌ ${error.message}`);
         process.exit(1);
     }
-    const { force, upload, dryRun } = args.flags;
+    const { force, upload, dryRun, purge } = args.flags;
     const requestedScopes = (args.values['--only'] || Object.keys(WEB_IMAGE_SCOPES).join(','))
         .split(',')
         .map((scope) => scope.trim())
@@ -114,7 +122,23 @@ async function main() {
     }
     const scopePrefixes = requestedScopes.map((scope) => WEB_IMAGE_SCOPES[scope]);
 
-    const sources = listWebImageSources(ASSETS_ROOT, requestedScopes);
+    const rawPrefix = args.values['--prefix'];
+    const keyPrefix = rawPrefix ? (rawPrefix.endsWith('/') ? rawPrefix : `${rawPrefix}/`) : null;
+    // WARNING: le préfixe sert aussi à choisir les entrées du manifeste à remplacer ; un préfixe libre
+    // (vide, `..`) effacerait des entrées qui n'ont rien à voir.
+    if (
+        keyPrefix !== null &&
+        (!/^[a-z0-9][a-z0-9/_-]*\/$/.test(keyPrefix) ||
+            keyPrefix.includes('//') ||
+            !scopePrefixes.some((scopePrefix) => keyPrefix.startsWith(`${scopePrefix}/`)))
+    ) {
+        console.error(`❌ --prefix invalide ou hors des dossiers de --only : ${rawPrefix}`);
+        process.exit(1);
+    }
+
+    const sources = listWebImageSources(ASSETS_ROOT, requestedScopes).filter(
+        (source) => keyPrefix === null || source.key.startsWith(keyPrefix),
+    );
     console.log(`🖼️  ${sources.length} images sources (${requestedScopes.join(', ')})`);
 
     const s3 = upload && !dryRun ? createR2Client(requireR2Config()) : null;
@@ -191,9 +215,12 @@ async function main() {
         const previous = fs.existsSync(MANIFEST_PATH) ? JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8')) : {};
         // POURQUOI : on garde les entrées des dossiers non traités par --only ; celles des dossiers
         // traités sont remplacées, ce qui retire les images supprimées en local.
-        const kept = Object.fromEntries(
-            Object.entries(previous).filter(([key]) => !scopePrefixes.some((prefix) => key.startsWith(`${prefix}/`))),
-        );
+        // Avec --prefix, seules les entrées de ce préfixe sont remplacées.
+        const isReplaced = (key) =>
+            keyPrefix !== null
+                ? key.startsWith(keyPrefix)
+                : scopePrefixes.some((prefix) => key.startsWith(`${prefix}/`));
+        const kept = Object.fromEntries(Object.entries(previous).filter(([key]) => !isReplaced(key)));
         const merged = { ...kept, ...manifestEntries };
         const sorted = Object.fromEntries(
             Object.keys(merged)
@@ -204,6 +231,23 @@ async function main() {
         console.log(`📝 ${Object.keys(sorted).length} entrées dans src/data/web-images.json`);
     } else {
         console.log('ℹ️  Sans --upload, rien n’est envoyé et le manifeste n’est pas modifié.');
+    }
+
+    if (purge) {
+        const workerUrl = process.env.IMAGE_WORKER_URL;
+        const purgeKey = process.env.IMAGE_WORKER_PURGE_KEY;
+        if (!workerUrl || !purgeKey) {
+            console.warn('⚠️  --purge : IMAGE_WORKER_URL ou IMAGE_WORKER_PURGE_KEY absent, cache du worker non purgé.');
+        } else {
+            const failed = await purgeImageKeys(
+                sources.map((source) => source.key),
+                { workerUrl, purgeKey },
+            );
+            console.log(
+                `🧹 Cache du worker purgé pour ${sources.length} image(s)${failed ? `, ${failed} échec(s)` : ''}`,
+            );
+            if (failed > 0) stats.errors += failed;
+        }
     }
 
     if (stats.errors > 0) {

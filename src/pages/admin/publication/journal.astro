@@ -20,7 +20,7 @@ const dateFormat = new Intl.DateTimeFormat("fr-FR", {
 });
 ---
 
-<AdminLayout title="Admin · Journal" description="Écritures faites depuis l'admin distant." active="journal">
+<AdminLayout title="Admin · Journal" description="Écritures faites depuis l'admin distant." active="journal" heading>
     {isLocal ? (
         <p class="text-mp-text-body">Le journal ne concerne que l'admin distant ; rien n'est enregistré en local.</p>
     ) : journal.error ? (

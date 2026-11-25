@@ -224,3 +224,61 @@ describe('uploadRaw', () => {
         await expect(lib.uploadRaw('1', '20xx', new Uint8Array())).rejects.toThrow('Invalid year');
     });
 });
+
+describe('sources de l’admin distant', () => {
+    const memoryReader = (files: Record<string, string>) => ({
+        readText: async (relativePath: string) => files[relativePath] ?? null,
+        listDir: async () => null,
+    });
+
+    it('lit le CSV et les JSON par le lecteur, et les fichiers par l’index R2', async () => {
+        const { buildAstroAssetIndex } = await import('./astro-asset-index');
+        const photos = await lib.listRecentPhotos(10, {
+            reader: memoryReader({
+                'data/astrobin_clodoweg_gallery_python.csv': CSV,
+                'src/data/drafts.json': JSON.stringify({ '123': true }),
+            }),
+            assets: buildAstroAssetIndex(
+                ['astrophotographies/2024/123_raw.jpg', 'astrophotographies/mini/2023/456_raw.jpg'],
+                'r2',
+            ),
+        });
+        expect(photos[0]).toMatchObject({
+            ID: '123',
+            hasRaw: true,
+            rawPath: 'R2 : astrophotographies/2024/123_raw.jpg',
+            hasMini: false,
+            draft: true,
+        });
+        expect(photos[1]).toMatchObject({ ID: '456', hasRaw: false, hasMini: true });
+    });
+
+    it('enregistre toute la fiche en un seul commit, sans toucher au CSV', async () => {
+        const commit = vi.fn().mockResolvedValue({ commitSha: 'abc' });
+        await lib.updatePhotoMetadata(
+            '123',
+            '2024',
+            'M42',
+            { alt: 'Orion', seo: 'Description', draft: false },
+            { reader: memoryReader({ 'src/data/alt.json': JSON.stringify({ autre: 'b' }) }), writer: { commit } },
+        );
+        expect(commit).toHaveBeenCalledTimes(1);
+        const [changes, message] = commit.mock.calls[0];
+        expect(message).toBe("Admin : fiche de l'astrophoto 123");
+        expect(changes.map((change: { path: string }) => change.path)).toEqual([
+            'src/data/alt.json',
+            'src/data/seo.json',
+            'src/data/drafts.json',
+        ]);
+        expect(JSON.parse(changes[0].content)).toEqual({
+            autre: 'b',
+            '/assets/astrophotographies/2024/123_raw.jpg': 'Orion',
+        });
+    });
+
+    it('ne crée aucun commit sans champ à modifier', async () => {
+        const commit = vi.fn();
+        await lib.updatePhotoMetadata('123', '2024', 'M42', {}, { reader: memoryReader({}), writer: { commit } });
+        expect(commit).not.toHaveBeenCalled();
+    });
+});

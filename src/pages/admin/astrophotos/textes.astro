@@ -1,0 +1,24 @@
+---
+/**
+ * Fiches et textes des astrophotos : descriptions SEO et alts, photo par photo (vue limitée de l'audit SEO).
+ * L'édition d'une fiche se fait depuis la vue d'ensemble (/admin/astrophotos).
+ */
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import SEOPanel from "@/components/Admin/SEOPanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+const isLocal = isLocalAdmin(Astro.locals);
+---
+
+<AdminLayout
+    title="Admin · Astrophotos · Fiches et textes"
+    description="Descriptions SEO et alts des astrophotos."
+    active="astro-textes"
+>
+    <SEOPanel client:only="react" scope="astrophoto" remote={!isLocal} />
+</AdminLayout>

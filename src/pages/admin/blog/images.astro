@@ -1,0 +1,41 @@
+---
+/**
+ * Images et textes du domaine blog : workflow après l'enregistrement, images à préparer (en local) et textes
+ * manquants (alts, SEO).
+ *
+ * POURQUOI une page à part : l'éditeur sert à écrire ; ce qui suit l'enregistrement est un workflow distinct.
+ * En local, deux panneaux lancent des scripts (versions web, `update-content.mjs`) ; à distance, les images sont
+ * traitées à l'envoi et seuls les textes manquants restent à suivre (`ContentGapsPanel`, lu sur la branche dev).
+ */
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import WebImagesReminder from "@/components/Admin/WebImagesReminder";
+import ContentUpdatePanel from "@/components/Admin/ContentUpdatePanel";
+import ContentGapsPanel from "@/components/Admin/ContentGapsPanel";
+import RefreshEntryImagesPanel from "@/components/Admin/RefreshEntryImagesPanel";
+import ContentImagesSteps from "@/components/Admin/ContentImagesSteps.astro";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+const isLocal = isLocalAdmin(Astro.locals);
+---
+
+<AdminLayout
+    title="Admin · Blog · Images et textes"
+    description="Images et textes du domaine blog."
+    active="blog-images"
+    heading
+>
+    <ContentImagesSteps scope="blog" remote={!isLocal} />
+    {isLocal && (
+        <>
+            <WebImagesReminder scope="blog" client:only="react" />
+            <ContentUpdatePanel scope="blog" client:only="react" />
+        </>
+    )}
+    <ContentGapsPanel scope="blog" client:only="react" />
+    {isLocal && <RefreshEntryImagesPanel scope="blog" client:only="react" />}
+</AdminLayout>

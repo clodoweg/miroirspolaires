@@ -1,5 +1,5 @@
 /**
- * Mise à jour du blog ou des voyages (boutons « Mettre à jour » de /admin/blog et /admin/voyages)
+ * Mise à jour du blog ou des voyages (boutons « Mettre à jour » de /admin/blog/images et /admin/voyages/images)
  *
  * Responsabilité principale : pour un seul domaine, dans l'ordre :
  *  1. Blog : temps de lecture manquants (scripts/seo/blog-metadata.js).

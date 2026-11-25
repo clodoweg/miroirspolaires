@@ -1,0 +1,66 @@
+---
+/**
+ * Étapes, dans l'ordre, entre l'enregistrement d'un article ou d'un voyage et sa mise en production.
+ *
+ * Responsabilité : rappeler le workflow en tête de `/admin/blog/images` et `/admin/voyages/images`, pour que
+ * l'ordre ne dépende pas de la mémoire de l'utilisateur. Les actions elles-mêmes sont dans les panneaux de la page.
+ */
+interface Props {
+    scope: "blog" | "voyages";
+    /** Admin distant : les images sont traitées à l'envoi et chaque enregistrement est un commit sur dev. */
+    remote?: boolean;
+}
+
+const { scope, remote = false } = Astro.props;
+const isBlog = scope === "blog";
+const textCommands = isBlog ? "/generate-alts blog" : "/generate-alts voyages et /generate-seo voyages";
+const committedFiles = isBlog
+    ? "le Markdown, src/data/image-dimensions.json, web-images.json, blog.json et alt.json"
+    : "le Markdown, src/data/image-dimensions.json, web-images.json, alt.json et seo.json";
+const entryLabel = isBlog ? "l'article" : "le voyage";
+
+const localSteps = [
+    {
+        title: `Enregistrer ${entryLabel}`,
+        detail: isBlog
+            ? "Dans l'éditeur : Markdown, temps de lecture et copie du dossier de l'article sur R2."
+            : "Dans l'éditeur : Markdown et copie du dossier du voyage sur R2.",
+    },
+    {
+        title: "Préparer les images pour le site",
+        detail: "Bouton ci-dessous : renvoi sur R2 des fichiers modifiés, dimensions, puis versions web. Inutile de générer les versions web à part : elles sont incluses.",
+    },
+    {
+        title: "Écrire les alts et le SEO",
+        detail: `Dans Claude Code : ${textCommands}. Les textes manquants sont listés ci-dessous.`,
+    },
+    { title: "Committer", detail: `Après les étapes 2 et 3 : ${committedFiles}.` },
+    { title: "Mettre en production", detail: "Depuis l'admin distant : Publication › Mise en production." },
+];
+
+// POURQUOI : à distance, compression, versions web et dimensions sont faites à l'envoi de chaque image
+// (`remote-images.ts`) et l'enregistrement committe tout sur dev : il n'y a ni « Préparer » ni commit manuel.
+const remoteSteps = [
+    {
+        title: `Déposer les images et enregistrer ${entryLabel}`,
+        detail: "Automatique : chaque image est compressée, ses versions web et ses dimensions sont calculées à l'envoi ; l'enregistrement committe tout sur dev.",
+    },
+    {
+        title: "Écrire les alts et le SEO",
+        detail: `Dans une session Claude Code sur la branche dev : ${textCommands}. Les textes manquants sont listés ci-dessous. La page peut partir en production avant.`,
+    },
+    { title: "Mettre en production", detail: "Publication › Mise en production." },
+];
+
+const steps = remote ? remoteSteps : localSteps;
+---
+
+<ol class:list={["mb-6 grid gap-3 md:grid-cols-2", remote ? "xl:grid-cols-3" : "xl:grid-cols-5"]}>
+    {steps.map((step, index) => (
+        <li class="flex flex-col items-start gap-1 rounded-xl border border-mp-glass-border p-4">
+            <span class="font-mono text-xs text-mp-accent">{index + 1}</span>
+            <span class="font-semibold text-mp-text-heading">{step.title}</span>
+            <span class="text-sm text-mp-text-secondary">{step.detail}</span>
+        </li>
+    ))}
+</ol>

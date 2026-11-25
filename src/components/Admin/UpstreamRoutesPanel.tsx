@@ -1,5 +1,5 @@
 /**
- * Panneau « Routes amont » de `/admin/upstream`.
+ * Panneau « Routes amont » de `/admin/donnees/routes-cds`.
  *
  * Responsabilité : tester les routes vers le CDS et ses miroirs, les réordonner, les activer ou les couper,
  * et appliquer le préréglage de panne. Chaque action écrit `src/data/upstream-priority.json`.

@@ -1,0 +1,20 @@
+---
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import DatabasePanel from "@/components/Admin/DatabasePanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+const isLocal = isLocalAdmin(Astro.locals);
+---
+
+<AdminLayout
+    title="Admin · Catalogues du ciel profond"
+    description="Catalogues du ciel profond : statistiques et mise à jour."
+    active="db-catalogues"
+>
+    <DatabasePanel client:only="react" view="catalogues" remote={!isLocal} />
+</AdminLayout>

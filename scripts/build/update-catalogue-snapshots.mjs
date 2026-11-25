@@ -4,7 +4,7 @@
  * Responsabilité principale :
  * - Télécharge chaque catalogue du registre (SIMBAD, VizieR) avec le code du site
  *   (`fetchCatalogueEntriesLive`), donc la même normalisation et la même précession.
- * - Suit les routes et la priorité de `src/data/upstream-priority.json`, choisies dans `/admin/upstream` :
+ * - Suit les routes et la priorité de `src/data/upstream-priority.json`, choisies dans `/admin/donnees/routes-cds` :
  *   pendant une panne du CDS, le script bascule sur les miroirs et indique la route utilisée.
  * - Écrit `src/data/catalogues/<slug>.json`, que le site lit à la place du CDS.
  * - Conserve l'instantané existant si un catalogue échoue ou revient tronqué, puis sort en

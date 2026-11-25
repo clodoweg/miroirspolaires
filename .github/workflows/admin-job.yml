@@ -1,6 +1,6 @@
 name: Admin job
 
-# Script lancé depuis l'admin distant (/admin/scripts sur la Preview de dev), par la GitHub App.
+# Script lancé depuis l'admin distant (/admin/infra/scripts sur la Preview de dev), par la GitHub App.
 # Le runner (scripts/admin/run-admin-job.mjs) vérifie le job dans Turso et n'accepte que les entrées
 # `remote: true` de src/lib/admin/scripts.ts ; ce que le script écrit sous src/data/ ou data/ est
 # committé sur dev. Journal et état du job : tables Turso admin_jobs et admin_job_logs.

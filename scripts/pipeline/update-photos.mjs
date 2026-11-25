@@ -1,5 +1,5 @@
 /**
- * Mise à jour complète des astrophotos (bouton « Mettre à jour les photos » de /admin/astrophotos)
+ * Mise à jour complète des astrophotos (bouton « Mettre à jour les photos » de /admin/astrophotos/importer)
  *
  * Responsabilité principale, dans l'ordre :
  *  1. Importer depuis le dépôt voisin `astrobin` le CSV et le HTML (s'ils sont plus récents).
@@ -52,6 +52,10 @@
  *                   miniatures et versions web, même si R2 les a déjà. Seuls les fichiers dont le contenu
  *                   diffère de R2 sont envoyés (et remplacés, cache du worker purgé) ; les identiques sont
  *                   laissés tels quels. Long (de 30 min à 1 h en GitHub Actions).
+ *   --refresh-ids=<id,id> : Avec --ci seulement, sans --force-media. Retélécharge tous les médias de ces
+ *                   seules photos (ID AstroBin, 50 au plus), en plus des nouvelles photos : pour une photo
+ *                   retraitée sur AstroBin. Ses fichiers différents de R2 sont remplacés et leur cache purgé.
+ *                   Exige l'option du même nom dans scrape_astrobin.py (dépôt astrobin).
  *
  * Variables d'environnement :
  *   ASTROBIN_DIR : dossier du dépôt astrobin (défaut : ../astrobin). S'il manque, les imports sont sautés
@@ -64,6 +68,7 @@
  *   node scripts/pipeline/update-photos.mjs
  *   ASTROBIN_DIR=../astrobin node scripts/pipeline/update-photos.mjs --ci   # GitHub Actions
  *   ASTROBIN_DIR=../astrobin node scripts/pipeline/update-photos.mjs --ci --force-media   # tout recopier
+ *   ASTROBIN_DIR=../astrobin node scripts/pipeline/update-photos.mjs --ci --refresh-ids=1213620   # une photo retraitée
  */
 
 import fs from 'node:fs';
@@ -361,10 +366,11 @@ function limitConcurrency(fn, limit) {
 /**
  * Mode --ci : scrape, traitements locaux, envoi sur R2 en deux temps, manifeste et contrôle final.
  *
- * @param {{ forceMedia?: boolean }} [options] - `forceMedia` : retélécharger tous les médias (--force-media).
+ * @param {{ forceMedia?: boolean, refreshIds?: string[] }} [options] - `forceMedia` : retélécharger tous les
+ *   médias (--force-media) ; `refreshIds` : retélécharger ceux de ces photos seulement (--refresh-ids).
  * @returns {Promise<void>} Se termine par process.exit(1) en cas d'échec.
  */
-async function runCiPipeline({ forceMedia = false } = {}) {
+async function runCiPipeline({ forceMedia = false, refreshIds = [] } = {}) {
     // POURQUOI : vérifier R2 avant le scrape, pour ne pas découvrir un secret manquant après 6 minutes.
     const r2Config = requireR2Config();
     const s3 = createR2Client(r2Config);
@@ -376,11 +382,18 @@ async function runCiPipeline({ forceMedia = false } = {}) {
     // POURQUOI : sans --incremental ni --check-r2, le scrape retélécharge tous les médias ; la comparaison
     // au contenu de R2 (stageFiles) n'envoie ensuite que ceux qui ont changé.
     console.log(
-        `\n=== Scrape AstroBin (${forceMedia ? 'tous les médias, --force-media' : 'nouvelles photos seulement'}) ===`,
+        `\n=== Scrape AstroBin (${
+            forceMedia
+                ? 'tous les médias, --force-media'
+                : refreshIds.length > 0
+                  ? `nouvelles photos et photos ${refreshIds.join(', ')}`
+                  : 'nouvelles photos seulement'
+        }) ===`,
     );
     const scrapeArgs = [
         path.join(ASTROBIN_DIR, 'scrape_astrobin.py'),
         ...(forceMedia ? [] : ['--incremental', '--check-r2']),
+        ...(refreshIds.length > 0 ? [`--refresh-ids=${refreshIds.join(',')}`] : []),
         '--no-sync',
     ];
     if ((await runCommand(process.env.PYTHON || 'python3', scrapeArgs, ASTROBIN_DIR)) !== 0) {
@@ -484,6 +497,7 @@ async function main() {
     try {
         parsed = parseCliArgs(process.argv.slice(2), {
             flags: { dryRun: ['--dry-run'], ci: ['--ci'], forceMedia: ['--force-media'] },
+            valueOptions: ['--refresh-ids'],
         });
     } catch (error) {
         console.error(`❌ ${error.message}`);
@@ -502,8 +516,19 @@ async function main() {
         console.error('❌ --force-media ne s’utilise qu’avec --ci.');
         process.exit(1);
     }
+    const rawRefreshIds = parsed.values['--refresh-ids'];
+    // WARNING: la valeur part en argument du scrape ; seuls des chiffres et des virgules passent.
+    if (rawRefreshIds !== undefined && !/^\d{1,12}(,\d{1,12}){0,49}$/.test(rawRefreshIds)) {
+        console.error('❌ --refresh-ids attend des ID AstroBin séparés par des virgules (50 au plus).');
+        process.exit(1);
+    }
+    const refreshIds = rawRefreshIds ? rawRefreshIds.split(',') : [];
+    if (refreshIds.length > 0 && (!ci || forceMedia)) {
+        console.error('❌ --refresh-ids s’utilise avec --ci, sans --force-media (qui recopie déjà tout).');
+        process.exit(1);
+    }
     if (ci) {
-        await runCiPipeline({ forceMedia });
+        await runCiPipeline({ forceMedia, refreshIds });
         return;
     }
 

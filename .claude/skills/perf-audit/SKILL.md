@@ -24,7 +24,7 @@ node scripts/audit/lighthouse-runner.mjs --target=$ARGUMENTS   # local ou prod
 
 Effets :
 - écrit et supprime des rapports temporaires dans `temp/`, avec un profil Chrome dans `temp/chrome-profile` ;
-- **réécrit `src/data/lighthouse-results.json`** (versionné), lu par `/admin/lighthouse`.
+- **réécrit `src/data/lighthouse-results.json`** (versionné), lu par `/admin/qualite/performance`.
 
 ## Analyser
 

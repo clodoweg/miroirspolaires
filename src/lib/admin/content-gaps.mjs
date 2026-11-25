@@ -51,12 +51,39 @@ function readJsonOrEmpty(filePath) {
 }
 
 /**
- * Calcule les textes manquants d'un domaine.
+ * Calcule les textes manquants d'un domaine à partir de contenus déjà lus.
+ *
+ * POURQUOI séparé de la lecture : le script `update-content.mjs` lit le disque, l'admin distant lit la branche
+ * dev par l'API GitHub (`content-gaps-reader.ts`) ; le calcul doit rester le même.
+ *
+ * @param {'blog' | 'voyages'} scope - Domaine analysé.
+ * @param {{ entry: string, markdown: string }[]} sources - Contenus (`<année>/<slug>` et Markdown brut).
+ * @param {Record<string, unknown>} altData - Contenu de `src/data/alt.json`.
+ * @param {Record<string, unknown>} seoData - Contenu de `src/data/seo.json`.
+ * @returns {{ missingAltCount: number, missingAltsByEntry: Record<string, number>, missingSeo: string[] }}
+ *   Le nombre d'images sans alt, leur détail par contenu, et les voyages sans description SEO.
+ */
+export function computeContentGaps(scope, sources, altData, seoData) {
+    const missingAltsByEntry = {};
+    const missingSeo = [];
+    let missingAltCount = 0;
+    for (const { entry, markdown } of [...sources].sort((left, right) => left.entry.localeCompare(right.entry))) {
+        const missing =
+            scope === 'blog' ? findBlogImagesWithoutAlt(markdown) : findVoyageImagesWithoutAlt(markdown, altData);
+        if (missing.length > 0) missingAltsByEntry[entry] = missing.length;
+        missingAltCount += missing.length;
+        if (scope === 'voyages' && !seoData[`voyages/${entry}`]) missingSeo.push(entry);
+    }
+    return { missingAltCount, missingAltsByEntry, missingSeo };
+}
+
+/**
+ * Calcule les textes manquants d'un domaine en lisant le disque.
  *
  * @param {'blog' | 'voyages'} scope - Domaine à analyser.
  * @param {string} projectRoot - Racine du dépôt.
  * @returns {{ missingAltCount: number, missingAltsByEntry: Record<string, number>, missingSeo: string[] }}
- *   Le nombre d'images sans alt, leur détail par contenu, et les voyages sans description SEO.
+ *   Voir `computeContentGaps`.
  */
 export function getContentGaps(scope, projectRoot) {
     const contentRoot = path.join(projectRoot, 'src/content', scope);
@@ -67,20 +94,10 @@ export function getContentGaps(scope, projectRoot) {
               .readdirSync(contentRoot, { recursive: true })
               .map(String)
               .filter((file) => file.endsWith('.md'))
-              .sort()
         : [];
-
-    const missingAltsByEntry = {};
-    const missingSeo = [];
-    let missingAltCount = 0;
-    for (const file of files) {
-        const markdown = fs.readFileSync(path.join(contentRoot, file), 'utf8');
-        const entry = file.replace(/\.md$/, '').split(path.sep).join('/');
-        const missing =
-            scope === 'blog' ? findBlogImagesWithoutAlt(markdown) : findVoyageImagesWithoutAlt(markdown, altData);
-        if (missing.length > 0) missingAltsByEntry[entry] = missing.length;
-        missingAltCount += missing.length;
-        if (scope === 'voyages' && !seoData[`voyages/${entry}`]) missingSeo.push(entry);
-    }
-    return { missingAltCount, missingAltsByEntry, missingSeo };
+    const sources = files.map((file) => ({
+        entry: file.replace(/\.md$/, '').split(path.sep).join('/'),
+        markdown: fs.readFileSync(path.join(contentRoot, file), 'utf8'),
+    }));
+    return computeContentGaps(scope, sources, altData, seoData);
 }

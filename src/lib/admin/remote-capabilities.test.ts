@@ -11,6 +11,12 @@ describe('isAvailableRemotely', () => {
         ['GET', '/api/admin/upstream'],
         ['GET', '/api/admin/cache/status'],
         ['GET', '/api/admin/diagnostics'],
+        ['GET', '/api/admin/content-gaps'],
+        ['GET', '/api/admin/seo'],
+        ['GET', '/api/admin/todo'],
+        ['GET', '/api/admin/r2/inventory'],
+        ['GET', '/api/admin/database/stats'],
+        ['GET', '/api/admin/astrophotos/recent'],
     ])('ouvre %s %s', (method, pathname) => {
         expect(isAvailableRemotely(method, pathname)).toBe(true);
     });
@@ -26,6 +32,8 @@ describe('isAvailableRemotely', () => {
         ['DELETE', '/api/admin/voyages-images/2025/troms/a.jpg'],
         ['POST', '/api/admin/uploads'],
         ['POST', '/api/admin/uploads/finalize'],
+        ['POST', '/api/admin/astrophotos/update'],
+        ['POST', '/api/admin/r2/orphans'],
         ['GET', '/api/admin/release'],
         ['POST', '/api/admin/release'],
         ['POST', '/api/admin/release/merge'],
@@ -44,11 +52,13 @@ describe('isAvailableRemotely', () => {
         ['GET', '/api/admin/jobs/../x'],
         ['GET', '/api/admin/posts/2026/../../x'],
         ['GET', '/api/admin/r2/status'],
+        ['POST', '/api/admin/r2/delete'],
         ['POST', '/api/admin/images/2026/aurores'],
         ['POST', '/api/admin/images/2026/aurores/sync'],
         ['GET', '/api/admin/images/2026/aurores/sync'],
         ['GET', '/api/admin/images/2026/aurores/a%20b.jpg'],
         ['POST', '/api/admin/preview'],
+        ['POST', '/api/admin/astrophotos/upload'],
     ])('ferme %s %s', (method, pathname) => {
         expect(isAvailableRemotely(method, pathname)).toBe(false);
     });

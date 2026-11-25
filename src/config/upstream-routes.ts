@@ -2,7 +2,7 @@
  * Registre des routes amont (CDS et miroirs), source unique pour le site, l'admin et les scripts.
  *
  * Responsabilité : lister pour chaque service les routes candidates, et appliquer l'ordre choisi
- * dans `/admin/upstream`, conservé dans `src/data/upstream-priority.json`.
+ * dans `/admin/donnees/routes-cds`, conservé dans `src/data/upstream-priority.json`.
  *
  * WARNING: l'admin n'existe qu'en `npm run dev`. La priorité vit donc dans un fichier versionné que la
  * production lit après déploiement : pas de base ni de variable d'environnement, sinon le choix

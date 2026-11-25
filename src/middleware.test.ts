@@ -140,7 +140,7 @@ describe('middleware : admin distant (Preview de dev)', () => {
     it('sert une page admin ouverte depuis un lien externe, mais pas l’API', async () => {
         stubRemote();
         const external = { ...sessionCookie(), 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Mode': 'navigate' };
-        expect((await run('/admin/diagnostic', external).result).status).toBe(200);
+        expect((await run('/admin/publication/diagnostic', external).result).status).toBe(200);
         expect((await run('/api/admin/diagnostics', external).result).status).toBe(403);
     });
 

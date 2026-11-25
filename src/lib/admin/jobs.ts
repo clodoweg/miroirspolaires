@@ -5,8 +5,9 @@
  * contenu, relire l'état et le journal d'un job, l'annuler. L'exécution elle-même est faite par
  * `scripts/admin/run-admin-job.mjs` dans le workflow.
  *
- * WARNING: sécurité. Seules les entrées `remote: true` de `SCRIPTS` peuvent être lancées, sans argument ;
- * le workflow revérifie le script contre la même liste blanche.
+ * WARNING: sécurité. Seules les entrées `remote: true` de `SCRIPTS` peuvent être lancées, avec leurs seules
+ * `options` déclarées (validées par `buildScriptArgs`, rangées dans Turso et jamais passées au workflow) ; le
+ * runner revérifie le script et les options contre la même liste blanche.
  */
 import { randomUUID } from 'node:crypto';
 import { GitHubApiError, type GitHubAppClient } from './github/app-client';
@@ -22,7 +23,7 @@ import {
     type JobDatabase,
     type JobLogLine,
 } from './job-store.mjs';
-import { getScript } from './scripts';
+import { buildScriptArgs, getScript, ScriptOptionsError } from './scripts';
 import { jsonResponse } from './shared';
 
 export type { AdminJob, JobLogLine };
@@ -64,12 +65,15 @@ async function requireDatabase(database?: JobDatabase | null): Promise<JobDataba
 /**
  * Crée un job et déclenche le workflow.
  *
- * @param options - Script, auteur, client GitHub, branche de contenu, base (injectable).
+ * @param options - Script, options choisies, auteur, client GitHub, branche de contenu, base (injectable).
  * @returns Le job créé (`queued`).
- * @throws JobRequestError 400 si le script n'est pas lançable à distance, 409 si un job du même script est actif.
+ * @throws JobRequestError 400 si le script n'est pas lançable à distance ou si une option est refusée, 409 si un
+ *   job du même script est actif.
  */
 export async function startRemoteJob(options: {
     scriptId: string;
+    /** Valeurs choisies dans l'admin (non fiables). */
+    scriptOptions?: unknown;
     actor: string;
     client: GitHubAppClient;
     contentBranch: string;
@@ -81,11 +85,23 @@ export async function startRemoteJob(options: {
     if (!script || script.remote !== true) {
         throw new JobRequestError(400, 'Ce script ne se lance pas depuis l’admin distant.');
     }
+    try {
+        buildScriptArgs(script, options.scriptOptions);
+    } catch (error) {
+        if (error instanceof ScriptOptionsError) throw new JobRequestError(400, error.message);
+        throw error;
+    }
     const database = await requireDatabase(options.database);
     const active = await findActiveJob(database, script.id);
     if (active) throw new JobRequestError(409, 'Ce script tourne déjà : attendez la fin du job en cours.');
 
-    const job = { id: randomUUID(), scriptId: script.id, actor: options.actor, createdAt: now() };
+    const job = {
+        id: randomUUID(),
+        scriptId: script.id,
+        actor: options.actor,
+        createdAt: now(),
+        options: (options.scriptOptions as Record<string, unknown> | undefined) ?? null,
+    };
     await insertJob(database, job);
     const response = await options.client.request(
         `${options.client.repoPath}/actions/workflows/${ADMIN_JOB_WORKFLOW}/dispatches`,

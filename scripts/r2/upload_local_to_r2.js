@@ -351,7 +351,7 @@ async function main() {
         totalErrors += await uploadDirectory(dir, incremental, force, dryRun, changed);
     }
 
-    // POURQUOI : l'admin (/admin/scripts) juge le succès sur le code de sortie.
+    // POURQUOI : l'admin (/admin/infra/scripts) juge le succès sur le code de sortie.
     if (totalErrors > 0) {
         console.error(`❌ Transfert terminé avec ${totalErrors} échec(s).`);
         process.exit(1);

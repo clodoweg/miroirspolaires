@@ -1,197 +1,150 @@
 ---
 /**
- * AdminLayout - shared shell for every page under /admin.
+ * AdminLayout - coque commune à toutes les pages sous /admin.
  *
- * Wraps BaseLayout. Pages just provide their
- * content via the default slot; the rest (container width, header offset,
- * footer/breadcrumb suppression) is handled here so every admin page stays
- * visually consistent.
+ * Responsabilité : barre latérale par sections (`AdminSidebar.astro`, alimentée par le registre
+ * `src/config/admin-sections.ts`), fil d'Ariane « Admin › Section › Groupe › Page », bandeau de l'admin distant, et
+ * remplacement du contenu par une explication quand la page ne fonctionne pas dans le mode courant.
  *
- * Usage:
- *   <AdminLayout active="blog" title="Éditeur blog" description="...">
+ * Usage :
+ *   <AdminLayout active="blog" title="Admin · Blog" description="...">
  *     <BlogEditor client:only="react" />
  *   </AdminLayout>
+ *
+ * `bleed` : éditeurs pleine largeur, qui ont leur propre barre latérale ; le menu de l'admin s'y replie
+ * alors en tête de page, à toutes les largeurs.
+ * `heading` : affiche le titre de la page (pour les pages sans panneau qui porte déjà son propre titre).
  */
 import BaseLayout from "@/layouts/BaseLayout.astro";
-import PageHeader from "@/components/PageHeader.astro";
-import StatsMetadata from "@/components/sections/StatsMetadata.astro";
-import Papa from "papaparse";
-import { createUniqueHeaderTransform } from "@/lib/admin/shared";
-import { countMarkdownEntries } from "@/lib/admin/content-files";
-import { getContentReader } from "@/lib/admin/stores/content-reader";
+import AdminSidebar from "@/components/Admin/AdminSidebar.astro";
 import { getRemoteAdminConfig } from "@/lib/admin/auth/config";
+import {
+    ADMIN_DASHBOARD,
+    getAdminPage,
+    getAdminPageTitle,
+    getAdminSectionOf,
+    isAdminPageAvailable,
+    type AdminPageId,
+} from "@/config/admin-sections";
 
 interface Props {
     title: string;
     description: string;
-    active?:
-        | "dashboard"
-        | "blog"
-        | "voyages"
-        | "astrophotos"
-        | "scripts"
-        | "lighthouse"
-        | "seo"
-        | "r2"
-        | "cache"
-        | "database"
-        | "upstream"
-        | "diagnostic"
-        | "publication"
-        | "journal";
-    /** Full-width content (no inner container). Useful for editors with their own layout. */
+    active?: AdminPageId;
+    /** Contenu pleine largeur (éditeurs avec leur propre mise en page). */
     bleed?: boolean;
+    /** Affiche le libellé de la page en titre (pages sans panneau titré). */
+    heading?: boolean;
 }
 
-const { title, description, active = "dashboard", bleed = false } = Astro.props;
+const { title, description, active = "dashboard", bleed = false, heading = false } = Astro.props;
 
-// 1. Récupération dynamique des statistiques du site côté serveur.
-// POURQUOI getContentReader() : disque en dev, branche de contenu (API GitHub) sur l'admin distant.
-const CSV_PATH = "data/astrobin_clodoweg_gallery_python.csv";
-const contentReader = getContentReader();
 const adminAccess = Astro.locals.adminAccess;
 const remoteSession = adminAccess?.mode === "remote" ? adminAccess.session : null;
+const mode = remoteSession ? "remote" : "local";
 const contentBranch = remoteSession ? getRemoteAdminConfig().contentBranch : null;
-// POURQUOI : pages dont les panneaux ne savent pas encore fonctionner sans disque ni spawn (voir
-// remote-capabilities.ts) ; à distance, on les remplace par une explication plutôt que par des erreurs 501.
-const REMOTE_READY_PAGES = new Set([
-    "dashboard",
-    "blog",
-    "voyages",
-    "lighthouse",
-    "upstream",
-    "cache",
-    "diagnostic",
-    "publication",
-    "journal",
-    "scripts",
-]);
-const isUnavailableRemotely = remoteSession !== null && !REMOTE_READY_PAGES.has(active);
 
-// POURQUOI : à distance, une lecture GitHub refusée laisserait des compteurs à 0 sans explication.
-let contentReadFailed = false;
-let blogCount = 0;
-let voyageCount = 0;
-let photoCount = 0;
-
-try {
-    blogCount = await countMarkdownEntries(contentReader, "src/content/blog");
-} catch (e) {
-    console.error("Impossible de récupérer le nombre d'articles de blog :", e);
-    contentReadFailed = true;
-}
-
-try {
-    voyageCount = await countMarkdownEntries(contentReader, "src/content/voyages");
-} catch (e) {
-    console.error("Impossible de récupérer le nombre de voyages :", e);
-    contentReadFailed = true;
-}
-
-try {
-    const content = (await contentReader.readText(CSV_PATH)) ?? "";
-    const parsed = Papa.parse<Record<string, string>>(content, {
-        header: true,
-        skipEmptyLines: true,
-        transformHeader: createUniqueHeaderTransform(),
-    });
-    photoCount = (parsed.data ?? []).filter((r) => r.ID).length;
-} catch (e) {
-    console.error("Impossible de récupérer le nombre d'astrophotographies :", e);
-    contentReadFailed = true;
-}
-
-// 2. Formatage des statistiques pour StatsMetadata
-const stats = [
-    {
-        icon: "file-text",
-        value: blogCount,
-        suffix: "Articles",
-        label: "Blog",
-    },
-    {
-        icon: "compass",
-        value: voyageCount,
-        suffix: "Albums",
-        label: "Voyages",
-    },
-    {
-        icon: "camera",
-        value: photoCount,
-        suffix: "Photos",
-        label: "Astrophotographie",
-    },
-];
-
-// 3. Mappage des titres d'administration pour correspondre au style épuré du site public
-const cleanTitleMap: Record<string, string> = {
-    dashboard: "Console d'administration",
-    blog: "Éditeur de Blog",
-    voyages: "Éditeur de Voyages",
-    astrophotos: "Pipeline Astrophotographies",
-    scripts: "Exécution des Scripts",
-    lighthouse: "Audit de Performance Web",
-    seo: "Optimisation & Référencement",
-    r2: "Gestion Cloudflare R2 & Assets",
-    cache: "Gestion du Cache CDN & Worker",
-    database: "Supervision de la Base de Données",
-    upstream: "Routes amont",
-    diagnostic: "Diagnostic",
-    publication: "Mise en production",
-    journal: "Journal des écritures",
-};
-
-const displayTitle = cleanTitleMap[active] || title;
+const page = getAdminPage(active);
+const section = getAdminSectionOf(active);
+// POURQUOI : une page dont les panneaux exigent le disque ou `spawn` (ou, en local, une page propre à l'admin
+// distant) afficherait des erreurs ; on la remplace par une explication.
+const isUnavailable = !isAdminPageAvailable(page, mode);
+const unavailableMessage =
+    mode === "remote"
+        ? "Cette page n’est pas encore disponible sur l’admin distant. Elle reste utilisable en npm run dev."
+        : "Cette page n’existe que sur l’admin distant (Preview de la branche dev).";
 ---
 
-<BaseLayout title={displayTitle} description={description} breadcrumbLabel={displayTitle}>
-    <!-- 
-      POURQUOI: En utilisant le composant public <PageHeader>, nous appliquons le même en-tête
-      centré et le même arrière-plan atmosphérique que sur les pages normales de Blog ou de Vidéos,
-      tout en injectant un bandeau de statistiques en temps réel (<StatsMetadata>).
-    -->
-    <PageHeader title={displayTitle}>
-        <Fragment slot="metadata">
-            <StatsMetadata stats={stats} />
-        </Fragment>
-    </PageHeader>
-
-    {remoteSession && (
-        <div class="container-mp pt-4">
-            <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-mp-border-accent bg-mp-accent/10 px-4 py-3 text-sm text-mp-text-body">
-                <p>
-                    Admin distant : chaque enregistrement est un commit sur la branche <code>{contentBranch}</code>,
-                    visible sur cette Preview après son redéploiement (2 à 3 min). Les photos partent directement sur R2
-                    ; les scripts tournent dans GitHub Actions.{" "}
-                    <a href="/admin/diagnostic" class="text-mp-accent underline">
-                        Diagnostic GitHub
-                    </a>
-                </p>
-                {contentReadFailed && (
-                    <p class="w-full text-mp-astro-red">
-                        La lecture de la branche a échoué : ouvrir le diagnostic GitHub pour savoir quoi corriger.
-                    </p>
-                )}
-                <form method="post" action="/api/auth/github/logout" class="flex items-center gap-3">
-                    <span class="text-mp-text-muted">@{remoteSession.login}</span>
-                    <button type="submit" class="min-h-touch rounded-md px-3 text-mp-accent underline">
-                        Se déconnecter
-                    </button>
-                </form>
+<BaseLayout title={title} description={description} hideBreadcrumb hideFooter contentPaddingBottom={false}>
+    <aside
+        class:list={[
+            "border-b border-mp-border bg-mp-bg-secondary",
+            !bleed &&
+                "lg:fixed lg:top-navbar lg:bottom-0 lg:left-0 lg:w-64 lg:overflow-y-auto lg:border-r lg:border-b-0",
+        ]}
+    >
+        <details class:list={["group px-3", !bleed && "lg:hidden"]}>
+            <summary class="flex min-h-touch cursor-pointer items-center gap-2 px-3 text-sm text-mp-text-body">
+                <span class="font-mono text-xs tracking-wider text-mp-text-muted uppercase">Menu de l'admin</span>
+                <span class="text-mp-text-heading">{getAdminPageTitle(page)}</span>
+            </summary>
+            <AdminSidebar active={active} mode={mode} />
+        </details>
+        {!bleed && (
+            <div class="hidden px-3 lg:block">
+                <AdminSidebar active={active} mode={mode} />
             </div>
-        </div>
-    )}
-
-    <main class={bleed && !isUnavailableRemotely ? "admin-main" : "admin-main container-mp py-6"}>
-        {isUnavailableRemotely ? (
-            <p class="rounded-md border border-mp-border px-4 py-6 text-center text-mp-text-muted">
-                Cette page n’est pas encore disponible sur l’admin distant. Elle reste utilisable en{" "}
-                <code>npm run dev</code>.
-            </p>
-        ) : (
-            <slot />
         )}
-    </main>
+    </aside>
+
+    <div class:list={["flex min-w-0 flex-1 flex-col", !bleed && "lg:pl-64"]}>
+        <header class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-mp-border px-4 py-3 md:px-8">
+            <nav aria-label="Fil d'Ariane" class="flex-1 text-sm text-mp-text-muted">
+                <ol class="flex flex-wrap items-center gap-1.5">
+                    <li>
+                        {active === "dashboard" ? (
+                            <span class="text-mp-text-heading">Admin</span>
+                        ) : (
+                            <a href={ADMIN_DASHBOARD.href} class="mouse:hover:text-mp-accent">
+                                Admin
+                            </a>
+                        )}
+                    </li>
+                    {section && (
+                        <li class="flex items-center gap-1.5">
+                            <span aria-hidden="true">›</span>
+                            <span>{section.label}</span>
+                        </li>
+                    )}
+                    {page.group && (
+                        <li class="flex items-center gap-1.5">
+                            <span aria-hidden="true">›</span>
+                            <span>{page.group}</span>
+                        </li>
+                    )}
+                    {active !== "dashboard" && (
+                        <li class="flex items-center gap-1.5">
+                            <span aria-hidden="true">›</span>
+                            <span aria-current="page" class="text-mp-text-heading">
+                                {page.label}
+                            </span>
+                        </li>
+                    )}
+                </ol>
+            </nav>
+            {remoteSession && (
+                <div class="flex flex-wrap items-center gap-3 text-sm">
+                    <span class="text-mp-text-muted">
+                        Enregistrement = commit sur <code>{contentBranch}</code>
+                    </span>
+                    <form method="post" action="/api/auth/github/logout" class="flex items-center gap-2">
+                        <span class="text-mp-text-muted">@{remoteSession.login}</span>
+                        <button type="submit" class="min-h-touch rounded-md px-2 text-mp-accent underline">
+                            Se déconnecter
+                        </button>
+                    </form>
+                </div>
+            )}
+        </header>
+
+        <main class:list={["admin-main", !(bleed && !isUnavailable) && "w-full px-4 py-6 md:px-8"]}>
+            {heading && !isUnavailable && (
+                <div class="mb-6">
+                    <h1 class="font-serif text-2xl font-light text-mp-text-heading md:text-3xl">
+                        {getAdminPageTitle(page)}
+                    </h1>
+                    <p class="text-mp-text-muted">{page.description}</p>
+                </div>
+            )}
+            {isUnavailable ? (
+                <p class="rounded-md border border-mp-border px-4 py-6 text-center text-mp-text-muted">
+                    {unavailableMessage}
+                </p>
+            ) : (
+                <slot />
+            )}
+        </main>
+    </div>
 </BaseLayout>
 
 <style is:global>
