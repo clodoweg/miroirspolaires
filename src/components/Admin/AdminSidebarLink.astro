@@ -21,9 +21,12 @@ const isUnavailable = !isAdminPageAvailable(page, mode);
     title={page.description}
     aria-current={isActive ? "page" : undefined}
     class:list={[
-        "flex min-h-touch w-full items-center gap-2 rounded-md pr-3 transition-colors mouse:hover:bg-mp-accent/10 mouse:hover:text-mp-accent",
-        page.group ? "pl-6" : "pl-3",
-        isActive && "bg-mp-accent/15 font-semibold text-mp-accent",
+        // POURQUOI min-h-touch puis lg:min-h-9 : 48 px sur tactile (règle du projet), plus compact à la souris.
+        "relative flex min-h-touch w-full items-center gap-2 rounded-md pr-3 transition-colors duration-200 lg:min-h-9",
+        "before:absolute before:top-1/2 before:left-0 before:h-0 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-mp-accent before:transition-all before:duration-200 motion-reduce:before:transition-none",
+        page.group ? "pl-5" : "pl-3",
+        isActive && "bg-mp-accent/15 font-semibold text-mp-accent before:h-5",
+        !isActive && "mouse:hover:bg-mp-accent/10 mouse:hover:text-mp-accent mouse:hover:before:h-3",
         !isActive && isUnavailable && "text-mp-text-muted",
         !isActive && !isUnavailable && "text-mp-text-body",
     ]}

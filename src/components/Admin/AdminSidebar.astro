@@ -2,16 +2,17 @@
 /**
  * Barre latérale de l'administration.
  *
- * Responsabilité : afficher les sections, les groupes (« Blog ») et les pages du registre
- * (`src/config/admin-sections.ts`), marquer la page courante et griser, avec un badge, les pages qui ne
- * fonctionnent pas dans le mode courant (« local » sur l'admin distant, « distant » en `npm run dev`). Elles
- * restent listées pour que le menu soit le même partout.
+ * Responsabilité : afficher le tableau de bord puis les sections du registre (`src/config/admin-sections.ts`), chacune
+ * repliable avec son icône ; seule la section de la page courante est ouverte au chargement. Les pages qui ne
+ * fonctionnent pas dans le mode courant restent listées, grisées avec un badge.
  *
- * Rendu côté serveur, sans JavaScript : le repli sur mobile passe par `<details>` (`AdminLayout.astro`).
+ * Rendu côté serveur, sans JavaScript : le repli passe par `<details>` (sur mobile, tout le menu se replie aussi,
+ * voir `AdminLayout.astro`).
  * POURQUOI `block` sur les `<li>` : `base.css` met tout `<li>` en flex horizontal, ce qui alignerait l'en-tête de
  * groupe à côté de ses liens et rétrécirait les liens à leur texte.
  */
 import AdminSidebarLink from "./AdminSidebarLink.astro";
+import AdminSectionIcon from "./AdminSectionIcon.astro";
 import {
     ADMIN_DASHBOARD,
     ADMIN_SECTIONS,
@@ -38,25 +39,58 @@ function groupPages(pages: AdminPage[]): { group?: string; pages: AdminPage[] }[
     return entries;
 }
 
-const sections = [{ id: "accueil", label: null, pages: [ADMIN_DASHBOARD] }, ...ADMIN_SECTIONS].map((section) => ({
+const sections = ADMIN_SECTIONS.map((section) => ({
     ...section,
     entries: groupPages(section.pages),
+    isCurrent: section.pages.some((page) => page.id === active),
 }));
+const isDashboard = active === ADMIN_DASHBOARD.id;
 ---
 
 <nav aria-label="Navigation de l'admin" class="flex flex-col gap-1 py-4 text-sm">
+    <a
+        href={ADMIN_DASHBOARD.href}
+        aria-current={isDashboard ? "page" : undefined}
+        class:list={[
+            "flex min-h-touch items-center gap-3 rounded-lg px-3 transition-colors duration-200 lg:min-h-10",
+            isDashboard
+                ? "bg-mp-accent/15 font-semibold text-mp-accent"
+                : "text-mp-text-heading mouse:hover:bg-mp-accent/10 mouse:hover:text-mp-accent",
+        ]}
+    >
+        <AdminSectionIcon name="accueil" />
+        {ADMIN_DASHBOARD.label}
+    </a>
+
     {sections.map((section) => (
-        <div class="flex flex-col gap-0.5">
-            {section.label && (
-                <p class="px-3 pt-4 pb-1 font-mono text-xs tracking-wider text-mp-text-muted uppercase">
-                    {section.label}
-                </p>
-            )}
-            <ul class="flex flex-col gap-0.5">
+        <details open={section.isCurrent} class="group/section">
+            <summary
+                class:list={[
+                    "flex min-h-touch cursor-pointer list-none items-center gap-3 rounded-lg px-3 transition-colors duration-200 select-none lg:min-h-10 [&::-webkit-details-marker]:hidden",
+                    "font-mono text-xs tracking-wider uppercase mouse:hover:bg-mp-accent/10 mouse:hover:text-mp-accent",
+                    section.isCurrent ? "text-mp-accent" : "text-mp-text-muted",
+                ]}
+            >
+                <AdminSectionIcon name={section.id} />
+                <span class="flex-1">{section.label}</span>
+                <svg
+                    class="h-3.5 w-3.5 transition-transform duration-200 group-open/section:rotate-90 motion-reduce:transition-none"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="m9 18 6-6-6-6" />
+                </svg>
+            </summary>
+            <ul class="mt-0.5 mb-2 ml-5 flex flex-col gap-0.5 border-l border-mp-border pl-2">
                 {section.entries.map((entry) =>
                     entry.group ? (
                         <li class="block">
-                            <p class="px-3 pt-2 pb-0.5 font-semibold text-mp-text-heading">{entry.group}</p>
+                            <p class="px-3 pt-2 pb-0.5 text-xs font-semibold text-mp-text-heading">{entry.group}</p>
                             <ul class="flex flex-col gap-0.5">
                                 {entry.pages.map((page) => (
                                     <li class="block">
@@ -72,6 +106,6 @@ const sections = [{ id: "accueil", label: null, pages: [ADMIN_DASHBOARD] }, ...A
                     ),
                 )}
             </ul>
-        </div>
+        </details>
     ))}
 </nav>
