@@ -32,6 +32,11 @@ vi.mock('@aws-sdk/s3-request-presigner', () => ({
     ),
 }));
 
+const purge = vi.hoisted(() => ({
+    purgeReplacedImages: vi.fn(async (keys: string[]) => ({ keys, failedCount: 0 })),
+}));
+vi.mock('./image-cache-purge', () => purge);
+
 vi.mock('./r2-sync', () => ({
     getR2Target: () => {
         if (!bucket.configured) return null;
@@ -68,7 +73,10 @@ vi.mock('./r2-sync', () => ({
                 return { Body: { transformToByteArray: async () => new Uint8Array(object.body) } };
             }
             if (command instanceof HeadObjectCommand) {
-                return { Metadata: bucket.objects.get(command.input.Key as string)?.metadata };
+                const object = bucket.objects.get(command.input.Key as string);
+                // POURQUOI : comme R2, un HEAD sur une clé absente échoue (NotFound).
+                if (!object) throw Object.assign(new Error('NotFound'), { name: 'NotFound' });
+                return { Metadata: object.metadata };
             }
             if (command instanceof DeleteObjectsCommand) {
                 for (const { Key } of command.input.Delete?.Objects ?? []) bucket.objects.delete(Key as string);
@@ -181,6 +189,25 @@ describe('createImageUpload', () => {
 });
 
 describe('finalizeImageUpload', () => {
+    it('purge le cache du worker seulement quand l’image en remplace une du même nom', async () => {
+        put('incoming/blog/2026/aurores/a.jpg', await makeJpeg(800, 600));
+        const first = await finalizeImageUpload('blog', '2026', 'aurores', {
+            uploadKey: 'incoming/blog/2026/aurores/a.jpg',
+            filename: 'ciel.jpg',
+        });
+        expect(first.replaced).toBe(false);
+        expect(purge.purgeReplacedImages).not.toHaveBeenCalled();
+
+        put('incoming/blog/2026/aurores/b.jpg', await makeJpeg(900, 600));
+        const second = await finalizeImageUpload('blog', '2026', 'aurores', {
+            uploadKey: 'incoming/blog/2026/aurores/b.jpg',
+            filename: 'ciel.jpg',
+        });
+        expect(second).toMatchObject({ replaced: true, cachePurge: { failedCount: 0 } });
+        expect(purge.purgeReplacedImages).toHaveBeenCalledWith([`blog/2026/aurores/${second.name}`]);
+        purge.purgeReplacedImages.mockClear();
+    });
+
     it('compresse, écrit l’image avec ses dimensions et ses versions web, puis supprime l’original', async () => {
         put('incoming/blog/2026/aurores/tmp.jpg', await makeJpeg(3000, 2000));
         const image = await finalizeImageUpload('blog', '2026', 'aurores', {

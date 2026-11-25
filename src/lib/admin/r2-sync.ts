@@ -40,6 +40,8 @@ export interface SyncResult {
     bucket: string;
     prefix: string;
     uploaded: string[];
+    /** Fichiers renvoyés qui existaient déjà sur R2 avec une autre taille (même URL, cache à purger). */
+    replaced: string[];
     deleted: string[];
     skipped: string[];
     skippedReason?: 'no-credentials' | 'no-local-dir';
@@ -62,6 +64,7 @@ export async function syncDirToR2(localDir: string, prefix: string): Promise<Syn
             bucket: bucketName,
             prefix: normPrefix,
             uploaded: [],
+            replaced: [],
             deleted: [],
             skipped: [],
             skippedReason: 'no-credentials',
@@ -74,6 +77,7 @@ export async function syncDirToR2(localDir: string, prefix: string): Promise<Syn
             bucket: bucketName,
             prefix: normPrefix,
             uploaded: [],
+            replaced: [],
             deleted: [],
             skipped: [],
             skippedReason: 'no-local-dir',
@@ -108,6 +112,7 @@ export async function syncDirToR2(localDir: string, prefix: string): Promise<Syn
     }
 
     const uploaded: string[] = [];
+    const replaced: string[] = [];
     const skipped: string[] = [];
     for (const f of localFiles) {
         if (remoteSizes.get(f.name) === f.size) {
@@ -124,9 +129,10 @@ export async function syncDirToR2(localDir: string, prefix: string): Promise<Syn
             }),
         );
         uploaded.push(f.name);
+        if (remoteSizes.has(f.name)) replaced.push(f.name);
     }
 
-    return { bucket: bucketName, prefix: normPrefix, uploaded, deleted: toDelete, skipped };
+    return { bucket: bucketName, prefix: normPrefix, uploaded, replaced, deleted: toDelete, skipped };
 }
 
 async function listAll(c: S3Client, prefix: string): Promise<Array<{ Key?: string; Size?: number }>> {

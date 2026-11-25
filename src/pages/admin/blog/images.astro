@@ -12,6 +12,7 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
 import WebImagesReminder from "@/components/Admin/WebImagesReminder";
 import ContentUpdatePanel from "@/components/Admin/ContentUpdatePanel";
 import ContentGapsPanel from "@/components/Admin/ContentGapsPanel";
+import RefreshEntryImagesPanel from "@/components/Admin/RefreshEntryImagesPanel";
 import ContentImagesSteps from "@/components/Admin/ContentImagesSteps.astro";
 
 export const prerender = false;
@@ -36,4 +37,5 @@ const isLocal = isLocalAdmin(Astro.locals);
         </>
     )}
     <ContentGapsPanel scope="blog" client:only="react" />
+    {isLocal && <RefreshEntryImagesPanel scope="blog" client:only="react" />}
 </AdminLayout>

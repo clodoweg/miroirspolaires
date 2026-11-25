@@ -25,7 +25,7 @@ paths:
 | `r2/purge-cache.mjs [dir\|all]` | Purge le cache du worker (défaut `astrophotographies`), seulement pour les fichiers présents en local, variantes `IMAGE_CONFIG.CACHED_VARIANTS`. |
 | `r2/download_r2_to_local.js [préfixe] [-s] [-f]` | Écrase les fichiers locaux de taille différente. |
 | `build/regen-thumbs.mjs --upload` | Réécrit les miniatures sur R2. |
-| `build/generate-web-images.mjs --upload` | Envoie sur R2 (préfixe `web/` seulement) les versions web absentes (`--force` : les réécrit) et réécrit `src/data/web-images.json`. Sans `--upload` : local seulement (`temp/web-images/`). `--dry-run`, `--only=astro,blog,voyages`. |
+| `build/generate-web-images.mjs --upload` | Envoie sur R2 (préfixe `web/` seulement) les versions web absentes (`--force` : les réécrit) et réécrit `src/data/web-images.json`. Sans `--upload` : local seulement (`temp/web-images/`). `--dry-run`, `--only=astro,blog,voyages`, `--prefix=<dossier>` (un seul article ou voyage ; seules ses entrées du manifeste sont remplacées), `--purge` (cache du worker des sources traitées). Entrée `refresh-web-images` de l'admin : `--force --upload --purge` sur un dossier. |
 | `pipeline/update-exoplanets.mjs`, `update-comets.mjs`, `update-asteroids.mjs` | `DELETE` de la table Turso puis réimport. |
 | `pipeline/update-variable-stars.mjs` | `DELETE` par défaut s'il n'y a pas de `scripts/pipeline/import-progress.json`. `--fresh`, `--no-clean`, `--max-mag <n>` (défaut 25). |
 | `pipeline/crossmatch-variable-stars.mjs --reset` | Vide `variable_stars_gaia`. |

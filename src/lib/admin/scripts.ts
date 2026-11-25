@@ -202,6 +202,20 @@ export const SCRIPTS: ScriptDef[] = [
         needsTarget: true,
     },
     {
+        // POURQUOI : une image renvoyée sous le même nom garde ses anciennes versions web (le script ne régénère que
+        // les absentes) et son ancien cache. Lancée par `RefreshEntryImagesPanel` avec `--only` et `--prefix`.
+        id: 'refresh-web-images',
+        label: 'Régénérer les versions web d’un article ou d’un voyage',
+        description:
+            'Refait les versions web d’un seul dossier, les réécrit sur R2 et purge le cache du worker. À lancer après avoir remplacé une image sous le même nom.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/build/generate-web-images.mjs', '--force', '--upload', '--purge'],
+        writes: true,
+        needsTarget: true,
+        devOnly: true,
+    },
+    {
         id: 'seo-check',
         label: 'Audit SEO complet',
         description: 'Lecture seule. Vérifie la couverture SEO, alt-texts, sitemap, structured data.',
