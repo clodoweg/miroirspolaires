@@ -69,6 +69,61 @@ describe('runAdminJob', () => {
         vi.restoreAllMocks();
     });
 
+    it('ajoute les options du job après revalidation, ou refuse le job', async () => {
+        vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        const database = createClient({ url: ':memory:' });
+        await insertJob(database, {
+            id: 'job',
+            scriptId: 'seo-check',
+            actor: 'a',
+            createdAt: now(),
+            options: { x: 1 },
+        });
+        const spawnImpl = fakeSpawn({});
+        const buildScriptArgs = vi.fn(() => ['--missing']);
+        expect(
+            await runAdminJob({
+                jobId: 'job',
+                scriptId: 'seo-check',
+                database,
+                getScript,
+                buildScriptArgs,
+                spawnImpl,
+                now,
+            }),
+        ).toBe(0);
+        expect(buildScriptArgs).toHaveBeenCalledWith(SCRIPTS['seo-check'], { x: 1 });
+        expect(spawnImpl).toHaveBeenCalledWith(
+            'node',
+            ['scripts/audit/seo-coverage.mjs', '--missing'],
+            expect.anything(),
+        );
+
+        const refused = createClient({ url: ':memory:' });
+        await insertJob(refused, { id: 'job', scriptId: 'seo-check', actor: 'a', createdAt: now(), options: { x: 1 } });
+        const spawnRefused = fakeSpawn({});
+        const reject = () => {
+            throw new Error('Option inconnue : x');
+        };
+        expect(
+            await runAdminJob({
+                jobId: 'job',
+                scriptId: 'seo-check',
+                database: refused,
+                getScript,
+                buildScriptArgs: reject,
+                spawnImpl: spawnRefused,
+                now,
+            }),
+        ).toBe(1);
+        expect(spawnRefused).not.toHaveBeenCalled();
+        expect((await readJobLogs(refused, 'job')).map((line) => line.line)).toEqual([
+            'Options refusées : Option inconnue : x',
+        ]);
+        expect(await getJob(refused, 'job')).toMatchObject({ status: 'failed', exitCode: 1 });
+        vi.restoreAllMocks();
+    });
+
     it('note l’échec du script ou de son lancement', async () => {
         const failing = await seed();
         expect(

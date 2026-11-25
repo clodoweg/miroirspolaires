@@ -44,6 +44,43 @@ describe('startRemoteJob', () => {
         expect(error.status).toBe(400);
     });
 
+    it('valide et conserve les options choisies, sans les passer au workflow', async () => {
+        const database = memoryDatabase();
+        const { client, request } = fakeClient();
+        const job = await startRemoteJob({
+            scriptId: 'update-catalogues',
+            scriptOptions: { missing: true, only: ['messier'] },
+            actor: 'a',
+            client,
+            contentBranch: 'dev',
+            database,
+        });
+        expect(job.options).toEqual({ missing: true, only: ['messier'] });
+        expect(request).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({
+                body: JSON.stringify({ ref: 'dev', inputs: { job_id: job.id, script_id: 'update-catalogues' } }),
+            }),
+        );
+    });
+
+    it.each([[{ inconnue: true }], [{ only: ['messier; rm -rf'] }], [{ missing: 'oui' }]])(
+        'refuse les options %j',
+        async (scriptOptions) => {
+            const database = memoryDatabase();
+            const error = await startRemoteJob({
+                scriptId: 'update-catalogues',
+                scriptOptions,
+                actor: 'a',
+                client: fakeClient().client,
+                contentBranch: 'dev',
+                database,
+            }).catch((e) => e);
+            expect(error).toBeInstanceOf(JobRequestError);
+            expect(error.status).toBe(400);
+        },
+    );
+
     it('refuse un second job actif du même script', async () => {
         const database = memoryDatabase();
         const options = {

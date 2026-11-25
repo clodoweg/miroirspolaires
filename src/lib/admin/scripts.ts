@@ -1,5 +1,50 @@
 export type ScriptCategory = 'pipeline' | 'seo' | 'check';
 
+/**
+ * Option d'un script, affichée en case à cocher, en liste ou en champ numérique.
+ *
+ * WARNING: sécurité. À distance, seules ces options déclarées sont acceptées (`buildScriptArgs`), au serveur
+ * comme dans le runner de GitHub Actions ; jamais d'argument libre.
+ */
+export type ScriptOption =
+    | {
+          id: string;
+          kind: 'flag';
+          /** Argument ajouté quand la case est cochée (`--missing`). */
+          flag: string;
+          label: string;
+          help: string;
+          /** Efface des données : l'admin demande une confirmation renforcée. */
+          destructive?: boolean;
+      }
+    | {
+          id: string;
+          kind: 'list';
+          /** Préfixe de l'argument, suivi des valeurs séparées par des virgules (`--only=`). */
+          flag: string;
+          label: string;
+          help: string;
+          /** Motif que chaque valeur doit respecter (source d'expression régulière, ancrée). */
+          pattern: string;
+          maxItems: number;
+      }
+    | {
+          id: string;
+          kind: 'number';
+          /** Argument suivi de la valeur, séparée par une espace (`--max-mag 14`). */
+          flag: string;
+          label: string;
+          help: string;
+          min: number;
+          max: number;
+          integer?: boolean;
+          /** Valeur du script quand l'option est absente (affichée, jamais transmise). */
+          defaultValue: number;
+      };
+
+/** Valeurs choisies dans l'admin, par identifiant d'option. */
+export type ScriptOptionValues = Record<string, boolean | number | string[]>;
+
 export interface ScriptDef {
     id: string;
     label: string;
@@ -22,7 +67,7 @@ export interface ScriptDef {
     /**
      * Lançable depuis l'admin distant : le script tourne dans GitHub Actions (`.github/workflows/admin-job.yml`)
      * et ce qu'il écrit sous `src/data/` ou `data/` est committé sur `dev`. Opt-in explicite, jamais avec
-     * `devOnly` ni `needsTarget` (aucun argument n'est transmis à distance).
+     * `devOnly` ni `needsTarget` (à distance, seuls les arguments issus de `options` sont transmis).
      */
     remote?: boolean;
     /**
@@ -31,6 +76,8 @@ export interface ScriptDef {
      * comparerait tout `src/assets/astrophotographies/` à R2 et écrirait sur le R2 de production.
      */
     remoteOnly?: boolean;
+    /** Options proposées dans l'admin (cases à cocher, listes, nombres), validées par `buildScriptArgs`. */
+    options?: ScriptOption[];
 }
 
 /**
@@ -260,6 +307,39 @@ export const SCRIPTS: ScriptDef[] = [
         args: ['scripts/build/update-catalogue-snapshots.mjs'],
         writes: true,
         remote: true,
+        options: [
+            {
+                id: 'only',
+                kind: 'list',
+                flag: '--only=',
+                label: 'Catalogues à traiter',
+                help: 'Identifiants des catalogues (messier, caldwell…). Vide : tous.',
+                pattern: '[a-z0-9-]{1,40}',
+                maxItems: 50,
+            },
+            {
+                id: 'missing',
+                kind: 'flag',
+                flag: '--missing',
+                label: 'Seulement les catalogues sans instantané',
+                help: 'Saute les catalogues déjà présents dans src/data/catalogues/.',
+            },
+            {
+                id: 'force',
+                kind: 'flag',
+                flag: '--force',
+                label: 'Accepter une liste plus courte',
+                help: 'Écrit l’instantané même si la nouvelle liste est nettement plus courte que l’actuelle (sinon, elle est jugée tronquée et ignorée).',
+                destructive: true,
+            },
+            {
+                id: 'dryRun',
+                kind: 'flag',
+                flag: '--dry-run',
+                label: 'Simulation',
+                help: 'Télécharge et valide sans rien écrire.',
+            },
+        ],
     },
     {
         id: 'update-exoplanets',
@@ -302,6 +382,37 @@ export const SCRIPTS: ScriptDef[] = [
         args: ['scripts/pipeline/crossmatch-variable-stars.mjs'],
         writes: true,
         remote: true,
+        options: [
+            {
+                id: 'maxMag',
+                kind: 'number',
+                flag: '--max-mag',
+                label: 'Magnitude de la dernière tranche',
+                help: 'Dernière tranche de magnitude traitée. La tranche ≤ 12 est toujours traitée.',
+                min: 1,
+                max: 35,
+                defaultValue: 30.8,
+            },
+            {
+                id: 'batchSize',
+                kind: 'number',
+                flag: '--batch-size',
+                label: 'Étoiles par requête',
+                help: 'Taille des lots envoyés au CDS XMatch.',
+                min: 100,
+                max: 50000,
+                integer: true,
+                defaultValue: 15000,
+            },
+            {
+                id: 'reset',
+                kind: 'flag',
+                flag: '--reset',
+                label: 'Repartir de zéro',
+                help: 'Vide la table variable_stars_gaia avant le traitement.',
+                destructive: true,
+            },
+        ],
     },
     {
         id: 'update-comets',
@@ -348,4 +459,75 @@ export function listRemoteScripts(): ScriptDef[] {
 
 export function getScript(id: string): ScriptDef | undefined {
     return SCRIPTS.find((s) => s.id === id);
+}
+
+/** Options refusées : inconnues, mal typées ou hors bornes. */
+export class ScriptOptionsError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'ScriptOptionsError';
+    }
+}
+
+/**
+ * Traduit les options choisies en arguments, après validation stricte.
+ *
+ * @param script - Script du registre.
+ * @param values - Valeurs reçues (non fiables : corps de requête ou ligne Turso).
+ * @returns Les arguments à ajouter à `script.args`, dans l'ordre des options déclarées.
+ * @throws ScriptOptionsError si une option est inconnue, mal typée ou hors bornes.
+ */
+export function buildScriptArgs(script: ScriptDef, values: unknown): string[] {
+    if (values === undefined || values === null) return [];
+    if (typeof values !== 'object' || Array.isArray(values)) throw new ScriptOptionsError('Options invalides.');
+    const declared = new Map((script.options ?? []).map((option) => [option.id, option]));
+    const record = values as Record<string, unknown>;
+    for (const key of Object.keys(record)) {
+        if (!declared.has(key)) throw new ScriptOptionsError(`Option inconnue : ${key}`);
+    }
+    const args: string[] = [];
+    for (const option of script.options ?? []) {
+        const value = record[option.id];
+        if (value === undefined || value === null) continue;
+        if (option.kind === 'flag') {
+            if (typeof value !== 'boolean') throw new ScriptOptionsError(`${option.label} : oui ou non attendu.`);
+            if (value) args.push(option.flag);
+        } else if (option.kind === 'list') {
+            if (!Array.isArray(value)) throw new ScriptOptionsError(`${option.label} : liste attendue.`);
+            const pattern = new RegExp(`^(?:${option.pattern})$`);
+            const items = [...new Set(value)];
+            if (items.length > option.maxItems) throw new ScriptOptionsError(`${option.label} : trop de valeurs.`);
+            for (const item of items) {
+                if (typeof item !== 'string' || !pattern.test(item)) {
+                    throw new ScriptOptionsError(`${option.label} : valeur refusée (${String(item)}).`);
+                }
+            }
+            if (items.length > 0) args.push(`${option.flag}${items.join(',')}`);
+        } else {
+            const isValidNumber =
+                typeof value === 'number' &&
+                Number.isFinite(value) &&
+                value >= option.min &&
+                value <= option.max &&
+                (!option.integer || Number.isInteger(value));
+            if (!isValidNumber) {
+                throw new ScriptOptionsError(`${option.label} : nombre entre ${option.min} et ${option.max} attendu.`);
+            }
+            args.push(option.flag, String(value));
+        }
+    }
+    return args;
+}
+
+/**
+ * Indique si les options choisies effacent des données.
+ *
+ * @param script - Script du registre.
+ * @param values - Valeurs choisies.
+ * @returns `true` si une option `destructive` est cochée.
+ */
+export function hasDestructiveOption(script: Pick<ScriptDef, 'options'>, values: ScriptOptionValues): boolean {
+    return (script.options ?? []).some(
+        (option) => option.kind === 'flag' && option.destructive && values[option.id] === true,
+    );
 }

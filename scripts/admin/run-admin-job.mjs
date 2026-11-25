@@ -49,6 +49,8 @@ const FLUSH_INTERVAL_MS = 1000;
  * @param {string} options.scriptId - Script demandé par le workflow.
  * @param {JobDatabase} options.database - Client libSQL.
  * @param {(id: string) => { id: string, command: string, args: string[], remote?: boolean } | undefined} options.getScript - Registre des scripts.
+ * @param {(script: object, values: unknown) => string[]} options.buildScriptArgs - Validation des options du job
+ *   (`buildScriptArgs` de `scripts.ts`) ; lève une erreur pour toute option non déclarée.
  * @param {typeof spawn} [options.spawnImpl] - `spawn` injectable (tests).
  * @param {() => string} [options.now] - Horloge ISO injectable (tests).
  * @param {string | null} [options.runId] - Identifiant du run GitHub Actions.
@@ -60,6 +62,7 @@ export async function runAdminJob({
     scriptId,
     database,
     getScript,
+    buildScriptArgs = () => [],
     spawnImpl = spawn,
     now = () => new Date().toISOString(),
     runId = null,
@@ -81,9 +84,22 @@ export async function runAdminJob({
         return 1;
     }
 
+    // WARNING: sécurité. Les options viennent de Turso : elles sont revalidées contre la liste déclarée du script.
+    let optionArgs;
+    try {
+        optionArgs = buildScriptArgs(script, job.options);
+    } catch (error) {
+        await appendJobLogs(database, jobId, [
+            { at: now(), stream: 'system', line: `Options refusées : ${error.message}` },
+        ]);
+        await updateJob(database, jobId, { status: 'failed', finishedAt: now(), exitCode: 1, runId });
+        return 1;
+    }
+    const commandArgs = [...script.args, ...optionArgs];
+
     await updateJob(database, jobId, { status: 'running', startedAt: now(), runId });
     /** @type {{ at: string, stream: string, line: string }[]} */
-    let pending = [{ at: now(), stream: 'system', line: `$ ${script.command} ${script.args.join(' ')}` }];
+    let pending = [{ at: now(), stream: 'system', line: `$ ${script.command} ${commandArgs.join(' ')}` }];
     let flushing = Promise.resolve();
     const flush = () => {
         const batch = pending;
@@ -108,7 +124,7 @@ export async function runAdminJob({
 
     const timer = setInterval(() => void flush(), flushIntervalMs);
     const exitCode = await new Promise((resolve) => {
-        const child = spawnImpl(script.command, script.args, {
+        const child = spawnImpl(script.command, commandArgs, {
             cwd: PROJECT_ROOT,
             env: { ...process.env, FORCE_COLOR: '0' },
         });
@@ -194,8 +210,15 @@ async function main() {
     const scriptId = args.values['--script'];
     if (!scriptId) throw new Error('--script est obligatoire');
     // POURQUOI : Node ≥ 22.18 exécute un `.ts` sans types non effaçables ; la liste blanche reste unique.
-    const { getScript } = await import('../../src/lib/admin/scripts.ts');
-    return runAdminJob({ jobId, scriptId, database, getScript, runId: process.env.GITHUB_RUN_ID ?? null });
+    const { getScript, buildScriptArgs } = await import('../../src/lib/admin/scripts.ts');
+    return runAdminJob({
+        jobId,
+        scriptId,
+        database,
+        getScript,
+        buildScriptArgs,
+        runId: process.env.GITHUB_RUN_ID ?? null,
+    });
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {

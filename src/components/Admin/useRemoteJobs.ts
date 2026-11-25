@@ -9,12 +9,15 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AdminJob, JobLogLine } from '@/lib/admin/jobs';
+import type { ScriptOption, ScriptOptionValues } from '@/lib/admin/scripts';
 
 export interface RemoteScript {
     id: string;
     label: string;
     description: string;
     writes: boolean;
+    /** Options déclarées dans `SCRIPTS` (absentes des anciennes réponses). */
+    options?: ScriptOption[];
 }
 
 interface JobsResponse {
@@ -139,15 +142,17 @@ export function useRemoteJobs(scriptIds?: readonly string[]) {
      * Lance un job, puis affiche son journal.
      *
      * @param scriptId - Script à lancer (entrée `remote: true` de `SCRIPTS`).
+     * @param options - Valeurs des options déclarées par le script (revalidées par le serveur).
      * @returns Le job créé.
      * @throws Error avec le message de l'API si le lancement est refusé.
      */
     const launch = useCallback(
-        async (scriptId: string): Promise<AdminJob> => {
+        async (scriptId: string, options?: ScriptOptionValues): Promise<AdminJob> => {
+            const hasOptions = options !== undefined && Object.keys(options).length > 0;
             const response = await fetch('/api/admin/jobs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ scriptId }),
+                body: JSON.stringify(hasOptions ? { scriptId, options } : { scriptId }),
             });
             if (!response.ok) throw new Error(await readErrorMessage(response));
             const job = (await response.json()) as AdminJob;

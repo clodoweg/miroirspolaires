@@ -14,8 +14,10 @@ import AdminProviders from './AdminProviders';
 import { useConfirm } from './ConfirmDialog';
 import PageHeader from './PageHeader';
 import RemoteJobHistory from './RemoteJobHistory';
+import ScriptOptionsForm, { previewScriptArgs } from './ScriptOptionsForm';
 import { useToast } from './Toast';
 import { useRemoteJobs, type RemoteScript } from './useRemoteJobs';
+import { hasDestructiveOption, type ScriptOptionValues } from '@/lib/admin/scripts';
 
 export default function RemoteJobsPanel() {
     return (
@@ -31,19 +33,25 @@ function RemoteJobsPanelInner() {
     const { data, loadError, refresh, selectedJob, logs, selectJob, launch, cancel } = useRemoteJobs();
     const [busy, setBusy] = useState(false);
 
+    const [optionValues, setOptionValues] = useState<Record<string, ScriptOptionValues>>({});
+
     const launchScript = async (script: RemoteScript) => {
+        const values = optionValues[script.id] ?? {};
+        const destructive = hasDestructiveOption(script, values);
         const accepted = await confirm({
             title: `Lancer « ${script.label} » ?`,
-            message: script.writes
-                ? 'Le script tourne dans GitHub Actions. Ce qu’il écrit (Turso, ou fichiers de src/data/ committés sur dev) prend effet sans autre confirmation.'
-                : 'Le script tourne dans GitHub Actions, en lecture seule.',
-            tone: script.writes ? 'danger' : 'default',
+            message: destructive
+                ? 'Une option destructive est cochée : des données seront effacées avant le traitement.'
+                : script.writes
+                  ? 'Le script tourne dans GitHub Actions. Ce qu’il écrit (Turso, ou fichiers de src/data/ committés sur dev) prend effet sans autre confirmation.'
+                  : 'Le script tourne dans GitHub Actions, en lecture seule.',
+            tone: script.writes || destructive ? 'danger' : 'default',
             confirmLabel: 'Lancer',
         });
         if (!accepted) return;
         setBusy(true);
         try {
-            await launch(script.id);
+            await launch(script.id, values);
             toast.success('Job lancé : le run GitHub Actions démarre dans quelques secondes.');
         } catch (error) {
             toast.error(String((error as Error).message ?? error), { title: 'Lancement impossible' });
@@ -96,6 +104,19 @@ function RemoteJobsPanelInner() {
                     >
                         <p className="text-sm font-semibold text-mp-text-primary">{script.label}</p>
                         <p className="text-xs text-mp-text-secondary">{script.description}</p>
+                        <ScriptOptionsForm
+                            options={script.options ?? []}
+                            values={optionValues[script.id] ?? {}}
+                            disabled={busy}
+                            onChange={(values) => setOptionValues((current) => ({ ...current, [script.id]: values }))}
+                        />
+                        {(script.options ?? []).length > 0 && (
+                            <code className="font-mono text-xs text-mp-text-muted">
+                                {['…', ...previewScriptArgs(script.options ?? [], optionValues[script.id] ?? {})].join(
+                                    ' ',
+                                )}
+                            </code>
+                        )}
                         <div>
                             <button
                                 type="button"

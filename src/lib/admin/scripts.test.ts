@@ -2,7 +2,14 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { SCRIPTS, getScript, listRemoteScripts } from './scripts';
+import {
+    SCRIPTS,
+    buildScriptArgs,
+    getScript,
+    hasDestructiveOption,
+    listRemoteScripts,
+    ScriptOptionsError,
+} from './scripts';
 
 describe('SCRIPTS (console de scripts de l’admin)', () => {
     it('ne lance le mode destructif du transfert R2 que depuis mirror-r2', () => {
@@ -81,5 +88,52 @@ describe('SCRIPTS (console de scripts de l’admin)', () => {
             devOnly: true,
             args: ['scripts/pipeline/update-photos.mjs'],
         });
+    });
+});
+
+describe('buildScriptArgs', () => {
+    const catalogues = getScript('update-catalogues')!;
+    const crossmatch = getScript('crossmatch-variable-stars')!;
+
+    it('traduit les options dans l’ordre déclaré', () => {
+        expect(
+            buildScriptArgs(catalogues, { dryRun: true, only: ['messier', 'caldwell', 'messier'], missing: false }),
+        ).toEqual(['--only=messier,caldwell', '--dry-run']);
+        expect(buildScriptArgs(crossmatch, { maxMag: 14.5, batchSize: 2000 })).toEqual([
+            '--max-mag',
+            '14.5',
+            '--batch-size',
+            '2000',
+        ]);
+        expect(buildScriptArgs(catalogues, undefined)).toEqual([]);
+        expect(buildScriptArgs(catalogues, { only: [] })).toEqual([]);
+    });
+
+    it.each([
+        ['un objet attendu', ['--reset']],
+        ['une option inconnue', { reset: true }],
+        ['une valeur hors motif', { only: ['../x'] }],
+        ['une liste trop longue', { only: Array.from({ length: 51 }, (_, i) => `c${i}`) }],
+        ['un drapeau mal typé', { missing: 'true' }],
+    ])('refuse %s', (_label, values) => {
+        expect(() => buildScriptArgs(catalogues, values)).toThrow(ScriptOptionsError);
+    });
+
+    it.each([{ maxMag: 0 }, { maxMag: Number.NaN }, { batchSize: 100.5 }, { batchSize: '2000' }])(
+        'refuse le nombre %j',
+        (values) => {
+            expect(() => buildScriptArgs(crossmatch, values)).toThrow(ScriptOptionsError);
+        },
+    );
+
+    it('repère les options destructives cochées', () => {
+        expect(hasDestructiveOption(crossmatch, { reset: true })).toBe(true);
+        expect(hasDestructiveOption(crossmatch, { reset: false, maxMag: 12 })).toBe(false);
+    });
+
+    it('ne déclare d’options que sur des scripts lançables à distance ou locaux connus', () => {
+        for (const script of SCRIPTS) {
+            for (const option of script.options ?? []) expect(option.flag.startsWith('--'), `${script.id}`).toBe(true);
+        }
     });
 });
