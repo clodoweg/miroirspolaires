@@ -13,6 +13,7 @@ describe('isAvailableRemotely', () => {
         ['GET', '/api/admin/diagnostics'],
         ['GET', '/api/admin/content-gaps'],
         ['GET', '/api/admin/seo'],
+        ['GET', '/api/admin/todo'],
         ['GET', '/api/admin/r2/inventory'],
         ['GET', '/api/admin/database/stats'],
         ['GET', '/api/admin/astrophotos/recent'],

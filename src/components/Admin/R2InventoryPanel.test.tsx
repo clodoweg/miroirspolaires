@@ -30,7 +30,7 @@ describe('formatBytes', () => {
 
 describe('R2InventoryPanel', () => {
     it('supprime les orphelins cochés après confirmation', async () => {
-        const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+        const fetchMock = vi.fn(async (url: string) => {
             if (url === '/api/admin/r2/orphans') return Response.json({ deleted: ['blog/2020/ancien/a.jpg'] });
             return Response.json(INVENTORY);
         });

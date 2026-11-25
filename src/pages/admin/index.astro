@@ -2,6 +2,7 @@
 import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import Dashboard from "@/components/Admin/Dashboard";
+import AdminTodoPanel from "@/components/Admin/AdminTodoPanel";
 import WebImagesReminder from "@/components/Admin/WebImagesReminder";
 import { ADMIN_SECTIONS, getAdminPageTitle, isAdminPageAvailable } from "@/config/admin-sections";
 
@@ -21,6 +22,7 @@ const remoteSections = ADMIN_SECTIONS.map((section) => ({
 ---
 
 <AdminLayout title="Admin · Tableau de bord" description="Console d'administration." active="dashboard" heading>
+    <AdminTodoPanel client:only="react" />
     {isWritable ? (
         <>
             <WebImagesReminder client:only="react" />

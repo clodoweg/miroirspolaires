@@ -47,6 +47,8 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 
 - `/admin/infra/r2` fonctionne aussi à distance : inventaire du bucket par dossier et fichiers orphelins (`r2-inventory.ts` : photo absente du CSV ou sous une ancienne année, article ou voyage supprimé, version web sans source, envoi `incoming/` de plus d'un jour), supprimables après confirmation (`POST /api/admin/r2/orphans`, qui recalcule les orphelins et refuse toute autre clé). La synchronisation avec `src/assets` reste locale.
 
+- Le tableau de bord commence par une liste « À faire » (`GET /api/admin/todo`, `admin-todo.ts`) : descriptions SEO, alts et descriptions Wikipedia manquants, instantanés de catalogues absents, rapport Lighthouse de plus de 30 jours et, à distance, commits de `dev` pas encore en production. Chaque ligne renvoie vers la page qui corrige ; une source illisible est signalée sans masquer les autres.
+
 ### Phase 4 : scripts dans GitHub Actions
 
 - `/admin/infra/scripts` (`RemoteJobsPanel.tsx`) liste les entrées `remote: true` de `SCRIPTS` (`src/lib/admin/scripts.ts`) : données Turso (exoplanètes, comètes, astéroïdes, croisement Gaia, contrôle des étoiles variables), instantanés de catalogues, Lighthouse, SEO et Wikipedia. Jamais les scripts `devOnly`, ceux qui demandent un dossier (`needsTarget`) ni l'import des étoiles variables (son mode par défaut vide la table ; il garde son workflow dédié). Les seuls arguments transmis sont les `options` déclarées du script (catalogues : `--only`, `--missing`, `--force`, `--dry-run` ; cross-match Gaia : `--max-mag`, `--batch-size`, `--reset`), cochées dans l'admin, validées au lancement, rangées avec le job dans Turso et revalidées par le runner.
