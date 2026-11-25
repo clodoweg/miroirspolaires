@@ -241,8 +241,8 @@ export const ADMIN_SECTIONS: AdminSection[] = [
                 id: 'r2',
                 label: 'Stockage R2',
                 href: '/admin/infra/r2',
-                description: 'Contenu du bucket Cloudflare R2.',
-                availability: 'local',
+                description: 'Inventaire du bucket R2, fichiers orphelins et synchronisation (en local).',
+                availability: 'both',
                 legacyHrefs: ['/admin/r2'],
             },
             {

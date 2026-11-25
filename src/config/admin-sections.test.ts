@@ -84,7 +84,7 @@ describe('getAdminPageTitle', () => {
 describe('isAdminPageAvailable', () => {
     it('suit la disponibilité déclarée', () => {
         expect(isAdminPageAvailable(getAdminPage('blog'), 'remote')).toBe(true);
-        expect(isAdminPageAvailable(getAdminPage('r2'), 'remote')).toBe(false);
+        expect(isAdminPageAvailable({ ...getAdminPage('blog'), availability: 'local' }, 'remote')).toBe(false);
         expect(isAdminPageAvailable(getAdminPage('publication'), 'local')).toBe(false);
         expect(isAdminPageAvailable(getAdminPage('publication'), 'remote')).toBe(true);
     });

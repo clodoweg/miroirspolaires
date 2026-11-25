@@ -13,6 +13,7 @@ describe('isAvailableRemotely', () => {
         ['GET', '/api/admin/diagnostics'],
         ['GET', '/api/admin/content-gaps'],
         ['GET', '/api/admin/seo'],
+        ['GET', '/api/admin/r2/inventory'],
         ['GET', '/api/admin/database/stats'],
         ['GET', '/api/admin/astrophotos/recent'],
     ])('ouvre %s %s', (method, pathname) => {
@@ -31,6 +32,7 @@ describe('isAvailableRemotely', () => {
         ['POST', '/api/admin/uploads'],
         ['POST', '/api/admin/uploads/finalize'],
         ['POST', '/api/admin/astrophotos/update'],
+        ['POST', '/api/admin/r2/orphans'],
         ['GET', '/api/admin/release'],
         ['POST', '/api/admin/release'],
         ['POST', '/api/admin/release/merge'],
@@ -49,6 +51,7 @@ describe('isAvailableRemotely', () => {
         ['GET', '/api/admin/jobs/../x'],
         ['GET', '/api/admin/posts/2026/../../x'],
         ['GET', '/api/admin/r2/status'],
+        ['POST', '/api/admin/r2/delete'],
         ['POST', '/api/admin/images/2026/aurores'],
         ['POST', '/api/admin/images/2026/aurores/sync'],
         ['GET', '/api/admin/images/2026/aurores/sync'],

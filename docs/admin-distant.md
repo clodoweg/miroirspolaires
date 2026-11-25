@@ -16,7 +16,7 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 
 - Login GitHub : OAuth utilisateur de la GitHub App, état signé et PKCE. Seul `ADMIN_GITHUB_USER_ID` est accepté ; session signée de 12 h (`mp_admin_session`, `HttpOnly`, `Secure`, `SameSite=Lax`).
 - Routes ouvertes à distance (`src/lib/admin/remote-capabilities.ts`) : listes et lecture des articles et voyages, rapport Lighthouse, priorité des routes amont, état du cache. Toutes les autres répondent 501.
-- La barre latérale, le fil d'Ariane et le bouton de déconnexion sont affichés par `AdminLayout.astro`, d'après le registre `src/config/admin-sections.ts`. Une page dont `availability` vaut `local` (panneaux qui exigent le disque ou des scripts : R2) reste dans le menu avec le badge « local » et affiche un message au lieu d'erreurs 501 ; le tableau de bord liste les pages disponibles, par section.
+- La barre latérale, le fil d'Ariane et le bouton de déconnexion sont affichés par `AdminLayout.astro`, d'après le registre `src/config/admin-sections.ts`. Toutes les pages fonctionnent à distance ; dans une page, les panneaux qui exigent le disque ou `spawn` sont masqués à distance. Une page dont `availability` vaudrait `local` resterait dans le menu avec le badge « local » et affiche un message au lieu d'erreurs 501 ; le tableau de bord liste les pages disponibles, par section.
 
 - Menu « Admin » dans la barre de navigation du site (`getAdminNavItem`, `src/config/navigation.ts`) : en `npm run dev` et dans le build de la Preview de `dev`, avec les seules pages qui fonctionnent dans ce mode ; absent de la production et des autres Previews.
 
@@ -44,6 +44,8 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 - `/admin/donnees` et ses pages (exoplanètes, étoiles variables, comètes, astéroïdes, catalogues) fonctionnent aussi à distance : statistiques lues dans Turso (`GET /api/admin/database/stats`, instantanés de catalogues lus sur la branche dev), mises à jour lancées comme jobs GitHub Actions avec leurs options (`DatabasePanel` en mode `remote`, `useRemoteJobs`). L'import VSX des étoiles variables reste sur son workflow dédié (« Update variable stars »).
 
 - L'audit SEO (`/admin/qualite/seo`) et ses vues par domaine (`/admin/astrophotos/textes`, `/admin/pages`) fonctionnent aussi à distance : `runSeoAudit` (`seo-audit.ts`) lit la branche dev. Le sitemap généré (`dist/`) n'y existe pas et apparaît non généré ; le bouton qui lance le script d'audit reste local.
+
+- `/admin/infra/r2` fonctionne aussi à distance : inventaire du bucket par dossier et fichiers orphelins (`r2-inventory.ts` : photo absente du CSV ou sous une ancienne année, article ou voyage supprimé, version web sans source, envoi `incoming/` de plus d'un jour), supprimables après confirmation (`POST /api/admin/r2/orphans`, qui recalcule les orphelins et refuse toute autre clé). La synchronisation avec `src/assets` reste locale.
 
 ### Phase 4 : scripts dans GitHub Actions
 

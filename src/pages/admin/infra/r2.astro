@@ -1,22 +1,35 @@
 ---
-import { isAdminGranted } from "@/lib/admin/auth/access";
+/**
+ * Stockage R2 : inventaire du bucket et fichiers orphelins (partout) ; synchronisation avec src/assets (en local).
+ */
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import R2Panel from "@/components/Admin/R2Panel";
+import R2InventoryPanel from "@/components/Admin/R2InventoryPanel";
 import WebImagesReminder from "@/components/Admin/WebImagesReminder";
 
-// Refreshed asset metadata
 export const prerender = false;
 
 if (!isAdminGranted(Astro.locals)) {
     return new Response("Not Found", { status: 404 });
 }
+const isLocal = isLocalAdmin(Astro.locals);
 ---
 
 <AdminLayout
-    title="Admin · Cloudflare R2"
-    description="Gestion et synchronisation des volumes de stockage d'images et d'assets avec Cloudflare R2."
+    title="Admin · Stockage R2"
+    description="Inventaire du bucket R2, fichiers orphelins et synchronisation des images."
     active="r2"
+    heading
 >
-    <WebImagesReminder client:only="react" />
-    <R2Panel client:only="react" />
+    <R2InventoryPanel client:only="react" />
+    {
+        // POURQUOI : synchronisation et miroir comparent src/assets au bucket ; à distance, il n'y a pas de disque.
+        isLocal && (
+            <div class="mt-10 flex flex-col gap-6">
+                <WebImagesReminder client:only="react" />
+                <R2Panel client:only="react" />
+            </div>
+        )
+    }
 </AdminLayout>
