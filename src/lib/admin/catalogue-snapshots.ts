@@ -1,7 +1,7 @@
 /**
  * État des instantanés de catalogues pour l'admin.
  *
- * Responsabilité : comparer `src/data/catalogues/` au registre, pour que `/admin/database` montre
+ * Responsabilité : comparer `src/data/catalogues/` au registre, pour que `/admin/donnees` montre
  * les catalogues encore servis par le CDS et non par un fichier versionné.
  */
 

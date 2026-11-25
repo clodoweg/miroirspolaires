@@ -1,5 +1,5 @@
 /**
- * Lecture, écriture et test des routes amont pour `/admin/upstream`.
+ * Lecture, écriture et test des routes amont pour `/admin/donnees/routes-cds`.
  *
  * Responsabilité : valider et enregistrer la priorité dans `src/data/upstream-priority.json`, et mesurer
  * une route par un appel réel et léger.

@@ -16,7 +16,7 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 
 - Login GitHub : OAuth utilisateur de la GitHub App, état signé et PKCE. Seul `ADMIN_GITHUB_USER_ID` est accepté ; session signée de 12 h (`mp_admin_session`, `HttpOnly`, `Secure`, `SameSite=Lax`).
 - Routes ouvertes à distance (`src/lib/admin/remote-capabilities.ts`) : listes et lecture des articles et voyages, rapport Lighthouse, priorité des routes amont, état du cache. Toutes les autres répondent 501.
-- Les compteurs de l'en-tête et un bandeau avec bouton de déconnexion sont affichés par `AdminLayout.astro`. Les pages dont les panneaux exigent le disque ou des scripts (astrophotos, scripts, SEO, R2, base de données) affichent un message au lieu d'erreurs 501 ; le tableau de bord liste les pages disponibles.
+- La barre latérale, le fil d'Ariane et le bouton de déconnexion sont affichés par `AdminLayout.astro`, d'après le registre `src/config/admin-sections.ts`. Une page dont `availability` vaut `local` (panneaux qui exigent le disque ou des scripts : astrophotos, SEO, R2, base de données) reste dans le menu avec le badge « local » et affiche un message au lieu d'erreurs 501 ; le tableau de bord liste les pages disponibles, par section.
 
 - Menu « Admin » dans la barre de navigation du site (`getAdminNavItem`, `src/config/navigation.ts`) : en `npm run dev` et dans le build de la Preview de `dev`, avec les seules pages qui fonctionnent dans ce mode ; absent de la production et des autres Previews.
 
@@ -39,14 +39,14 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 
 ### Phase 4 : scripts dans GitHub Actions
 
-- `/admin/scripts` (`RemoteJobsPanel.tsx`) liste les entrées `remote: true` de `SCRIPTS` (`src/lib/admin/scripts.ts`) : données Turso (exoplanètes, comètes, astéroïdes, croisement Gaia, contrôle des étoiles variables), instantanés de catalogues, Lighthouse, SEO et Wikipedia. Jamais les scripts `devOnly`, ceux qui demandent un dossier (`needsTarget`) ni l'import des étoiles variables (son mode par défaut vide la table ; il garde son workflow dédié). Aucun argument n'est transmis.
+- `/admin/infra/scripts` (`RemoteJobsPanel.tsx`) liste les entrées `remote: true` de `SCRIPTS` (`src/lib/admin/scripts.ts`) : données Turso (exoplanètes, comètes, astéroïdes, croisement Gaia, contrôle des étoiles variables), instantanés de catalogues, Lighthouse, SEO et Wikipedia. Jamais les scripts `devOnly`, ceux qui demandent un dossier (`needsTarget`) ni l'import des étoiles variables (son mode par défaut vide la table ; il garde son workflow dédié). Aucun argument n'est transmis.
 - Lancer (`POST /api/admin/jobs`, `src/lib/admin/jobs.ts`) crée un job dans Turso (`admin_jobs`, `src/lib/admin/job-store.mjs`) puis déclenche `.github/workflows/admin-job.yml` sur `dev` par la GitHub App. Le runner `scripts/admin/run-admin-job.mjs` revérifie le script contre la liste blanche, envoie la sortie dans `admin_job_logs` chaque seconde et note le code de sortie ; le workflow committe sur `dev` ce que le script a écrit sous `src/data/` ou `data/`, puis l'étape de clôture enregistre le commit ou l'échec.
 - L'admin relit l'état et le journal toutes les 3 s (`GET /api/admin/jobs/<id>?after=<n>`) et peut annuler (`POST …/cancel` : annule le run, ou marque le job annulé avant son démarrage, que le runner refuse alors de lancer). Un seul job actif par script.
 - Prérequis : le workflow doit exister sur `main` (GitHub ne déclenche un `workflow_dispatch` que pour un fichier de la branche par défaut) ; secrets Actions `TURSO_DATABASE_URL` et `TURSO_AUTH_TOKEN` (jeton en écriture) ; jeton Turso en écriture aussi dans Vercel (Preview de `dev`) pour créer les jobs ; permission Actions (Read and write) de la GitHub App.
 
 ### Phase 5 : mise à jour des astrophotos dans GitHub Actions
 
-- Entrée `update-photos-ci` de `SCRIPTS` (`remote: true`, `remoteOnly: true` : masquée et refusée en local), lancée depuis `/admin/scripts`. Elle exécute `scripts/pipeline/update-photos.mjs --ci` :
+- Entrée `update-photos-ci` de `SCRIPTS` (`remote: true`, `remoteOnly: true` : masquée et refusée en local), lancée depuis `/admin/infra/scripts`. Elle exécute `scripts/pipeline/update-photos.mjs --ci` :
   1. scrape AstroBin du dépôt privé `clodoweg/astrobin` (`scrape_astrobin.py --incremental --check-r2 --no-sync`) : seuls les médias absents de R2 sont téléchargés ;
   2. import du CSV, du HTML et des nouveaux médias, alts (clés déplacées si l'année d'une photo change), miniatures, fiches techniques et descriptions Wikipedia, versions web en local, dimensions ;
   3. envoi des fichiers nouveaux ou modifiés sous `incoming/astro/<run>/` (`scripts/lib/r2-staging.mjs`), puis, si tout est envoyé, copie côté serveur vers les clés définitives et suppression du préfixe temporaire ;
@@ -63,7 +63,7 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 ### Phase 6 : mise en production, journal, limitation
 
 - `/admin/publication` (`ReleasePanel.tsx`, `src/lib/admin/github/release.ts`, routes `/api/admin/release` et `/api/admin/release/merge`) : commits de `dev` absents de `main`, ouverture de la PR `dev` → `main` (`chore: release dev to production`), suivi de sa CI, puis fusion après confirmation. WARNING: la fusion déploie le site public ; le serveur la refuse si la CI n'est pas entièrement verte (le job `verify` doit figurer parmi les vérifications : tant qu'il n'a pas démarré, la CI reste « en cours », `REQUIRED_CHECK_NAMES` de `release.ts`), si GitHub signale un conflit ou si la PR a reçu un commit depuis l'affichage. Branche de production : `ADMIN_PRODUCTION_BRANCH` (défaut `main`).
-- Journal d'audit (`src/lib/admin/audit-log.ts`, table Turso `admin_audit_log` créée au premier usage) : le middleware enregistre chaque écriture (méthode autre que GET) de l'admin distant avec le compte, le chemin et le statut. `/admin/journal` affiche les 200 dernières. Sans Turso, ou si le jeton Turso est en lecture seule, rien n'est enregistré et les actions passent.
+- Journal d'audit (`src/lib/admin/audit-log.ts`, table Turso `admin_audit_log` créée au premier usage) : le middleware enregistre chaque écriture (méthode autre que GET) de l'admin distant avec le compte, le chemin et le statut. `/admin/publication/journal` affiche les 200 dernières. Sans Turso, ou si le jeton Turso est en lecture seule, rien n'est enregistré et les actions passent.
 - Limitation : au-delà de 120 écritures par minute pour un compte, le middleware répond 429 (`Retry-After: 60`), d'après le journal. Sans Turso, pas de limitation.
 
 ## Mise en place

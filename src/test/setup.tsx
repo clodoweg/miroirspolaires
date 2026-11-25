@@ -3,7 +3,7 @@ import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import React from 'react';
 
-// POURQUOI : ce fichier change selon l'ordre choisi dans `/admin/upstream` (préréglage de panne, par exemple).
+// POURQUOI : ce fichier change selon l'ordre choisi dans `/admin/donnees/routes-cds` (préréglage de panne, par exemple).
 // Les tests partent toujours de l'ordre par défaut du registre ; ceux qui testent un autre ordre le passent explicitement.
 vi.mock('@/data/upstream-priority.json', () => ({ default: { updatedAt: null, services: {} } }));
 

@@ -86,7 +86,7 @@ describe('github-oauth', () => {
 describe('startLogin', () => {
     it('redirige vers GitHub et pose le cookie d’état', () => {
         const response = startLogin(
-            new URL(`${ORIGIN}/api/auth/github/login?returnTo=/admin/seo`),
+            new URL(`${ORIGIN}/api/auth/github/login?returnTo=/admin/qualite/seo`),
             'remote',
             CONFIG,
             NOW,

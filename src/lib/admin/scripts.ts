@@ -10,7 +10,7 @@ export interface ScriptDef {
     /** Whether the script may write to disk (warn before running). */
     writes: boolean;
     /**
-     * Masque l'entrée de /admin/scripts, qui lance sans argument : sans dossier, ce script porterait sur
+     * Masque l'entrée de /admin/infra/scripts, qui lance sans argument : sans dossier, ce script porterait sur
      * plusieurs domaines. Seul un panneau qui lui passe un dossier (R2, cache, rappel web) peut la lancer.
      */
     needsTarget?: boolean;
@@ -26,7 +26,7 @@ export interface ScriptDef {
      */
     remote?: boolean;
     /**
-     * Réservé à l'admin distant : masqué de /admin/scripts en local et refusé par `api/admin/scripts/run.ts`.
+     * Réservé à l'admin distant : masqué de /admin/infra/scripts en local et refusé par `api/admin/scripts/run.ts`.
      * POURQUOI : `update-photos-ci` (et sa variante `-force`) est conçu pour un disque vide (GitHub Actions) ; lancé en local, il
      * comparerait tout `src/assets/astrophotographies/` à R2 et écrirait sur le R2 de production.
      */

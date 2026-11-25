@@ -21,7 +21,7 @@ describe('SCRIPTS (console de scripts de l’admin)', () => {
         }
     });
 
-    it("n'expose dans /admin/scripts aucun script partagé sans domaine", () => {
+    it("n'expose dans /admin/infra/scripts aucun script partagé sans domaine", () => {
         const sharedScripts = ['pipeline/generate-mini.mjs'];
         const targetedScripts = ['r2/', 'build/generate-web-images.mjs'];
         for (const script of SCRIPTS.filter((entry) => !entry.needsTarget)) {

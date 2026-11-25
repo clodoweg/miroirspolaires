@@ -272,7 +272,7 @@ async function main() {
         console.log(`   - 📥 Téléchargés : ${downloaded}`);
         console.log(`   - ❌ Échecs : ${failed}`);
         console.log('─'.repeat(60));
-        // POURQUOI : l'admin (/admin/scripts) juge le succès sur le code de sortie.
+        // POURQUOI : l'admin (/admin/infra/scripts) juge le succès sur le code de sortie.
         if (failed > 0) process.exit(1);
     } catch (error) {
         console.error('❌ Une erreur critique est survenue :', error.message);

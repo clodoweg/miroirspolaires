@@ -1,5 +1,5 @@
 /**
- * Panneau des scripts de l'admin distant (`/admin/scripts` sur la Preview de `dev`).
+ * Panneau des scripts de l'admin distant (`/admin/infra/scripts` sur la Preview de `dev`).
  *
  * Responsabilité : lister les scripts lançables dans GitHub Actions, en lancer un, suivre l'état et le
  * journal des jobs (relus toutes les 3 s tant qu'un job tourne) et annuler un job.

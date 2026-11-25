@@ -1,0 +1,26 @@
+---
+/**
+ * Redirection des anciennes URL de l'admin (`/admin/seo` → `/admin/qualite/seo`…).
+ *
+ * POURQUOI une route plutôt que `redirects` d'`astro.config.mjs` : une redirection de configuration serait
+ * générée dans le build de production et y exposerait la structure de l'admin. Ici, la garde
+ * `isAdminGranted()` répond 404 partout où l'admin n'existe pas, comme les autres pages.
+ *
+ * Les anciennes URL sont déclarées dans `legacyHrefs` de `src/config/admin-sections.ts`. Toute autre URL
+ * sous `/admin` répond 404. La query (`?year=…&slug=…`) est conservée.
+ */
+import { isAdminGranted } from "@/lib/admin/auth/access";
+import { resolveLegacyAdminHref } from "@/config/admin-sections";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+
+const target = resolveLegacyAdminHref(Astro.url.pathname);
+if (!target) {
+    return new Response("Not Found", { status: 404 });
+}
+return Astro.redirect(`${target}${Astro.url.search}`, 301);
+---

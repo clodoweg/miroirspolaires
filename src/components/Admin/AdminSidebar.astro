@@ -1,0 +1,74 @@
+---
+/**
+ * Barre latérale de l'administration.
+ *
+ * Responsabilité : afficher les sections et les pages du registre (`src/config/admin-sections.ts`), marquer la
+ * page courante et griser, avec un badge, les pages qui ne fonctionnent pas dans le mode courant (« local »
+ * sur l'admin distant, « distant » en `npm run dev`). Elles restent listées pour que le menu soit le même partout.
+ *
+ * Rendu côté serveur, sans JavaScript : le repli sur mobile passe par `<details>`.
+ */
+import {
+    ADMIN_DASHBOARD,
+    ADMIN_SECTIONS,
+    isAdminPageAvailable,
+    type AdminDisplayMode,
+    type AdminPage,
+    type AdminPageId,
+} from "@/config/admin-sections";
+
+interface Props {
+    active: AdminPageId;
+    mode: AdminDisplayMode;
+}
+
+const { active, mode } = Astro.props;
+
+const unavailableBadge = mode === "remote" ? "local" : "distant";
+
+function linkState(page: AdminPage) {
+    return {
+        isActive: page.id === active,
+        isUnavailable: !isAdminPageAvailable(page, mode),
+    };
+}
+---
+
+<nav aria-label="Navigation de l'admin" class="flex flex-col gap-1 py-4 text-sm">
+    {[{ label: null, pages: [ADMIN_DASHBOARD] }, ...ADMIN_SECTIONS].map((section) => (
+        <div class="flex flex-col gap-0.5">
+            {section.label && (
+                <p class="px-3 pt-4 pb-1 font-mono text-xs tracking-wider text-mp-text-muted uppercase">
+                    {section.label}
+                </p>
+            )}
+            <ul class="flex flex-col gap-0.5">
+                {section.pages.map((page) => {
+                    const { isActive, isUnavailable } = linkState(page);
+                    return (
+                        <li>
+                            <a
+                                href={page.href}
+                                title={page.description}
+                                aria-current={isActive ? "page" : undefined}
+                                class:list={[
+                                    "flex min-h-touch items-center gap-2 rounded-md px-3 transition-colors mouse:hover:bg-mp-accent/10 mouse:hover:text-mp-accent",
+                                    isActive && "bg-mp-accent/15 font-semibold text-mp-accent",
+                                    !isActive && isUnavailable && "text-mp-text-muted",
+                                    !isActive && !isUnavailable && "text-mp-text-body",
+                                ]}
+                            >
+                                <span class="flex-1">{page.label}</span>
+                                {isUnavailable && (
+                                    <span class="rounded border border-mp-border-light px-1.5 font-mono text-xs text-mp-text-muted">
+                                        {unavailableBadge}
+                                    </span>
+                                )}
+                            </a>
+                        </li>
+                    );
+                })}
+            </ul>
+        </div>
+    ))}
+</nav>
