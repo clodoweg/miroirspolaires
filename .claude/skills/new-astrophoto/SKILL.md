@@ -14,6 +14,7 @@ Les astrophotos ne sont pas du markdown. Chaque page est générée depuis `data
 1. Dans le dépôt `astrobin`, à la main : `python3 scrape_astrobin.py --incremental`. Il télécharge les médias absents, génère les SVG manquants et copie le tout vers ce dépôt. Vérifier que le fichier brut est bien arrivé : `src/assets/astrophotographies/<AAAA>/<ID>_raw.jpg`, avec `AAAA` = les 4 premiers caractères de la colonne `Uploaded`.
 2. Bouton « Mettre à jour les photos » de `/admin/astrophotos/importer` (en local, ou job GitHub Actions sur l'admin distant, qui fait aussi l'étape 1), ou `node scripts/pipeline/update-photos.mjs` après confirmation (écrit sur R2). `--dry-run` pour simuler. Il traite toutes les photos du CSV : import, années modifiées, miniatures, alts depuis le CSV, données Wikipedia, envoi R2 (`--changed`, sans suppression), dimensions et versions web. Lire le bilan affiché à la fin.
 3. Si le bilan ou l'admin signale une description SEO manquante : `/generate-seo astro`.
+3 bis. Photo retraitée sur AstroBin (même ID) : lien « Reprendre » de la photo dans `/admin/astrophotos`, ou champ « Photos retraitées » de l'import (option `--refresh-ids` du job).
 4. Facultatif, pour préchauffer le CDN : `node scripts/r2/warm-cache.mjs astrophotographies/<AAAA>`
 
 WARNING: ne jamais ajouter `--delete-first` à un envoi R2 : il vide le préfixe avant de tout réenvoyer. Les anciens objets R2 restent sous l'ancienne année quand une photo en change.

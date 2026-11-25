@@ -96,6 +96,53 @@ function OptionCheckbox({
     );
 }
 
+/**
+ * Lit la liste d'ID AstroBin saisie (séparés par des virgules ou des espaces).
+ *
+ * @param input - Saisie.
+ * @returns Les ID sans doublon, ou `null` si une valeur n'est pas un ID ou s'il y en a plus de 50.
+ */
+export function parseRefreshIds(input: string): string[] | null {
+    const ids = [...new Set(input.split(/[\s,]+/).filter(Boolean))];
+    if (ids.length > 50 || ids.some((id) => !/^\d{1,12}$/.test(id))) return null;
+    return ids;
+}
+
+function RefreshIdsField({
+    value,
+    onChange,
+    invalid,
+}: {
+    value: string;
+    onChange: (value: string) => void;
+    invalid: boolean;
+}) {
+    const id = useId();
+    return (
+        <div className="flex flex-col gap-2 rounded-xl border border-mp-glass-border p-4">
+            <label htmlFor={id} className="flex flex-wrap items-center gap-3">
+                <code className="font-mono text-sm text-mp-accent">--refresh-ids</code>
+                <span className="text-sm text-mp-text-primary">Photos retraitées (ID AstroBin)</span>
+                <input
+                    id={id}
+                    type="text"
+                    inputMode="numeric"
+                    value={value}
+                    onChange={(event) => onChange(event.target.value)}
+                    placeholder="ex. 1213620"
+                    aria-invalid={invalid}
+                    className="admin-input max-w-xs font-mono"
+                />
+            </label>
+            <p className="text-sm text-mp-text-secondary">
+                Pour une ou quelques photos retraitées sur AstroBin : tous leurs médias sont retéléchargés et remplacés,
+                sans recopier toute la galerie. Laisser vide pour une mise à jour simple.
+            </p>
+            {invalid && <p className="text-sm text-mp-astro-red">Des ID AstroBin (chiffres), 50 au plus.</p>}
+        </div>
+    );
+}
+
 function StepsList({ firstStep }: { firstStep: string }) {
     return (
         <ol className="grid list-decimal gap-1 pl-5 text-sm text-mp-text-secondary md:grid-cols-2">
@@ -193,7 +240,13 @@ function RemoteImport() {
     const { data, loadError, selectedJob, logs, selectJob, launch, cancel, hasActiveJob } =
         useRemoteJobs(ASTRO_IMPORT_JOB_IDS);
     const [forceMedia, setForceMedia] = useState(false);
+    // POURQUOI : la fiche d'une photo renvoie ici avec ?refresh=<ID> pour la reprendre après retraitement.
+    const [refreshInput, setRefreshInput] = useState(() =>
+        typeof window === 'undefined' ? '' : (new URLSearchParams(window.location.search).get('refresh') ?? ''),
+    );
     const [busy, setBusy] = useState(false);
+    const refreshIds = parseRefreshIds(refreshInput);
+    const hasInvalidIds = refreshIds === null;
     const scriptId = forceMedia ? 'update-photos-ci-force' : 'update-photos-ci';
 
     const start = async () => {
@@ -208,7 +261,7 @@ function RemoteImport() {
         if (!accepted) return;
         setBusy(true);
         try {
-            await launch(scriptId);
+            await launch(scriptId, !forceMedia && refreshIds && refreshIds.length > 0 ? { refreshIds } : undefined);
             toast.success('Job lancé : le run GitHub Actions démarre dans quelques secondes.');
         } catch (error) {
             toast.error(String((error as Error).message ?? error), { title: 'Lancement impossible' });
@@ -251,12 +304,15 @@ function RemoteImport() {
                     checked={forceMedia}
                     onChange={setForceMedia}
                 />
+                {!forceMedia && (
+                    <RefreshIdsField value={refreshInput} onChange={setRefreshInput} invalid={hasInvalidIds} />
+                )}
                 {data.error && <p className="text-sm text-red-700 dark:text-red-400">{data.error}</p>}
                 <div className="flex flex-wrap items-center gap-3">
                     <button
                         type="button"
                         onClick={() => void start()}
-                        disabled={busy || hasActiveJob || Boolean(data.error)}
+                        disabled={busy || hasActiveJob || Boolean(data.error) || (!forceMedia && hasInvalidIds)}
                         className={primaryButtonClass}
                     >
                         <RefreshCw className="h-4 w-4" aria-hidden="true" />
@@ -264,6 +320,9 @@ function RemoteImport() {
                     </button>
                     <code className="font-mono text-xs text-mp-text-muted">
                         update-photos.mjs --ci{forceMedia ? ' --force-media' : ''}
+                        {!forceMedia && refreshIds && refreshIds.length > 0
+                            ? ` --refresh-ids=${refreshIds.join(',')}`
+                            : ''}
                     </code>
                     {hasActiveJob && <span className="text-sm text-mp-text-muted">Un import est déjà en cours.</span>}
                 </div>

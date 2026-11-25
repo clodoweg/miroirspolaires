@@ -385,6 +385,14 @@ function AstroPhotosPanelInner() {
                                                     <ExternalLink className="h-3 w-3 shrink-0" />
                                                 </a>
                                             )}
+                                            <a
+                                                href={`/admin/astrophotos/importer?refresh=${encodeURIComponent(p.ID)}`}
+                                                className="inline-flex items-center gap-1 text-mp-text-muted transition-colors hover:text-mp-accent"
+                                                title="Photo retraitée sur AstroBin : la reprendre"
+                                                aria-label={`Reprendre la photo ${p.ID} depuis AstroBin`}
+                                            >
+                                                <RefreshCw className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>

@@ -4,7 +4,7 @@
  */
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import AstroImportPanel from './AstroImportPanel';
+import AstroImportPanel, { parseRefreshIds } from './AstroImportPanel';
 
 vi.mock('./ScriptConsole', () => ({
     default: ({ runId, args }: { runId: string; args: string[] }) => (
@@ -98,6 +98,35 @@ describe('AstroImportPanel à distance', () => {
         );
     });
 
+    it('reprend seulement les photos retraitées indiquées', async () => {
+        const fetchMock = mockJobsApi();
+        render(<AstroImportPanel remote />);
+        fireEvent.change(await screen.findByRole('textbox', { name: /Photos retraitées/ }), {
+            target: { value: '1213620, 42' },
+        });
+        expect(screen.getByText(/--refresh-ids=1213620,42/)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /Mettre à jour les photos/ }));
+        await confirmLaunch();
+        await waitFor(() =>
+            expect(fetchMock).toHaveBeenCalledWith(
+                '/api/admin/jobs',
+                expect.objectContaining({
+                    body: JSON.stringify({ scriptId: 'update-photos-ci', options: { refreshIds: ['1213620', '42'] } }),
+                }),
+            ),
+        );
+    });
+
+    it('bloque le lancement sur une saisie qui n’est pas une liste d’ID', async () => {
+        mockJobsApi();
+        render(<AstroImportPanel remote />);
+        fireEvent.change(await screen.findByRole('textbox', { name: /Photos retraitées/ }), {
+            target: { value: 'M42' },
+        });
+        expect(screen.getByText(/Des ID AstroBin/)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Mettre à jour les photos/ })).toBeDisabled();
+    });
+
     it('affiche une erreur de chargement', async () => {
         vi.stubGlobal(
             'fetch',
@@ -105,5 +134,17 @@ describe('AstroImportPanel à distance', () => {
         );
         render(<AstroImportPanel remote />);
         expect(await screen.findByText(/Chargement impossible/)).toBeInTheDocument();
+    });
+});
+
+describe('parseRefreshIds', () => {
+    it('lit des ID séparés par des virgules ou des espaces, sans doublon', () => {
+        expect(parseRefreshIds('')).toEqual([]);
+        expect(parseRefreshIds(' 1, 2 2 ')).toEqual(['1', '2']);
+    });
+
+    it('refuse autre chose que des ID, ou plus de 50', () => {
+        expect(parseRefreshIds('1;rm')).toBeNull();
+        expect(parseRefreshIds(Array.from({ length: 51 }, (_, i) => String(i + 1)).join(','))).toBeNull();
     });
 });

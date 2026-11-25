@@ -108,6 +108,17 @@ export const SCRIPTS: ScriptDef[] = [
         writes: true,
         remote: true,
         remoteOnly: true,
+        options: [
+            {
+                id: 'refreshIds',
+                kind: 'list',
+                flag: '--refresh-ids=',
+                label: 'Photos retraitées (ID AstroBin)',
+                help: 'Retélécharge tous les médias de ces photos, même déjà présents, en plus des nouvelles photos.',
+                pattern: '\\d{1,12}',
+                maxItems: 50,
+            },
+        ],
     },
     {
         // WARNING: retélécharge toute la galerie (2,8 Go) et remplace sur R2 les fichiers dont le contenu a changé.

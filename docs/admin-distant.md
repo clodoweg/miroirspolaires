@@ -64,10 +64,11 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
   3. envoi des fichiers nouveaux ou modifiés sous `incoming/astro/<run>/` (`scripts/lib/r2-staging.mjs`), puis, si tout est envoyé, copie côté serveur vers les clés définitives et suppression du préfixe temporaire ;
   4. ajout des nouvelles versions web à `web-images.json` (aucune entrée retirée), purge du cache du worker pour les images remplacées, contrôle sur R2 qu'aucune photo n'a perdu son raw ou sa miniature.
   Le workflow ne committe le CSV et les manifestes sur `dev` que si le script réussit. Un échec avant l'étape 3 n'écrit rien sur R2. Les descriptions SEO manquantes restent signalées (`/generate-seo astro`).
+- Photos retraitées : l'option `refreshIds` de `update-photos-ci` (champ « Photos retraitées » de `/admin/astrophotos/importer`, ou lien « Reprendre » d'une photo du catalogue, qui préremplit `?refresh=<ID>`) ajoute `--refresh-ids=<id,id>` : le scrape retélécharge tous les médias de ces photos, puis le job remplace sur R2 ceux qui ont changé et purge leur cache, sans recopier toute la galerie.
 - Variante `update-photos-ci-force` (`--ci --force-media`) : le scrape retélécharge tous les médias (2,8 Go) et miniatures et versions web sont régénérées ; seuls les fichiers dont le contenu diffère de R2 sont envoyés et remplacent l'existant (cache du worker purgé). Rien n'est supprimé. Durée : de 30 min à 1 h. Les deux variantes partagent un groupe de concurrence du workflow : l'une attend la fin de l'autre.
 - Le CSV reste écrit par le seul scrape AstroBin : l'admin ne l'édite jamais.
 - Prérequis, en plus de la phase 4 :
-  - le dépôt `astrobin` doit contenir sur sa branche par défaut les options `--check-r2` et `--no-sync` de `scrape_astrobin.py` ;
+  - le dépôt `astrobin` doit contenir sur sa branche par défaut les options `--check-r2`, `--no-sync` et `--refresh-ids` de `scrape_astrobin.py` (sans la dernière, une reprise de photos échoue avec le code 2) ;
   - une deploy key en lecture seule sur `clodoweg/astrobin`, dont la clé privée est le secret Actions `ASTROBIN_DEPLOY_KEY` de ce dépôt ;
   - secrets Actions `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` ; facultatifs : `IMAGE_WORKER_URL`, `IMAGE_WORKER_PURGE_KEY`. Le workflow ne les transmet qu'à `update-photos-ci` ;
   - conseillé : règle de cycle de vie R2 supprimant `incoming/` après un jour (runs interrompus).
