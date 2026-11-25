@@ -60,7 +60,7 @@ const unavailableMessage =
         class:list={[
             "border-b border-mp-border bg-mp-bg-secondary",
             !bleed &&
-                "lg:fixed lg:top-navbar lg:bottom-0 lg:left-0 lg:w-64 lg:overflow-y-auto lg:border-r lg:border-b-0",
+                "admin-sidebar lg:fixed lg:top-navbar lg:bottom-0 lg:left-0 lg:w-64 lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-b-0",
         ]}
     >
         <details class:list={["group px-3", !bleed && "lg:hidden"]}>
@@ -177,6 +177,25 @@ const unavailableMessage =
     }
     .rich-editor a {
         @apply cursor-text;
+    }
+
+    /* POURQUOI : la barre latérale ne montre sa barre de défilement (fine) qu'au survol, quand elle déborde. */
+    .admin-sidebar {
+        scrollbar-width: none;
+    }
+    .admin-sidebar:hover {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(212, 180, 131, 0.35) transparent;
+    }
+    .admin-sidebar::-webkit-scrollbar {
+        width: 0;
+    }
+    .admin-sidebar:hover::-webkit-scrollbar {
+        width: 6px;
+    }
+    .admin-sidebar::-webkit-scrollbar-thumb {
+        background-color: rgba(212, 180, 131, 0.35);
+        border-radius: 9999px;
     }
 
     /* Custom scrollbar inside admin shells. */

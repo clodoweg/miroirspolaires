@@ -78,7 +78,9 @@ function RefreshEntryImagesInner({ scope }: { scope: Scope }) {
 
     return (
         <section className="mt-8 flex flex-col gap-3 rounded-xl border border-dashed border-mp-border-light p-4">
-            <h2 className="font-semibold text-mp-text-heading">Une image a été remplacée sous le même nom ?</h2>
+            <h2 className="font-sans text-base font-semibold text-mp-text-heading">
+                Une image a été remplacée sous le même nom ?
+            </h2>
             <p className="text-sm text-mp-text-secondary">
                 L’enregistrement la renvoie sur R2 et purge le cache du worker, mais ses versions web restent anciennes
                 : régénère-les pour ce seul dossier.
