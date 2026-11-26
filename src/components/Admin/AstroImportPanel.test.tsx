@@ -117,6 +117,27 @@ describe('AstroImportPanel à distance', () => {
         );
     });
 
+    it('garde les annotations d’AstroBin quand la case est cochée', async () => {
+        const fetchMock = mockJobsApi();
+        render(<AstroImportPanel remote />);
+        fireEvent.click(await screen.findByRole('checkbox', { name: /Tout recopier/ }));
+        fireEvent.click(screen.getByRole('checkbox', { name: /Garder les annotations d’AstroBin/ }));
+        expect(screen.getByText(/--force-media --astrobin-annotations/)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /Tout recopier \(30 min/ }));
+        await confirmLaunch();
+        await waitFor(() =>
+            expect(fetchMock).toHaveBeenCalledWith(
+                '/api/admin/jobs',
+                expect.objectContaining({
+                    body: JSON.stringify({
+                        scriptId: 'update-photos-ci-force',
+                        options: { astrobinAnnotations: true },
+                    }),
+                }),
+            ),
+        );
+    });
+
     it('bloque le lancement sur une saisie qui n’est pas une liste d’ID', async () => {
         mockJobsApi();
         render(<AstroImportPanel remote />);

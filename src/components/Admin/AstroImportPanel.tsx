@@ -240,6 +240,7 @@ function RemoteImport() {
     const { data, loadError, selectedJob, logs, selectJob, launch, cancel, hasActiveJob } =
         useRemoteJobs(ASTRO_IMPORT_JOB_IDS);
     const [forceMedia, setForceMedia] = useState(false);
+    const [astrobinAnnotations, setAstrobinAnnotations] = useState(false);
     // POURQUOI : la fiche d'une photo renvoie ici avec ?refresh=<ID> pour la reprendre après retraitement.
     const [refreshInput, setRefreshInput] = useState(() =>
         typeof window === 'undefined' ? '' : (new URLSearchParams(window.location.search).get('refresh') ?? ''),
@@ -261,7 +262,10 @@ function RemoteImport() {
         if (!accepted) return;
         setBusy(true);
         try {
-            await launch(scriptId, !forceMedia && refreshIds && refreshIds.length > 0 ? { refreshIds } : undefined);
+            await launch(scriptId, {
+                ...(!forceMedia && refreshIds && refreshIds.length > 0 ? { refreshIds } : {}),
+                ...(astrobinAnnotations ? { astrobinAnnotations: true } : {}),
+            });
             toast.success('Job lancé : le run GitHub Actions démarre dans quelques secondes.');
         } catch (error) {
             toast.error(String((error as Error).message ?? error), { title: 'Lancement impossible' });
@@ -307,6 +311,13 @@ function RemoteImport() {
                 {!forceMedia && (
                     <RefreshIdsField value={refreshInput} onChange={setRefreshInput} invalid={hasInvalidIds} />
                 )}
+                <OptionCheckbox
+                    flag="--astrobin-annotations"
+                    label="Garder les annotations d’AstroBin"
+                    help="Sans cette case, le job dessine les calques d’annotations (anneaux et étiquettes, style InstaSlice) à partir de la résolution astrométrique d’AstroBin. Cochée : il télécharge les SVG PixInsight d’AstroBin, comme avant. Avec « Tout recopier », toute la galerie passe dans le style choisi."
+                    checked={astrobinAnnotations}
+                    onChange={setAstrobinAnnotations}
+                />
                 {data.error && <p className="text-sm text-red-700 dark:text-red-400">{data.error}</p>}
                 <div className="flex flex-wrap items-center gap-3">
                     <button
@@ -323,6 +334,7 @@ function RemoteImport() {
                         {!forceMedia && refreshIds && refreshIds.length > 0
                             ? ` --refresh-ids=${refreshIds.join(',')}`
                             : ''}
+                        {astrobinAnnotations ? ' --astrobin-annotations' : ''}
                     </code>
                     {hasActiveJob && <span className="text-sm text-mp-text-muted">Un import est déjà en cours.</span>}
                 </div>

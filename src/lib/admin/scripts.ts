@@ -101,7 +101,7 @@ export const SCRIPTS: ScriptDef[] = [
         id: 'update-photos-ci',
         label: 'Astrophotos : mettre à jour les photos (GitHub Actions)',
         description:
-            'Lance le scrape AstroBin (nouvelles photos seulement), génère miniatures, alts, descriptions Wikipedia, versions web et dimensions, envoie tout sur R2 sous un préfixe temporaire puis le copie vers les clés définitives si tout a réussi, et committe le CSV et les manifestes sur dev. Ne supprime rien sur R2. Les descriptions SEO restent à écrire via Claude Code.',
+            'Lance le scrape AstroBin (nouvelles photos seulement), dessine les calques d’annotations, génère miniatures, alts, descriptions Wikipedia, versions web et dimensions, envoie tout sur R2 sous un préfixe temporaire puis le copie vers les clés définitives si tout a réussi, et committe le CSV et les manifestes sur dev. Ne supprime rien sur R2. Les descriptions SEO restent à écrire via Claude Code.',
         category: 'pipeline',
         command: 'node',
         args: ['scripts/pipeline/update-photos.mjs', '--ci'],
@@ -118,6 +118,13 @@ export const SCRIPTS: ScriptDef[] = [
                 pattern: '\\d{1,12}',
                 maxItems: 50,
             },
+            {
+                id: 'astrobinAnnotations',
+                kind: 'flag',
+                flag: '--astrobin-annotations',
+                label: 'Garder les annotations d’AstroBin',
+                help: 'Télécharge les SVG PixInsight d’AstroBin au lieu de dessiner les calques (style InstaSlice).',
+            },
         ],
     },
     {
@@ -125,13 +132,22 @@ export const SCRIPTS: ScriptDef[] = [
         id: 'update-photos-ci-force',
         label: 'Astrophotos : tout recopier depuis AstroBin (GitHub Actions)',
         description:
-            'Comme la mise à jour des photos, mais retélécharge tous les médias d’AstroBin (raws, annotations, skyplots) et régénère miniatures et versions web, même s’ils sont déjà sur R2. Seuls les fichiers dont le contenu a changé remplacent ceux de R2 (cache du worker purgé) ; rien n’est supprimé. Long : de 30 min à 1 h.',
+            'Comme la mise à jour des photos, mais retélécharge tous les médias d’AstroBin (raws, skyplots), redessine tous les calques d’annotations et régénère miniatures et versions web, même s’ils sont déjà sur R2. Seuls les fichiers dont le contenu a changé remplacent ceux de R2 (cache du worker purgé) ; rien n’est supprimé. Long : de 30 min à 1 h.',
         category: 'pipeline',
         command: 'node',
         args: ['scripts/pipeline/update-photos.mjs', '--ci', '--force-media'],
         writes: true,
         remote: true,
         remoteOnly: true,
+        options: [
+            {
+                id: 'astrobinAnnotations',
+                kind: 'flag',
+                flag: '--astrobin-annotations',
+                label: 'Garder les annotations d’AstroBin',
+                help: 'Télécharge les SVG PixInsight d’AstroBin au lieu de dessiner les calques (style InstaSlice).',
+            },
+        ],
     },
     {
         id: 'sync-r2',

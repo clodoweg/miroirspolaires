@@ -57,6 +57,8 @@
  *                   seules photos (ID AstroBin, 50 au plus), en plus des nouvelles photos : pour une photo
  *                   retraitée sur AstroBin. Ses fichiers différents de R2 sont remplacés et leur cache purgé.
  *                   Exige l'option du même nom dans scrape_astrobin.py (dépôt astrobin).
+ *   --astrobin-annotations : Avec --ci seulement. Garde les SVG d'annotations PixInsight d'AstroBin
+ *                   (scrape --annotations=astrobin) au lieu des calques dessinés par annotate_astro.py.
  *
  * Variables d'environnement :
  *   ASTROBIN_DIR : dossier du dépôt astrobin (défaut : ../astrobin). S'il manque, les imports sont sautés
@@ -368,11 +370,12 @@ function limitConcurrency(fn, limit) {
 /**
  * Mode --ci : scrape, traitements locaux, envoi sur R2 en deux temps, manifeste et contrôle final.
  *
- * @param {{ forceMedia?: boolean, refreshIds?: string[] }} [options] - `forceMedia` : retélécharger tous les
- *   médias (--force-media) ; `refreshIds` : retélécharger ceux de ces photos seulement (--refresh-ids).
+ * @param {{ forceMedia?: boolean, refreshIds?: string[], astrobinAnnotations?: boolean }} [options] - `forceMedia` :
+ *   retélécharger tous les médias (--force-media) ; `refreshIds` : retélécharger ceux de ces photos seulement
+ *   (--refresh-ids) ; `astrobinAnnotations` : garder les SVG d'AstroBin (--astrobin-annotations).
  * @returns {Promise<void>} Se termine par process.exit(1) en cas d'échec.
  */
-async function runCiPipeline({ forceMedia = false, refreshIds = [] } = {}) {
+async function runCiPipeline({ forceMedia = false, refreshIds = [], astrobinAnnotations = false } = {}) {
     // POURQUOI : vérifier R2 avant le scrape, pour ne pas découvrir un secret manquant après 6 minutes.
     const r2Config = requireR2Config();
     const s3 = createR2Client(r2Config);
@@ -396,6 +399,8 @@ async function runCiPipeline({ forceMedia = false, refreshIds = [] } = {}) {
         path.join(ASTROBIN_DIR, 'scrape_astrobin.py'),
         ...(forceMedia ? [] : ['--incremental', '--check-r2']),
         ...(refreshIds.length > 0 ? [`--refresh-ids=${refreshIds.join(',')}`] : []),
+        // POURQUOI : par défaut, le scrape dessine les calques d'annotations (annotate_astro.py, dépôt astrobin).
+        ...(astrobinAnnotations ? ['--annotations=astrobin'] : []),
         '--no-sync',
     ];
     if ((await runCommand(process.env.PYTHON || 'python3', scrapeArgs, ASTROBIN_DIR)) !== 0) {
@@ -512,14 +517,19 @@ async function main() {
     let parsed;
     try {
         parsed = parseCliArgs(process.argv.slice(2), {
-            flags: { dryRun: ['--dry-run'], ci: ['--ci'], forceMedia: ['--force-media'] },
+            flags: {
+                dryRun: ['--dry-run'],
+                ci: ['--ci'],
+                forceMedia: ['--force-media'],
+                astrobinAnnotations: ['--astrobin-annotations'],
+            },
             valueOptions: ['--refresh-ids'],
         });
     } catch (error) {
         console.error(`❌ ${error.message}`);
         process.exit(1);
     }
-    const { dryRun, ci, forceMedia } = parsed.flags;
+    const { dryRun, ci, forceMedia, astrobinAnnotations } = parsed.flags;
     if (parsed.positionals.length > 0) {
         console.error('❌ Ce script ne prend aucun argument positionnel.');
         process.exit(1);
@@ -530,6 +540,10 @@ async function main() {
     }
     if (forceMedia && !ci) {
         console.error('❌ --force-media ne s’utilise qu’avec --ci.');
+        process.exit(1);
+    }
+    if (astrobinAnnotations && !ci) {
+        console.error('❌ --astrobin-annotations ne s’utilise qu’avec --ci.');
         process.exit(1);
     }
     const rawRefreshIds = parsed.values['--refresh-ids'];
@@ -544,7 +558,7 @@ async function main() {
         process.exit(1);
     }
     if (ci) {
-        await runCiPipeline({ forceMedia, refreshIds });
+        await runCiPipeline({ forceMedia, refreshIds, astrobinAnnotations });
         return;
     }
 
