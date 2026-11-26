@@ -2,6 +2,7 @@
 import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import DatabasePanel from "@/components/Admin/DatabasePanel";
+import ProductionRedeployPanel from "@/components/Admin/ProductionRedeployPanel";
 
 export const prerender = false;
 
@@ -13,4 +14,12 @@ const isLocal = isLocalAdmin(Astro.locals);
 
 <AdminLayout title="Admin · Astéroïdes" description="Astéroïdes : statistiques et mise à jour." active="db-asteroids">
     <DatabasePanel client:only="react" view="asteroids" remote={!isLocal} />
+    {
+        // POURQUOI : ces pages du site sont générées au build ; une mise à jour Turso exige un redéploiement.
+        !isLocal && (
+            <div class="mt-8">
+                <ProductionRedeployPanel client:only="react" compact />
+            </div>
+        )
+    }
 </AdminLayout>

@@ -37,6 +37,7 @@ describe('isAvailableRemotely', () => {
         ['GET', '/api/admin/release'],
         ['POST', '/api/admin/release'],
         ['POST', '/api/admin/release/merge'],
+        ['POST', '/api/admin/release/redeploy'],
         ['GET', '/api/admin/jobs'],
         ['POST', '/api/admin/jobs'],
         ['GET', '/api/admin/jobs/0f0e8a3c-1234-4abc-9def-0123456789ab'],

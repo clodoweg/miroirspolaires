@@ -51,6 +51,8 @@ export const REMOTE_ADMIN_API_ROUTES: readonly RemoteRoute[] = [
     { method: 'GET', pattern: /^\/api\/admin\/release\/?$/ },
     { method: 'POST', pattern: /^\/api\/admin\/release\/?$/ },
     { method: 'POST', pattern: /^\/api\/admin\/release\/merge\/?$/ },
+    { method: 'GET', pattern: /^\/api\/admin\/release\/redeploy\/?$/ },
+    { method: 'POST', pattern: /^\/api\/admin\/release\/redeploy\/?$/ },
     { method: 'GET', pattern: /^\/api\/admin\/jobs\/?$/ },
     { method: 'POST', pattern: /^\/api\/admin\/jobs\/?$/ },
     { method: 'GET', pattern: /^\/api\/admin\/jobs\/[0-9a-f-]{36}\/?$/ },

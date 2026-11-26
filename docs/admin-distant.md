@@ -49,6 +49,8 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 
 - Le tableau de bord commence par une liste « À faire » (`GET /api/admin/todo`, `admin-todo.ts`) : descriptions SEO, alts et descriptions Wikipedia manquants, instantanés de catalogues absents, rapport Lighthouse de plus de 30 jours et, à distance, commits de `dev` pas encore en production. Chaque ligne renvoie vers la page qui corrige ; une source illisible est signalée sans masquer les autres.
 
+- « Redéployer la production » (`/admin/publication`, et pages Exoplanètes, Comètes, Astéroïdes et vue d'ensemble des données) appelle le deploy hook Vercel (`production-redeploy.ts`, `POST /api/admin/release/redeploy`) : ces pages sont générées au build à partir de Turso, une mise à jour des données n'y apparaît qu'après un nouveau build. L'URL du hook ne sort jamais du serveur.
+
 ### Phase 4 : scripts dans GitHub Actions
 
 - `/admin/infra/scripts` (`RemoteJobsPanel.tsx`) liste les entrées `remote: true` de `SCRIPTS` (`src/lib/admin/scripts.ts`) : données Turso (exoplanètes, comètes, astéroïdes, croisement Gaia, contrôle des étoiles variables), instantanés de catalogues, Lighthouse, SEO et Wikipedia. Jamais les scripts `devOnly`, ceux qui demandent un dossier (`needsTarget`) ni l'import des étoiles variables (son mode par défaut vide la table ; il garde son workflow dédié). Les seuls arguments transmis sont les `options` déclarées du script (catalogues : `--only`, `--missing`, `--force`, `--dry-run` ; cross-match Gaia : `--max-mag`, `--batch-size`, `--reset`), cochées dans l'admin, validées au lancement, rangées avec le job dans Turso et revalidées par le runner.
@@ -104,7 +106,7 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
    | `ADMIN_SESSION_SECRET` | au moins 32 caractères aléatoires (`openssl rand -base64 48`) |
    | `ADMIN_CONTENT_BRANCH` | facultatif, `dev` par défaut |
 
-   Le dépôt est lu dans les variables système `VERCEL_GIT_REPO_OWNER` et `VERCEL_GIT_REPO_SLUG` (Settings › Environment Variables › « Automatically expose System Environment Variables », activé par défaut) ; `ADMIN_GITHUB_REPOSITORY=owner/nom` les remplace au besoin. Les variables existantes dont l'admin a besoin (Turso, R2, worker) doivent aussi être définies pour la Preview de `dev`.
+   Le dépôt est lu dans les variables système `VERCEL_GIT_REPO_OWNER` et `VERCEL_GIT_REPO_SLUG` (Settings › Environment Variables › « Automatically expose System Environment Variables », activé par défaut) ; `ADMIN_GITHUB_REPOSITORY=owner/nom` les remplace au besoin. Les variables existantes dont l'admin a besoin (Turso, R2, worker) doivent aussi être définies pour la Preview de `dev`. Facultatives : `IMAGE_WORKER_URL` et `IMAGE_WORKER_PURGE_KEY` (purge du cache d'une image remplacée), `CLOUDFLARE_ZONE_ID` et `CLOUDFLARE_API_TOKEN` (purge du CDN de R2, jeton limité à « Zone › Cache Purge »), `VERCEL_PRODUCTION_DEPLOY_HOOK` (bouton « Redéployer la production » : Vercel › Settings › Git › Deploy Hooks, branche de production ; l'URL est un secret).
 5. **Redéployer** la branche `dev` (les variables ne s'appliquent qu'aux nouveaux déploiements), puis ouvrir `https://dev.miroirspolaires.fr/admin`.
 
 Vérifications :
