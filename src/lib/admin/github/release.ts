@@ -68,23 +68,49 @@ async function readJson<T>(response: Response, context: string): Promise<T> {
  */
 export const REQUIRED_CHECK_NAMES = ['verify'];
 
+type CheckRun = { name?: string; status?: string; conclusion?: string | null; started_at?: string | null };
+
+/**
+ * Garde, pour chaque nom, le check run le plus récent.
+ *
+ * POURQUOI : un même commit porte la CI du push sur dev et celle de la PR, toutes deux nommées `verify`.
+ * Seule la dernière compte : une ancienne réussite ne doit pas masquer une exécution en cours ou en échec.
+ */
+function latestRunPerName(runs: CheckRun[]): CheckRun[] {
+    const latest = new Map<string, CheckRun>();
+    runs.forEach((run, index) => {
+        const key = run.name ?? `#${index}`;
+        const current = latest.get(key);
+        if (!current || String(run.started_at ?? '') > String(current.started_at ?? '')) latest.set(key, run);
+    });
+    return [...latest.values()];
+}
+
 /**
  * Résume les vérifications (check runs) d'un commit.
  *
  * @param runs - Check runs renvoyés par GitHub.
  * @param requiredNames - Vérifications attendues ; tant que l'une manque, la CI est considérée en cours.
+ * @param notBefore - Date d'ouverture de la PR : une vérification attendue lancée avant (CI du push sur dev)
+ *   ne compte pas, celle de la PR doit apparaître.
  * @returns `none` sans vérification, `pending` si l'une tourne encore ou si une vérification attendue n'est
  *   pas encore apparue, `failure` si l'une échoue, sinon `success`.
  */
 export function summarizeChecks(
-    runs: { name?: string; status?: string; conclusion?: string | null }[],
+    runs: CheckRun[],
     requiredNames: readonly string[] = REQUIRED_CHECK_NAMES,
+    notBefore?: string | null,
 ): ChecksState {
     if (runs.length === 0) return 'none';
-    if (runs.some((run) => run.status !== 'completed')) return 'pending';
-    if (requiredNames.some((name) => !runs.some((run) => run.name === name))) return 'pending';
+    const latest = latestRunPerName(runs);
+    if (latest.some((run) => run.status !== 'completed')) return 'pending';
+    const isFreshRequiredRun = (name: string) =>
+        latest.some(
+            (run) => run.name === name && (!notBefore || (run.started_at != null && run.started_at >= notBefore)),
+        );
+    if (requiredNames.some((name) => !isFreshRequiredRun(name))) return 'pending';
     const passing = new Set(['success', 'neutral', 'skipped']);
-    return runs.every((run) => passing.has(String(run.conclusion))) ? 'success' : 'failure';
+    return latest.every((run) => passing.has(String(run.conclusion))) ? 'success' : 'failure';
 }
 
 async function findOpenPullRequest(client: GitHubAppClient, branches: ReleaseBranches): Promise<number | null> {
@@ -102,11 +128,14 @@ async function findOpenPullRequest(client: GitHubAppClient, branches: ReleaseBra
 }
 
 async function readPullRequest(client: GitHubAppClient, number: number): Promise<ReleasePullRequest> {
-    const pull = await readJson<{ number: number; html_url: string; head: { sha: string }; mergeable: boolean | null }>(
-        await client.request(`${client.repoPath}/pulls/${number}`),
-        'Lecture de la PR',
-    );
-    const checks = await readJson<{ check_runs: { name?: string; status?: string; conclusion?: string | null }[] }>(
+    const pull = await readJson<{
+        number: number;
+        html_url: string;
+        head: { sha: string };
+        mergeable: boolean | null;
+        created_at?: string;
+    }>(await client.request(`${client.repoPath}/pulls/${number}`), 'Lecture de la PR');
+    const checks = await readJson<{ check_runs: CheckRun[] }>(
         await client.request(`${client.repoPath}/commits/${pull.head.sha}/check-runs?per_page=100`),
         'Lecture de la CI',
     );
@@ -115,7 +144,7 @@ async function readPullRequest(client: GitHubAppClient, number: number): Promise
         url: pull.html_url,
         headSha: pull.head.sha,
         mergeable: pull.mergeable,
-        checks: summarizeChecks(checks.check_runs),
+        checks: summarizeChecks(checks.check_runs, REQUIRED_CHECK_NAMES, pull.created_at),
     };
 }
 

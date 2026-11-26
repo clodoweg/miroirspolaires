@@ -109,6 +109,7 @@ export type DatabaseView = 'overview' | 'catalogues' | ActiveTab;
 const DATABASE_JOB_IDS = [
     'update-catalogues',
     'update-exoplanets',
+    'update-variable-stars-ci',
     'check-variable-stars',
     'crossmatch-variable-stars',
     'update-comets',
@@ -139,6 +140,17 @@ export function argsToJobOptions(args: string[]): ScriptOptionValues {
         else if (arg.startsWith('--only=')) values.only = arg.slice('--only='.length).split(',').filter(Boolean);
     }
     return values;
+}
+
+/**
+ * Options du job distant d'import VSX (`update-variable-stars-ci`, toujours `--no-clean`).
+ *
+ * @param args - Arguments du bouton : `--fresh` pour tout réimporter, rien ou `--no-clean` pour compléter.
+ * @param maxMag - Magnitude limite saisie.
+ * @returns Les options déclarées dans `SCRIPTS`.
+ */
+export function variableStarsJobOptions(args: string[], maxMag: number): ScriptOptionValues {
+    return args.includes('--fresh') ? { fresh: true, maxMag } : { maxMag };
 }
 
 /**
@@ -236,14 +248,11 @@ function DatabasePanelInner({ view, remote }: { view: DatabaseView; remote: bool
     }, [stats?.progress]);
 
     const runScript = async (scriptId: string, label: string, extra: string[] = []) => {
-        if (remote && !DATABASE_JOB_IDS.includes(scriptId)) {
-            // POURQUOI : l'import VSX vide la table par défaut ; il garde son workflow GitHub Actions dédié.
-            toast.error(
-                'Lancez l’import depuis GitHub : Actions › « Update variable stars » (mode no-clean conseillé).',
-                {
-                    title: 'Import réservé au workflow dédié',
-                },
-            );
+        // POURQUOI : à distance, l'import VSX passe par sa variante `--no-clean` (sans fichier de progression dans
+        // GitHub Actions, la version locale viderait la table) ; « Tout réimporter » y ajoute `--fresh`.
+        const jobScriptId = remote && scriptId === 'update-variable-stars' ? 'update-variable-stars-ci' : scriptId;
+        if (remote && !DATABASE_JOB_IDS.includes(jobScriptId)) {
+            toast.error('Ce script ne se lance pas depuis l’admin distant.', { title: 'Script indisponible' });
             return;
         }
         const titleLabel = scriptId === 'update-variable-stars' ? `${label} (Mag ≤ ${maxMag})` : label;
@@ -274,6 +283,9 @@ function DatabasePanelInner({ view, remote }: { view: DatabaseView; remote: bool
                             Ce script va interroger le service VizieR TAP pour charger l'ensemble des données de
                             pulsation.
                         </p>
+                        {remote && (
+                            <p>Le script tourne dans GitHub Actions : un import complet peut durer plusieurs heures.</p>
+                        )}
                     </div>
                 );
             } else if (extra.includes('--no-clean')) {
@@ -287,6 +299,9 @@ function DatabasePanelInner({ view, remote }: { view: DatabaseView; remote: bool
                         <p className="font-semibold text-mp-accent">
                             Les données d'étoiles existantes dans la base ne seront PAS effacées.
                         </p>
+                        {remote && (
+                            <p>Le script tourne dans GitHub Actions : un import complet peut durer plusieurs heures.</p>
+                        )}
                     </div>
                 );
             } else {
@@ -354,7 +369,11 @@ function DatabasePanelInner({ view, remote }: { view: DatabaseView; remote: bool
         if (remote) {
             // POURQUOI : à distance, pas de console locale ; le script tourne dans GitHub Actions, suivi ci-dessous.
             try {
-                await remoteJobs.launch(scriptId, argsToJobOptions(extra));
+                const jobOptions =
+                    jobScriptId === 'update-variable-stars-ci'
+                        ? variableStarsJobOptions(extra, maxMag)
+                        : argsToJobOptions(extra);
+                await remoteJobs.launch(jobScriptId, jobOptions);
                 toast.success('Job lancé : le run GitHub Actions démarre dans quelques secondes.');
             } catch (error) {
                 toast.error(String((error as Error).message ?? error), { title: 'Lancement impossible' });
@@ -1013,14 +1032,19 @@ function DatabasePanelInner({ view, remote }: { view: DatabaseView; remote: bool
                                         >
                                             🗑️ Nouvel import complet (efface tout)
                                         </button>
-                                        <button
-                                            type="button"
-                                            disabled={activeScript !== null}
-                                            onClick={() => runScript('update-variable-stars', 'Étoiles Variables', [])}
-                                            className="rounded-md border border-mp-accent bg-mp-accent px-4 py-2 text-xs font-semibold text-mp-ui-black hover:opacity-90 disabled:opacity-50"
-                                        >
-                                            🔁 Reprendre l'importation (en cours)
-                                        </button>
+                                        {/* POURQUOI : la reprise lit un fichier de progression local, absent de GitHub Actions. */}
+                                        {!remote && (
+                                            <button
+                                                type="button"
+                                                disabled={activeScript !== null}
+                                                onClick={() =>
+                                                    runScript('update-variable-stars', 'Étoiles Variables', [])
+                                                }
+                                                className="rounded-md border border-mp-accent bg-mp-accent px-4 py-2 text-xs font-semibold text-mp-ui-black hover:opacity-90 disabled:opacity-50"
+                                            >
+                                                🔁 Reprendre l'importation (en cours)
+                                            </button>
+                                        )}
                                         <button
                                             type="button"
                                             disabled={activeScript !== null}

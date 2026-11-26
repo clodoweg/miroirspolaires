@@ -17,7 +17,7 @@
  * Effet distant : aucun sans --upload. Avec --upload : écriture R2 sous le seul préfixe `web/`
  * (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME obligatoires), sans jamais
  * toucher aux originaux. WARNING: avec --force --upload, les versions existantes sont réécrites, mais
- * le CDN de R2 peut servir l'ancienne version un temps (même URL).
+ * le CDN de R2 sert l'ancienne version (même URL) tant que --purge ne l'a pas vidé.
  * Effet local : temp/web-images/ et, avec --upload, src/data/web-images.json (à committer).
  *
  * Options disponibles (toute autre option est refusée, code de sortie 1) :
@@ -26,8 +26,10 @@
  *   --prefix=<préfixe>        : limite aux sources dont la clé commence par ce préfixe, dans un dossier de
  *                               --only (ex. blog/2026/mon-article/). Seules ses entrées du manifeste sont
  *                               remplacées. Lettres minuscules, chiffres, `-`, `_` et `/` seulement.
- *   --purge                   : purge ensuite le cache du worker pour les sources traitées (IMAGE_WORKER_URL et
- *                               IMAGE_WORKER_PURGE_KEY ; sans elles, la purge est sautée avec un avertissement).
+ *   --purge                   : purge ensuite, pour les sources traitées, le cache du worker (IMAGE_WORKER_URL et
+ *                               IMAGE_WORKER_PURGE_KEY) et le CDN de R2 : source, miniature et versions web
+ *                               (CLOUDFLARE_ZONE_ID, CLOUDFLARE_API_TOKEN, PUBLIC_R2_URL). Chaque purge sans ses
+ *                               variables est sautée avec un avertissement.
  *   --force                   : régénère les versions locales et, avec --upload, les réécrit sur R2.
  *   --upload                  : envoie les versions absentes de R2 et met à jour le manifeste.
  *   --dry-run                 : compte les sources et les versions prévues, sans rien écrire.
@@ -50,6 +52,7 @@ import { HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { PROJECT_ROOT, loadEnv } from '../lib/env.mjs';
 import { createR2Client, requireR2Config } from '../lib/r2.mjs';
 import { parseCliArgs } from '../lib/args.mjs';
+import { purgeCdnKeys } from '../lib/cdn-cache.mjs';
 import { purgeImageKeys } from '../lib/worker-cache.mjs';
 import { planWebImageWidths, webImageKey } from '../../src/utils/webImages.mjs';
 import { WEB_IMAGE_SCOPES, getDisplayWidth, listWebImageSources } from '../../src/lib/admin/web-image-sources.mjs';
@@ -247,6 +250,20 @@ async function main() {
                 `🧹 Cache du worker purgé pour ${sources.length} image(s)${failed ? `, ${failed} échec(s)` : ''}`,
             );
             if (failed > 0) stats.errors += failed;
+        }
+        const cdn = await purgeCdnKeys(
+            sources.map((source) => source.key),
+            { withDerivatives: true },
+        );
+        if (cdn.skippedReason) {
+            console.warn(
+                '⚠️  --purge : CLOUDFLARE_ZONE_ID, CLOUDFLARE_API_TOKEN ou PUBLIC_R2_URL absent, CDN de R2 non purgé.',
+            );
+        } else {
+            console.log(
+                `🧹 CDN de R2 purgé : ${cdn.urlCount} URL${cdn.failedCount ? `, ${cdn.failedCount} échec(s)` : ''}`,
+            );
+            stats.errors += cdn.failedCount;
         }
     }
 
