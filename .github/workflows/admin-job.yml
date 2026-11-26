@@ -7,7 +7,8 @@ name: Admin job
 # Secrets requis : TURSO_DATABASE_URL, TURSO_AUTH_TOKEN (jeton en écriture).
 # Pour `update-photos-ci` et `update-photos-ci-force` seulement : ASTROBIN_DEPLOY_KEY (clé SSH privée d'une deploy key en lecture seule
 # du dépôt privé clodoweg/astrobin), R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME ;
-# facultatifs : IMAGE_WORKER_URL, IMAGE_WORKER_PURGE_KEY (purge du cache des images remplacées).
+# facultatifs : IMAGE_WORKER_URL, IMAGE_WORKER_PURGE_KEY (purge du cache du worker des images remplacées),
+# CLOUDFLARE_ZONE_ID, CLOUDFLARE_API_TOKEN (jeton « Zone › Cache Purge » ; purge du CDN de R2).
 # POURQUOI le workflow doit exister sur main : GitHub ne déclenche un workflow_dispatch que pour un
 # fichier présent sur la branche par défaut, même quand le run cible dev.
 
@@ -90,6 +91,10 @@ jobs:
           R2_BUCKET_NAME: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_BUCKET_NAME || '' }}
           IMAGE_WORKER_URL: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.IMAGE_WORKER_URL || '' }}
           IMAGE_WORKER_PURGE_KEY: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.IMAGE_WORKER_PURGE_KEY || '' }}
+          CLOUDFLARE_ZONE_ID: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.CLOUDFLARE_ZONE_ID || '' }}
+          CLOUDFLARE_API_TOKEN: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.CLOUDFLARE_API_TOKEN || '' }}
+          # POURQUOI : adresse publique, pas un secret ; une variable de dépôt PUBLIC_R2_URL la remplace au besoin.
+          PUBLIC_R2_URL: ${{ env.IS_PHOTO_UPDATE == 'true' && (vars.PUBLIC_R2_URL || 'https://pub-r2.miroirspolaires.fr') || '' }}
         run: node scripts/admin/run-admin-job.mjs --job="$JOB_ID" --script="$SCRIPT_ID"
 
       - name: Commit results

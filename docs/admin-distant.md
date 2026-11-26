@@ -72,7 +72,7 @@ Le flux de travail visé : modifier sur la Preview de `dev`, vérifier sur la m�
 - Prérequis, en plus de la phase 4 :
   - le dépôt `astrobin` doit contenir sur sa branche par défaut les options `--check-r2`, `--no-sync` et `--refresh-ids` de `scrape_astrobin.py` (sans la dernière, une reprise de photos échoue avec le code 2) ;
   - une deploy key en lecture seule sur `clodoweg/astrobin`, dont la clé privée est le secret Actions `ASTROBIN_DEPLOY_KEY` de ce dépôt ;
-  - secrets Actions `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` ; facultatifs : `IMAGE_WORKER_URL`, `IMAGE_WORKER_PURGE_KEY`. Le workflow ne les transmet qu'à `update-photos-ci` ;
+  - secrets Actions `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME` ; facultatifs : `IMAGE_WORKER_URL`, `IMAGE_WORKER_PURGE_KEY` (cache du worker), `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_API_TOKEN` (CDN du domaine public de R2, `https://pub-r2.miroirspolaires.fr` sauf variable de dépôt `PUBLIC_R2_URL`). Le workflow ne les transmet qu'à `update-photos-ci` ;
   - conseillé : règle de cycle de vie R2 supprimant `incoming/` après un jour (runs interrompus).
 
 ### Phase 6 : mise en production, journal, limitation

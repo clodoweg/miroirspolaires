@@ -33,6 +33,7 @@ describe('GET /api/admin/cache/status', () => {
             configured: false,
             workerUrl: '',
             purgeKeyConfigured: false,
+            cdnPurgeConfigured: false,
             r2Configured: false,
             online: false,
             errorMessage: null,

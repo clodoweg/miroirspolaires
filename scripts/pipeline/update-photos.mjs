@@ -34,14 +34,15 @@
  *  4. Envoyer les fichiers nouveaux ou modifiés sous incoming/astro/<run>/ (scripts/lib/r2-staging.mjs),
  *     puis, si tout est envoyé, les copier vers leurs clés définitives et vider ce préfixe.
  *  5. Ajouter au manifeste web-images.json les nouvelles versions web (sans jamais en retirer), purger le
- *     cache du worker pour les images remplacées, puis contrôler sur R2 qu'aucune photo n'a perdu son raw
+ *     cache du worker et le CDN de R2 pour les fichiers remplacés, puis contrôler sur R2 qu'aucune photo n'a perdu son raw
  *     ou sa miniature.
  * Le commit des fichiers de data/ et src/data/ est fait par le workflow, seulement si le code de sortie est 0.
  *
  * Effet distant : R2 (écriture sous astrophotographies/ et web/, plus incoming/astro/ en --ci ;
  * R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME obligatoires) et Wikipedia ;
  * en --ci, aussi AstroBin (lecture) et la purge du cache du worker (IMAGE_WORKER_URL et
- * IMAGE_WORKER_PURGE_KEY, facultatives : sans elles, les images remplacées sont seulement listées).
+ * IMAGE_WORKER_PURGE_KEY) et du CDN de R2 (CLOUDFLARE_ZONE_ID, CLOUDFLARE_API_TOKEN, PUBLIC_R2_URL), toutes
+ * facultatives : sans elles, les fichiers remplacés sont seulement listés).
  * Effet local : src/assets/astrophotographies/, data/ et src/data/ (à committer ensuite).
  *
  * Options disponibles (toute autre option est refusée, code de sortie 1) :
@@ -94,6 +95,7 @@ import {
     promoteStagedFiles,
     stageFiles,
 } from '../lib/r2-staging.mjs';
+import { purgeCdnKeys } from '../lib/cdn-cache.mjs';
 import { purgeImageKeys } from '../lib/worker-cache.mjs';
 import { getDisplayWidth, listWebImageSources } from '../../src/lib/admin/web-image-sources.mjs';
 import { planWebImageWidths, webImageKey } from '../../src/utils/webImages.mjs';
@@ -461,6 +463,20 @@ async function runCiPipeline({ forceMedia = false, refreshIds = [] } = {}) {
                 console.warn(`⚠️  ${failedCount} purge(s) en échec : l'ancienne version peut rester en cache.`);
         } else {
             console.warn('⚠️  IMAGE_WORKER_URL ou IMAGE_WORKER_PURGE_KEY absent : cache non purgé.');
+        }
+    }
+
+    // POURQUOI : le domaine public de R2 sert sans le worker les miniatures, les mini/ et les versions web ;
+    // tout fichier remplacé (quel que soit son préfixe) doit aussi quitter le cache CDN de Cloudflare.
+    const replacedKeys = staging.staged.filter(({ isReplacement }) => isReplacement).map(({ key }) => key);
+    if (replacedKeys.length > 0) {
+        const cdn = await purgeCdnKeys(replacedKeys);
+        if (cdn.skippedReason) {
+            console.warn('⚠️  CLOUDFLARE_ZONE_ID, CLOUDFLARE_API_TOKEN ou PUBLIC_R2_URL absent : CDN de R2 non purgé.');
+        } else {
+            console.log(
+                `🧹 CDN de R2 : ${cdn.urlCount} URL purgée(s)${cdn.failedCount ? `, ${cdn.failedCount} échec(s)` : ''}.`,
+            );
         }
     }
 
