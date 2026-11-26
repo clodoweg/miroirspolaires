@@ -5,6 +5,7 @@
 import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import ReleasePanel from "@/components/Admin/ReleasePanel";
+import ProductionRedeployPanel from "@/components/Admin/ProductionRedeployPanel";
 
 export const prerender = false;
 
@@ -21,6 +22,9 @@ const isLocal = isLocalAdmin(Astro.locals);
             bouton est disponible sur l'admin distant.
         </p>
     ) : (
-        <ReleasePanel client:only="react" />
+        <div class="flex flex-col gap-8">
+            <ReleasePanel client:only="react" />
+            <ProductionRedeployPanel client:only="react" />
+        </div>
     )}
 </AdminLayout>

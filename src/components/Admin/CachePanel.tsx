@@ -45,6 +45,7 @@ interface CacheStatusPayload {
     configured: boolean;
     workerUrl: string;
     purgeKeyConfigured: boolean;
+    cdnPurgeConfigured?: boolean;
     r2Configured: boolean;
     online: boolean;
     pingStatus: number;
@@ -292,11 +293,30 @@ function CachePanelInner() {
                                             </span>
                                             {status.purgeKeyConfigured ? (
                                                 <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
-                                                    <CheckCircle className="h-3 w-3" /> Actactive
+                                                    <CheckCircle className="h-3 w-3" /> Active
                                                 </span>
                                             ) : (
                                                 <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-400">
                                                     <AlertTriangle className="h-3 w-3" /> Absente
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center justify-between rounded-sm bg-mp-ui-black/20 p-2.5">
+                                            <span className="flex items-center gap-1.5 text-xs text-mp-text-secondary">
+                                                <ShieldCheck className="h-3.5 w-3.5" />
+                                                Purge du CDN de R2 (images remplacées)
+                                            </span>
+                                            {status.cdnPurgeConfigured ? (
+                                                <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400">
+                                                    <CheckCircle className="h-3 w-3" /> Active
+                                                </span>
+                                            ) : (
+                                                <span
+                                                    className="flex items-center gap-1 text-[10px] font-semibold text-amber-400"
+                                                    title="CLOUDFLARE_ZONE_ID, CLOUDFLARE_API_TOKEN et PUBLIC_R2_URL"
+                                                >
+                                                    <AlertTriangle className="h-3 w-3" /> Non configurée
                                                 </span>
                                             )}
                                         </div>

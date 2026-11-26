@@ -13,6 +13,7 @@
  *     "configured": true,
  *     "workerUrl": "https://images.miroirspolaires.fr",
  *     "purgeKeyConfigured": true,
+ *     "cdnPurgeConfigured": true,
  *     "r2Configured": true,
  *     "online": true,
  *     "pingStatus": 400,
@@ -26,6 +27,7 @@
 import type { APIRoute } from 'astro';
 import { requireAdmin, jsonResponse } from '@/lib/admin/shared';
 import { IMAGE_CONFIG } from '@/config/imageConfig.mjs';
+import { readCdnPurgeConfig } from '../../../../../scripts/lib/cdn-cache.mjs';
 // POURQUOI : mêmes constantes que le worker, pour que l'admin n'affiche jamais une politique périmée.
 import { MAX_RESIZE_BYTES, MAX_RESIZE_PIXELS } from '../../../../../workers/image-resizer/src/core';
 
@@ -44,6 +46,8 @@ interface CacheStatusPayload {
     configured: boolean;
     workerUrl: string;
     purgeKeyConfigured: boolean;
+    /** Purge du CDN Cloudflare de R2 (zone, jeton, URL publique). */
+    cdnPurgeConfigured: boolean;
     r2Configured: boolean;
     online: boolean;
     pingStatus: number;
@@ -76,6 +80,7 @@ export const GET: APIRoute = async ({ locals }) => {
         configured: !!workerUrl,
         workerUrl,
         purgeKeyConfigured: !!purgeKey,
+        cdnPurgeConfigured: readCdnPurgeConfig() !== null,
         r2Configured,
         online: false,
         pingStatus: 0,

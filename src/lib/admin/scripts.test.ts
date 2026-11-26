@@ -68,13 +68,21 @@ describe('SCRIPTS (console de scripts de l’admin)', () => {
             expect(script.needsTarget, script.id).toBeUndefined();
             expect(script.command, script.id).toBe('node');
         }
-        // POURQUOI : sans argument, l'import des étoiles variables vide la table ; il a son propre workflow.
+        // POURQUOI : sans argument, l'import des étoiles variables vide la table ; seule sa variante --no-clean est ouverte.
         expect(remote.map((script) => script.id)).not.toContain('update-variable-stars');
+        expect(getScript('update-variable-stars-ci')?.args).toEqual([
+            'scripts/pipeline/update-variable-stars.mjs',
+            '--no-clean',
+        ]);
     });
 
-    it('réserve à distance la mise à jour des photos en mode --ci, et seulement elle', () => {
+    it('réserve à distance la mise à jour des photos en mode --ci et l’import VSX sans effacement', () => {
         const remoteOnly = SCRIPTS.filter((script) => script.remoteOnly);
-        expect(remoteOnly.map((script) => script.id)).toEqual(['update-photos-ci', 'update-photos-ci-force']);
+        expect(remoteOnly.map((script) => script.id)).toEqual([
+            'update-photos-ci',
+            'update-photos-ci-force',
+            'update-variable-stars-ci',
+        ]);
         expect(getScript('update-photos-ci')).toMatchObject({
             remote: true,
             args: ['scripts/pipeline/update-photos.mjs', '--ci'],

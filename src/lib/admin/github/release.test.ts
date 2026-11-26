@@ -88,6 +88,35 @@ describe('summarizeChecks', () => {
     ])('%j → %s', (runs, expected) => {
         expect(summarizeChecks(runs)).toBe(expected);
     });
+
+    const OPENED = '2026-11-26T12:52:40Z';
+    const pushRun = { name: 'verify', status: 'completed', conclusion: 'success', started_at: '2026-11-26T09:00:56Z' };
+
+    it('ignore la CI du push sur dev, antérieure à l’ouverture de la PR', () => {
+        expect(summarizeChecks([pushRun], ['verify'], OPENED)).toBe('pending');
+    });
+
+    it('ne laisse pas une ancienne réussite masquer la CI de la PR en cours ou en échec', () => {
+        const prRun = { name: 'verify', status: 'in_progress', conclusion: null, started_at: '2026-11-26T12:52:52Z' };
+        expect(summarizeChecks([prRun, pushRun], ['verify'], OPENED)).toBe('pending');
+        expect(summarizeChecks([pushRun, { ...prRun, status: 'completed', conclusion: 'failure' }])).toBe('failure');
+        expect(
+            summarizeChecks([{ ...prRun, status: 'completed', conclusion: 'success' }, pushRun], ['verify'], OPENED),
+        ).toBe('success');
+    });
+
+    it('oublie une exécution annulée remplacée par une plus récente', () => {
+        const cancelled = {
+            name: 'Analyze',
+            status: 'completed',
+            conclusion: 'cancelled',
+            started_at: '2026-11-26T12:00:00Z',
+        };
+        const rerun = { ...cancelled, conclusion: 'success', started_at: '2026-11-26T12:10:00Z' };
+        expect(
+            summarizeChecks([cancelled, rerun, { ...pushRun, started_at: '2026-11-26T12:53:00Z' }], ['verify'], OPENED),
+        ).toBe('success');
+    });
 });
 
 describe('getReleaseStatus', () => {
