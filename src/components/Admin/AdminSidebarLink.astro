@@ -1,0 +1,40 @@
+---
+/**
+ * Lien d'une page dans la barre latérale de l'admin : état courant, retrait sous un groupe, badge quand la page
+ * ne fonctionne pas dans le mode courant.
+ */
+import { isAdminPageAvailable, type AdminDisplayMode, type AdminPage, type AdminPageId } from "@/config/admin-sections";
+
+interface Props {
+    page: AdminPage;
+    active: AdminPageId;
+    mode: AdminDisplayMode;
+}
+
+const { page, active, mode } = Astro.props;
+const isActive = page.id === active;
+const isUnavailable = !isAdminPageAvailable(page, mode);
+---
+
+<a
+    href={page.href}
+    title={page.description}
+    aria-current={isActive ? "page" : undefined}
+    class:list={[
+        // POURQUOI min-h-touch puis lg:min-h-9 : 48 px sur tactile (règle du projet), plus compact à la souris.
+        "relative flex min-h-touch w-full items-center gap-2 rounded-md pr-3 transition-colors duration-200 lg:min-h-9",
+        "before:absolute before:top-1/2 before:left-0 before:h-0 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-mp-accent before:transition-all before:duration-200 motion-reduce:before:transition-none",
+        page.group ? "pl-5" : "pl-3",
+        isActive && "bg-mp-accent/15 font-semibold text-mp-accent before:h-5",
+        !isActive && "mouse:hover:bg-mp-accent/10 mouse:hover:text-mp-accent mouse:hover:before:h-3",
+        !isActive && isUnavailable && "text-mp-text-muted",
+        !isActive && !isUnavailable && "text-mp-text-body",
+    ]}
+>
+    <span class="flex-1">{page.label}</span>
+    {isUnavailable && (
+        <span class="rounded border border-mp-border-light px-1.5 font-mono text-xs text-mp-text-muted">
+            {mode === "remote" ? "local" : "distant"}
+        </span>
+    )}
+</a>

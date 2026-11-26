@@ -73,11 +73,23 @@ describe('syncDirToR2', () => {
         const result = await sync.syncDirToR2(localDir, 'blog/2026/slug');
 
         expect(result.uploaded).toEqual(['nouveau.jpg']);
+        expect(result.replaced).toEqual([]);
         expect(result.deleted).toEqual(['supprime.jpg']);
         expect(result.bucket).toBe('bucket-test');
         const types = send.mock.calls.map(([command]) => command.type);
         expect(types).toContain('delete');
         expect(types.filter((type) => type === 'put')).toHaveLength(1);
+    });
+
+    it('distingue les fichiers remplacés (même nom, autre taille) des nouveaux', async () => {
+        await fs.writeFile(path.join(localDir, 'retouche.jpg'), 'nouvelle version');
+        await fs.writeFile(path.join(localDir, 'neuve.jpg'), 'x');
+        send.mockImplementation(async (command: { type: string }) =>
+            command.type === 'list' ? { Contents: [{ Key: 'blog/2026/slug/retouche.jpg', Size: 3 }] } : {},
+        );
+        const result = await sync.syncDirToR2(localDir, 'blog/2026/slug');
+        expect([...result.uploaded].sort()).toEqual(['neuve.jpg', 'retouche.jpg']);
+        expect(result.replaced).toEqual(['retouche.jpg']);
     });
 });
 
@@ -115,6 +127,7 @@ describe('syncDirToR2 : cas limites', () => {
             bucket: '',
             prefix: 'voyages/2025/troms/',
             uploaded: [],
+            replaced: [],
             deleted: [],
             skipped: [],
             skippedReason: 'no-credentials',
@@ -156,7 +169,14 @@ describe('syncDirToR2 : cas limites', () => {
         send.mockResolvedValue({});
         const first = await sync.syncDirToR2(localDir, 'vide');
         const second = await sync.syncDirToR2(localDir, 'vide');
-        expect(first).toEqual({ bucket: 'bucket-test', prefix: 'vide/', uploaded: [], deleted: [], skipped: [] });
+        expect(first).toEqual({
+            bucket: 'bucket-test',
+            prefix: 'vide/',
+            uploaded: [],
+            replaced: [],
+            deleted: [],
+            skipped: [],
+        });
         expect(second).toEqual(first);
         expect(send.mock.calls.map(([command]) => command.type)).toEqual(['list', 'list']);
     });

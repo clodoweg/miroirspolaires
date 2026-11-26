@@ -17,6 +17,28 @@ function memoryDatabase(): JobDatabase {
 }
 
 describe('job-store (SQL réel, base en mémoire)', () => {
+    it('enregistre les options choisies et ajoute la colonne à une table plus ancienne', async () => {
+        const database = memoryDatabase();
+        // POURQUOI : table telle qu'elle existait avant l'ajout des options.
+        await database.execute(`CREATE TABLE admin_jobs (
+            id TEXT PRIMARY KEY, script_id TEXT NOT NULL, status TEXT NOT NULL, actor TEXT NOT NULL,
+            created_at TEXT NOT NULL, started_at TEXT, finished_at TEXT, exit_code INTEGER, run_id TEXT,
+            commit_sha TEXT
+        )`);
+        await insertJob(database, {
+            id: 'c',
+            scriptId: 'update-catalogues',
+            actor: 'clodoweg',
+            createdAt: '2026-11-11T10:00:00Z',
+            options: { missing: true, only: ['messier'] },
+        });
+        await insertJob(database, { id: 'd', scriptId: 'seo-check', actor: 'x', createdAt: 't', options: {} });
+        expect((await getJob(database, 'c'))?.options).toEqual({ missing: true, only: ['messier'] });
+        expect((await getJob(database, 'd'))?.options).toBeNull();
+        await database.execute({ sql: "UPDATE admin_jobs SET options = ? WHERE id = 'd'", args: ['{ illisible'] });
+        expect((await getJob(database, 'd'))?.options).toBeNull();
+    });
+
     it('crée, met à jour, liste et retrouve les jobs actifs', async () => {
         const database = memoryDatabase();
         await insertJob(database, {
@@ -43,6 +65,7 @@ describe('job-store (SQL réel, base en mémoire)', () => {
             exitCode: null,
             runId: null,
             commitSha: null,
+            options: null,
         });
         expect((await findActiveJob(database, 'update-exoplanets'))?.id).toBe('a');
 

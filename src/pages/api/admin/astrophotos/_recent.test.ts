@@ -24,6 +24,13 @@ describe('GET /api/admin/astrophotos/recent', () => {
         expect(await (await get('')).json()).toEqual([{ ID: '1' }]);
     });
 
+    it('répond 502 si la lecture échoue (GitHub ou R2 à distance)', async () => {
+        astro.listRecentPhotos.mockRejectedValue(new Error('R2 injoignable'));
+        const response = await get('');
+        expect(response.status).toBe(502);
+        expect(await response.json()).toEqual({ error: 'R2 injoignable' });
+    });
+
     it.each([
         ['', 30],
         ['?limit=all', 9999],

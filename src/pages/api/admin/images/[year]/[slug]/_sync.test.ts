@@ -4,6 +4,10 @@ import path from 'node:path';
 
 const r2 = vi.hoisted(() => ({ syncDirToR2: vi.fn() }));
 vi.mock('@/lib/admin/r2-sync', () => r2);
+const purge = vi.hoisted(() => ({
+    purgeReplacedImages: vi.fn(async (keys: string[]) => ({ keys, failedCount: 0 })),
+}));
+vi.mock('@/lib/admin/image-cache-purge', () => purge);
 
 import { POST } from './sync';
 
@@ -20,9 +24,10 @@ afterEach(() => vi.unstubAllEnvs());
 
 describe('POST /api/admin/images/[year]/[slug]/sync', () => {
     it('synchronise le dossier de l’article vers son préfixe R2', async () => {
-        r2.syncDirToR2.mockResolvedValue({ uploaded: ['a.jpg'] });
+        r2.syncDirToR2.mockResolvedValue({ uploaded: ['a.jpg', 'b.jpg'], replaced: ['b.jpg'] });
         const response = await sync('2026', 'tromso');
-        expect(await response.json()).toEqual({ uploaded: ['a.jpg'] });
+        expect(await response.json()).toMatchObject({ uploaded: ['a.jpg', 'b.jpg'], cachePurge: { failedCount: 0 } });
+        expect(purge.purgeReplacedImages).toHaveBeenCalledWith(['blog/2026/tromso/b.jpg']);
         expect(r2.syncDirToR2).toHaveBeenCalledWith(
             path.join(process.cwd(), 'src/assets/blog', '2026', 'tromso'),
             'blog/2026/tromso/',

@@ -4,6 +4,10 @@ import path from 'node:path';
 
 const r2 = vi.hoisted(() => ({ syncDirToR2: vi.fn() }));
 vi.mock('@/lib/admin/r2-sync', () => r2);
+const purge = vi.hoisted(() => ({
+    purgeReplacedImages: vi.fn(async (keys: string[]) => ({ keys, failedCount: 0 })),
+}));
+vi.mock('@/lib/admin/image-cache-purge', () => purge);
 
 import { POST } from './sync';
 
@@ -20,9 +24,10 @@ afterEach(() => vi.unstubAllEnvs());
 
 describe('POST /api/admin/voyages-images/[year]/[slug]/sync', () => {
     it('synchronise le dossier du voyage vers son préfixe R2', async () => {
-        r2.syncDirToR2.mockResolvedValue({ uploaded: [], skippedReason: 'no-local-dir' });
+        r2.syncDirToR2.mockResolvedValue({ uploaded: [], replaced: [], skippedReason: 'no-local-dir' });
         const response = await sync('2025', 'troms');
-        expect(await response.json()).toEqual({ uploaded: [], skippedReason: 'no-local-dir' });
+        expect(await response.json()).toMatchObject({ uploaded: [], skippedReason: 'no-local-dir' });
+        expect(purge.purgeReplacedImages).toHaveBeenCalledWith([]);
         expect(r2.syncDirToR2).toHaveBeenCalledWith(
             path.join(process.cwd(), 'src/assets/voyages', '2025', 'troms'),
             'voyages/2025/troms/',

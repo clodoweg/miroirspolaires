@@ -9,6 +9,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { CATALOGUES } from '@/lib/catalogues/registry';
 import { readCatalogueSnapshotStatus } from './catalogue-snapshots';
+import { createFsContentReader } from './stores/content-reader';
 
 describe('readCatalogueSnapshotStatus', () => {
     let rootDirectory: string;
@@ -27,7 +28,7 @@ describe('readCatalogueSnapshotStatus', () => {
     });
 
     it('signale tous les catalogues comme manquants sans instantané', async () => {
-        const status = await readCatalogueSnapshotStatus(rootDirectory);
+        const status = await readCatalogueSnapshotStatus(createFsContentReader(rootDirectory));
         expect(status.generatedCount).toBe(0);
         expect(status.lastGeneratedAt).toBeNull();
         expect(status.missing).toHaveLength(CATALOGUES.length);
@@ -38,7 +39,7 @@ describe('readCatalogueSnapshotStatus', () => {
         writeSnapshot('messier', messier);
         writeSnapshot('caldwell', JSON.stringify({ generatedAt: '2026-11-04T00:00:00.000Z', entries: [{}] }));
 
-        const status = await readCatalogueSnapshotStatus(rootDirectory);
+        const status = await readCatalogueSnapshotStatus(createFsContentReader(rootDirectory));
         expect(status.generatedCount).toBe(2);
         expect(status.entryCount).toBe(3);
         expect(status.sizeBytes).toBeGreaterThan(messier.length);
@@ -48,7 +49,7 @@ describe('readCatalogueSnapshotStatus', () => {
 
     it('compte un fichier illisible comme manquant', async () => {
         writeSnapshot('messier', '{ tronqué');
-        const status = await readCatalogueSnapshotStatus(rootDirectory);
+        const status = await readCatalogueSnapshotStatus(createFsContentReader(rootDirectory));
         expect(status.generatedCount).toBe(0);
         expect(status.missing.map((catalogue) => catalogue.slug)).toContain('messier');
     });

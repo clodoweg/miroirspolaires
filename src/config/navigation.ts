@@ -6,6 +6,7 @@
 
 import type { AdminAccessMode } from '../lib/admin/auth/config';
 import { isBoutiqueEnabled } from './shop';
+import { ADMIN_PAGES, isAdminPageAvailable } from './admin-sections';
 
 export interface NavItem {
     label: string;
@@ -77,32 +78,6 @@ export function getNavItems(): NavItem[] {
     return baseNavItems.filter((item) => item.label !== 'Boutique' || boutiqueActive);
 }
 
-interface AdminNavEntry {
-    label: string;
-    href: string;
-    /** Page qui fonctionne sur l'admin distant (voir `REMOTE_READY_PAGES` d'`AdminLayout.astro`). */
-    remote: boolean;
-    /** Page sans objet en local (mise en production, journal, diagnostic GitHub). */
-    remoteOnly?: boolean;
-}
-
-const ADMIN_NAV_ENTRIES: AdminNavEntry[] = [
-    { label: "Vue d'ensemble", href: '/admin', remote: true },
-    { label: 'Blog', href: '/admin/blog', remote: true },
-    { label: 'Voyages', href: '/admin/voyages', remote: true },
-    { label: 'Astrophotographies', href: '/admin/astrophotos', remote: false },
-    { label: 'Base de données', href: '/admin/database', remote: false },
-    { label: 'Routes amont', href: '/admin/upstream', remote: true },
-    { label: 'SEO', href: '/admin/seo', remote: false },
-    { label: 'Lighthouse', href: '/admin/lighthouse', remote: true },
-    { label: 'Scripts', href: '/admin/scripts', remote: true },
-    { label: 'Cloudflare R2', href: '/admin/r2', remote: false },
-    { label: 'Cache CDN', href: '/admin/cache', remote: true },
-    { label: 'Mise en production', href: '/admin/publication', remote: true, remoteOnly: true },
-    { label: 'Journal', href: '/admin/journal', remote: true, remoteOnly: true },
-    { label: 'Diagnostic', href: '/admin/diagnostic', remote: true, remoteOnly: true },
-];
-
 /**
  * Menu déroulant « Admin » de la barre de navigation.
  *
@@ -115,6 +90,7 @@ const ADMIN_NAV_ENTRIES: AdminNavEntry[] = [
  */
 export function getAdminNavItem(mode: AdminAccessMode): NavItem | null {
     if (mode === 'disabled') return null;
-    const entries = ADMIN_NAV_ENTRIES.filter((entry) => (mode === 'remote' ? entry.remote : !entry.remoteOnly));
-    return { label: 'Admin', children: entries.map(({ label, href }) => ({ label, href })) };
+    // POURQUOI : quelques raccourcis seulement ; la navigation complète est la barre latérale de l'admin.
+    const entries = ADMIN_PAGES.filter((page) => page.inNavbar && isAdminPageAvailable(page, mode));
+    return { label: 'Admin', children: entries.map((page) => ({ label: page.group ?? page.label, href: page.href })) };
 }

@@ -1,6 +1,7 @@
 /**
  * GET /api/admin/jobs : scripts lançables à distance et derniers jobs.
- * POST /api/admin/jobs : lance un script dans GitHub Actions (corps `{ scriptId }`).
+ * POST /api/admin/jobs : lance un script dans GitHub Actions (corps `{ scriptId, options? }`, options validées
+ * contre celles que le script déclare).
  *
  * Admin distant uniquement : en local, les scripts passent par `/api/admin/scripts/run` (spawn).
  */
@@ -20,12 +21,13 @@ export const GET: APIRoute = async ({ locals }) => {
     const blocked = requireAdmin(locals);
     if (blocked) return blocked;
     if (getAdminAccessMode() !== 'remote') return jsonResponse(LOCAL_ONLY, 501);
-    const scripts = listRemoteScripts().map(({ id, label, description, category, writes }) => ({
+    const scripts = listRemoteScripts().map(({ id, label, description, category, writes, options }) => ({
         id,
         label,
         description,
         category,
         writes,
+        options: options ?? [],
     }));
     const database = await getJobDatabase();
     if (!database) return jsonResponse({ scripts, jobs: [], error: 'Turso n’est pas configuré sur ce déploiement.' });
@@ -36,12 +38,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const blocked = requireAdmin(locals);
     if (blocked) return blocked;
     if (getAdminAccessMode() !== 'remote') return jsonResponse(LOCAL_ONLY, 501);
-    const body = (await request.json().catch(() => null)) as { scriptId?: unknown } | null;
+    const body = (await request.json().catch(() => null)) as { scriptId?: unknown; options?: unknown } | null;
     if (typeof body?.scriptId !== 'string') return jsonResponse({ error: 'scriptId requis' }, 400);
     const actor = locals.adminAccess?.mode === 'remote' ? locals.adminAccess.session.login : 'admin';
     try {
         const job = await startRemoteJob({
             scriptId: body.scriptId,
+            scriptOptions: body.options,
             actor,
             client: getRemoteGitHubClient(),
             contentBranch: getRemoteAdminConfig().contentBranch,

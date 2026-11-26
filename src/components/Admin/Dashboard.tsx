@@ -143,28 +143,28 @@ const QUICK_ACTIONS = [
         accent: false,
     },
     {
-        href: '/admin/astrophotos',
-        title: 'Pipeline photo',
-        description: 'Déposer un raw + traitement',
+        href: '/admin/astrophotos/importer',
+        title: 'Importer des photos',
+        description: 'Mise à jour depuis AstroBin',
         icon: 'upload',
         accent: false,
     },
     {
-        href: '/admin/database',
+        href: '/admin/donnees',
         title: 'Base de données',
         description: 'Catalogues exoplanètes & étoiles',
         icon: 'database',
         accent: false,
     },
     {
-        href: '/admin/lighthouse',
+        href: '/admin/qualite/performance',
         title: 'Audit Lighthouse',
         description: 'Performance & Core Web Vitals',
         icon: 'lighthouse',
         accent: false,
     },
     {
-        href: '/admin/scripts',
+        href: '/admin/infra/scripts',
         title: 'Lancer un script',
         description: 'SEO, checks, sync R2…',
         icon: 'play',
@@ -299,7 +299,7 @@ function ContentInventorySection({ stats }: { stats: Stats | null }) {
                 <StatCard
                     label="Score SEO"
                     value={stats?.seo ? `${stats.seo.score}%` : undefined}
-                    href="/admin/seo"
+                    href="/admin/qualite/seo"
                     icon={<SeoIcon />}
                     valueColor={stats?.seo ? scoreColor(stats.seo.score) : undefined}
                 />
@@ -317,7 +317,7 @@ function SeoHealthSection({ seo, loading }: { seo: SeoSummary | null; loading: b
 
     if (!seo) {
         return (
-            <SectionPanel title="Santé SEO" href="/admin/seo">
+            <SectionPanel title="Santé SEO" href="/admin/qualite/seo">
                 <div className="flex items-center gap-2 text-sm text-mp-text-muted">
                     <InfoIcon /> Données SEO non disponibles
                 </div>
@@ -334,7 +334,7 @@ function SeoHealthSection({ seo, loading }: { seo: SeoSummary | null; loading: b
     const totalTechChecks = seo.technicalChecks.ok + seo.technicalChecks.warning + seo.technicalChecks.error;
 
     return (
-        <SectionPanel title="Santé SEO" href="/admin/seo">
+        <SectionPanel title="Santé SEO" href="/admin/qualite/seo">
             <div className="flex items-start gap-5">
                 {/* Radial score gauge */}
                 <ScoreGauge score={seo.score} size={88} label="SEO" />
@@ -392,10 +392,10 @@ function LighthouseSection({ lighthouse, loading }: { lighthouse: LighthouseSumm
 
     if (!lighthouse) {
         return (
-            <SectionPanel title="Performance Lighthouse" href="/admin/lighthouse">
+            <SectionPanel title="Performance Lighthouse" href="/admin/qualite/performance">
                 <div className="flex items-center gap-2 text-sm text-mp-text-muted">
                     <InfoIcon /> Aucun rapport Lighthouse disponible.
-                    <a href="/admin/lighthouse" className="text-mp-accent hover:underline">
+                    <a href="/admin/qualite/performance" className="text-mp-accent hover:underline">
                         Lancer un audit →
                     </a>
                 </div>
@@ -414,7 +414,7 @@ function LighthouseSection({ lighthouse, loading }: { lighthouse: LighthouseSumm
         : '—';
 
     return (
-        <SectionPanel title="Performance Lighthouse" href="/admin/lighthouse">
+        <SectionPanel title="Performance Lighthouse" href="/admin/qualite/performance">
             {/* Four score gauges */}
             <div className="flex items-start justify-around gap-2">
                 <ScoreGauge score={lighthouse.averagePerformance} size={68} label="Perf." />
@@ -507,7 +507,7 @@ function R2StorageSection({ r2, loading }: { r2: R2Summary | null; loading: bool
                         </>
                     )}
                     {!hasR2 && <span className="text-[11px] text-mp-text-muted italic">R2 non configuré ou vide</span>}
-                    <a href="/admin/r2" className="ml-auto text-xs text-mp-accent hover:underline">
+                    <a href="/admin/infra/r2" className="ml-auto text-xs text-mp-accent hover:underline">
                         Gérer R2 →
                     </a>
                 </div>

@@ -2,7 +2,9 @@
 import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import Dashboard from "@/components/Admin/Dashboard";
+import AdminTodoPanel from "@/components/Admin/AdminTodoPanel";
 import WebImagesReminder from "@/components/Admin/WebImagesReminder";
+import { ADMIN_SECTIONS, getAdminPageTitle, isAdminPageAvailable } from "@/config/admin-sections";
 
 export const prerender = false;
 
@@ -11,52 +13,43 @@ if (!isAdminGranted(Astro.locals)) {
 }
 
 // POURQUOI : le tableau de bord complet lit src/assets et lance des scripts ; à distance, on liste
-// seulement les pages qui fonctionnent à distance.
+// les pages du registre qui fonctionnent à distance, groupées par section.
 const isWritable = isLocalAdmin(Astro.locals);
-const remotePages = [
-    {
-        href: "/admin/publication",
-        label: "Mise en production",
-        description: "Publier sur le site public les modifications validées sur dev.",
-    },
-    { href: "/admin/blog", label: "Blog", description: "Lire et modifier les articles (commit sur la branche)." },
-    {
-        href: "/admin/voyages",
-        label: "Voyages",
-        description: "Lire et modifier les récits de voyage (commit sur la branche).",
-    },
-    { href: "/admin/lighthouse", label: "Lighthouse", description: "Dernier rapport de performance commité." },
-    { href: "/admin/upstream", label: "Routes amont", description: "Ordre de priorité des miroirs CDS, modifiable." },
-    { href: "/admin/cache", label: "Cache", description: "État du worker d'images." },
-    { href: "/admin/scripts", label: "Scripts", description: "Données, SEO et audits lancés dans GitHub Actions." },
-    { href: "/admin/journal", label: "Journal", description: "Qui a modifié quoi, et quand." },
-    {
-        href: "/admin/diagnostic",
-        label: "Diagnostic",
-        description: "Accès de l'admin au dépôt, à la branche et à R2.",
-    },
-];
+const remoteSections = ADMIN_SECTIONS.map((section) => ({
+    label: section.label,
+    pages: section.pages.filter((page) => isAdminPageAvailable(page, "remote")),
+})).filter((section) => section.pages.length > 0);
 ---
 
-<AdminLayout title="Admin · Vue d'ensemble" description="Console d'administration locale." active="dashboard">
+<AdminLayout title="Admin · Tableau de bord" description="Console d'administration." active="dashboard" heading>
+    <AdminTodoPanel client:only="react" />
     {isWritable ? (
         <>
             <WebImagesReminder client:only="react" />
             <Dashboard client:only="react" />
         </>
     ) : (
-        <ul class="grid gap-4 sm:grid-cols-2">
-            {remotePages.map((page) => (
-                <li>
-                    <a
-                        href={page.href}
-                        class="block min-h-touch rounded-md border border-mp-border px-4 py-4 mouse:hover:border-mp-border-accent"
-                    >
-                        <span class="block font-semibold text-mp-text-heading">{page.label}</span>
-                        <span class="block text-sm text-mp-text-muted">{page.description}</span>
-                    </a>
-                </li>
+        <div class="flex flex-col gap-8">
+            {remoteSections.map((section) => (
+                <section class="flex flex-col gap-3">
+                    <h2 class="font-mono text-xs tracking-wider text-mp-text-muted uppercase">{section.label}</h2>
+                    <ul class="grid gap-4 sm:grid-cols-2">
+                        {section.pages.map((page) => (
+                            <li class="block">
+                                <a
+                                    href={page.href}
+                                    class="block min-h-touch rounded-md border border-mp-border px-4 py-4 mouse:hover:border-mp-border-accent"
+                                >
+                                    <span class="block font-semibold text-mp-text-heading">
+                                        {getAdminPageTitle(page)}
+                                    </span>
+                                    <span class="block text-sm text-mp-text-muted">{page.description}</span>
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
             ))}
-        </ul>
+        </div>
     )}
 </AdminLayout>

@@ -2,7 +2,7 @@
  * Plugin Vite : pas de rechargement de page quand les données écrites par les scripts changent
  *
  * Responsabilité : en dev, invalider les modules qui dépendent des fichiers réécrits par
- * `update-photos.mjs` et `update-content.mjs` (CSV et JSON de `src/data/`), ou par `/admin/upstream`, sans envoyer
+ * `update-photos.mjs` et `update-content.mjs` (CSV et JSON de `src/data/`), ou par `/admin/donnees/routes-cds`, sans envoyer
  * de `full-reload` au navigateur.
  *
  * POURQUOI : recharger une page de l'admin coupe sa connexion à `/api/admin/scripts/run`, qui tue

@@ -1,5 +1,5 @@
 /**
- * Section « Catalogues du ciel profond » de `/admin/database`.
+ * Section « Catalogues du ciel profond » de `/admin/donnees`.
  *
  * Responsabilité : montrer quels catalogues sont servis par un instantané versionné et lancer leur
  * génération. Contrairement aux autres pipelines de la page, ces données sont des fichiers du dépôt,

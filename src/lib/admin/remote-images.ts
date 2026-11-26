@@ -32,6 +32,7 @@ import sharp from 'sharp';
 import { normalizeAssetKey, planWebImageWidths, webImageKey, WEB_IMAGES_PREFIX } from '@/utils/webImages.mjs';
 import { compressImage, THUMB_SUFFIX } from './image-process';
 import { getR2Target } from './r2-sync';
+import { purgeReplacedImages, type CachePurgeResult } from './image-cache-purge';
 import {
     isAcceptedArticleImage,
     jsonResponse,
@@ -64,6 +65,9 @@ export interface FinalizedImage {
     originalBytes: number;
     compressedBytes: number;
     is360: boolean;
+    /** L'image remplace une image du même nom : le cache du worker a été purgé (voir `cachePurge`). */
+    replaced?: boolean;
+    cachePurge?: CachePurgeResult;
 }
 
 /** Délai de validité de l'URL d'envoi présignée. */
@@ -314,9 +318,18 @@ export async function finalizeImageUpload(
     if (is360 && !IS_360_RE.test(name)) name = name.replace(/(\.[^.]+)$/, '-360$1');
     if (!validateFilename(name)) throw new InvalidImageRequestError('Nom de fichier invalide');
 
-    await putSourceImage(client, bucket, imageKey(section, year, slug, name), full);
+    const targetKey = imageKey(section, year, slug, name);
+    // POURQUOI : un renvoi sous le même nom garde l'URL ; il faut alors purger le cache du worker.
+    const replaced = await client
+        .send(new HeadObjectCommand({ Bucket: bucket, Key: targetKey }))
+        .then(() => true)
+        .catch(() => false);
+    await putSourceImage(client, bucket, targetKey, full);
     await deleteKeys(client, bucket, [upload.uploadKey]);
+    const cachePurge = replaced ? await purgeReplacedImages([targetKey]) : undefined;
     return {
+        replaced,
+        cachePurge,
         name,
         width: full.width,
         height: full.height,

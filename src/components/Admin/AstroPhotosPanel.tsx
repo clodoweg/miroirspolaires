@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import AdminProviders from './AdminProviders';
 import ClaudeCodeNotice from './ClaudeCodeNotice';
-import ScriptConsole from './ScriptConsole';
 import { useToast } from './Toast';
 import { WEB_IMAGES_CHANGED_EVENT } from './WebImagesReminder';
 
@@ -67,16 +66,16 @@ function AstroPhotosPanelInner() {
     const toast = useToast();
     const [photos, setPhotos] = useState<CsvPhoto[]>([]);
     const [loading, setLoading] = useState(false);
-    const [isRunning, setIsRunning] = useState(false);
-    const [runId, setRunId] = useState<string | null>(null);
-    const [runNonce, setRunNonce] = useState(0);
 
     // Selected photo for editing modal
     const [selectedPhoto, setSelectedPhoto] = useState<CsvPhoto | null>(null);
 
     // Filter states
     const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    // POURQUOI : la liste « À faire » du tableau de bord ouvre la vue déjà filtrée (`?filtre=missing-wiki`).
+    const [statusFilter, setStatusFilter] = useState(() =>
+        typeof window === 'undefined' ? 'all' : (new URLSearchParams(window.location.search).get('filtre') ?? 'all'),
+    );
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -92,27 +91,12 @@ function AstroPhotosPanelInner() {
     }, [toast]);
 
     useEffect(() => {
-        // POURQUOI: Restaure l'état de la console astrophotos depuis sessionStorage lors d'un F5
-        const saved = sessionStorage.getItem('script-console-astrophotos');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (parsed.runId) {
-                    setRunId(parsed.runId);
-                    setRunNonce(parsed.runNonce || 0);
-                }
-            } catch {
-                // POURQUOI : état sauvegardé corrompu, on repart d'une console vierge.
-            }
-        }
         void load();
+        // POURQUOI : l'import (page « Importer ») signale ses fins d'exécution par cet événement.
+        const reload = () => void load();
+        window.addEventListener(WEB_IMAGES_CHANGED_EVENT, reload);
+        return () => window.removeEventListener(WEB_IMAGES_CHANGED_EVENT, reload);
     }, [load]);
-
-    const runPipeline = () => {
-        setRunId('update-photos');
-        setIsRunning(true);
-        setRunNonce((n) => n + 1);
-    };
 
     // Calculate metadata statistics
     const totalCount = photos.length;
@@ -163,15 +147,13 @@ function AstroPhotosPanelInner() {
                         site.
                     </p>
                 </div>
-                <button
-                    type="button"
-                    onClick={runPipeline}
-                    disabled={isRunning}
-                    className="flex items-center gap-1.5 rounded-md border border-mp-accent bg-mp-accent px-4 py-2 text-xs font-semibold text-mp-ui-black shadow-md shadow-mp-accent/10 hover:opacity-90 disabled:opacity-50"
+                <a
+                    href="/admin/astrophotos/importer"
+                    className="flex min-h-touch items-center gap-1.5 rounded-md border border-mp-accent bg-mp-accent px-4 py-2 text-xs font-semibold text-mp-ui-black shadow-md shadow-mp-accent/10 hover:opacity-90"
                 >
-                    <RefreshCw className={`h-3.5 w-3.5 ${isRunning ? 'animate-spin' : ''}`} />
-                    {isRunning ? 'Mise à jour en cours…' : 'Mettre à jour les photos'}
-                </button>
+                    <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                    Importer depuis AstroBin
+                </a>
             </div>
 
             {/* Coverage Statistics Cards Grid */}
@@ -254,40 +236,6 @@ function AstroPhotosPanelInner() {
                     message={`${totalCount - seoCount} photo(s) sans description SEO`}
                     commands={['/generate-seo astro']}
                 />
-            )}
-
-            {runId && (
-                <div className="flex flex-col gap-3">
-                    {isRunning && (
-                        <div className="rounded-lg border border-mp-accent/20 bg-mp-accent/5 p-4 text-xs leading-relaxed text-mp-accent">
-                            <strong>Exécution en cours :</strong> import, miniatures, alts, Wikipedia, envoi sur R2 et
-                            versions web. Ne fermez pas et ne rechargez pas cette page : cela arrêterait la mise à jour.
-                            Les métadonnées seront rafraîchies à la fin.
-                        </div>
-                    )}
-                    <ScriptConsole
-                        runId={runId}
-                        runNonce={runNonce}
-                        panelId="astrophotos"
-                        onExit={(code) => {
-                            setIsRunning(false);
-                            void load();
-                            // POURQUOI : le rappel des versions web est un îlot séparé, à rafraîchir lui aussi.
-                            window.dispatchEvent(new Event(WEB_IMAGES_CHANGED_EVENT));
-                            if (code === 0) {
-                                toast.success('Pensez à committer les fichiers listés dans la console.', {
-                                    title: 'Photos à jour',
-                                });
-                            } else {
-                                toast.error('Voir le détail dans la console.', { title: 'Mise à jour incomplète' });
-                            }
-                        }}
-                        onClose={() => {
-                            setRunId(null);
-                            sessionStorage.removeItem('script-console-astrophotos');
-                        }}
-                    />
-                </div>
             )}
 
             {/* Central Controls: Search & Fast Filter dropdown */}
@@ -440,6 +388,14 @@ function AstroPhotosPanelInner() {
                                                     <ExternalLink className="h-3 w-3 shrink-0" />
                                                 </a>
                                             )}
+                                            <a
+                                                href={`/admin/astrophotos/importer?refresh=${encodeURIComponent(p.ID)}`}
+                                                className="inline-flex items-center gap-1 text-mp-text-muted transition-colors hover:text-mp-accent"
+                                                title="Photo retraitée sur AstroBin : la reprendre"
+                                                aria-label={`Reprendre la photo ${p.ID} depuis AstroBin`}
+                                            >
+                                                <RefreshCw className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>

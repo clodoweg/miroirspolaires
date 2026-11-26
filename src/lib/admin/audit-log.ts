@@ -2,7 +2,7 @@
  * Journal d'audit et limitation de débit de l'admin distant.
  *
  * Responsabilité : enregistrer dans Turso chaque requête d'écriture faite sur l'admin distant (qui, quoi,
- * quand, résultat), relire les dernières entrées pour `/admin/journal`, et compter les écritures
+ * quand, résultat), relire les dernières entrées pour `/admin/publication/journal`, et compter les écritures
  * récentes pour plafonner leur débit (`src/middleware.ts`).
  *
  * POURQUOI Turso plutôt que la mémoire : les fonctions Vercel tournent sur plusieurs instances

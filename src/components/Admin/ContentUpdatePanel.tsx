@@ -2,14 +2,13 @@
  * Bouton de mise à jour d'un domaine de contenu (blog ou voyages)
  *
  * Responsabilité : lancer, après confirmation, `scripts/pipeline/update-content.mjs` sur le seul domaine
- * de la page, afficher sa console, et signaler les alts et descriptions SEO à écrire via Claude Code.
- * Îlot autonome, avec ses propres fournisseurs.
+ * de la page et afficher sa console. Les textes manquants sont affichés par `ContentGapsPanel.tsx`, que la fin
+ * d'exécution rafraîchit (`WEB_IMAGES_CHANGED_EVENT`). Îlot autonome, avec ses propres fournisseurs.
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import AdminProviders from './AdminProviders';
-import ClaudeCodeNotice from './ClaudeCodeNotice';
 import ScriptConsole from './ScriptConsole';
 import { useConfirm } from './ConfirmDialog';
 import { useToast } from './Toast';
@@ -17,27 +16,7 @@ import { WEB_IMAGES_CHANGED_EVENT } from './WebImagesReminder';
 
 type ContentScope = 'blog' | 'voyages';
 
-interface ContentGaps {
-    missingAltCount: number;
-    missingSeo: string[];
-}
-
 const SCOPE_LABELS: Record<ContentScope, string> = { blog: 'du blog', voyages: 'des voyages' };
-
-/**
- * Décrit les textes manquants.
- *
- * @param gaps - Textes manquants du domaine.
- * @returns La phrase à afficher.
- */
-function describeGaps({ missingAltCount, missingSeo }: ContentGaps): string {
-    const parts = [];
-    if (missingSeo.length > 0) {
-        parts.push(`${missingSeo.length} description${missingSeo.length > 1 ? 's' : ''} SEO manquante(s)`);
-    }
-    if (missingAltCount > 0) parts.push(`${missingAltCount} image(s) sans alt`);
-    return parts.join(' et ');
-}
 
 /**
  * Lit l'exécution sauvegardée, pour restaurer la console après un F5 comme les autres panneaux.
@@ -78,18 +57,6 @@ function ContentUpdatePanelInner({ scope }: { scope: ContentScope }) {
     const [isOpen, setIsOpen] = useState(savedNonce !== null);
     const [isRunning, setIsRunning] = useState(false);
     const [runNonce, setRunNonce] = useState(savedNonce ?? 0);
-    const [gaps, setGaps] = useState<ContentGaps | null>(null);
-    const [gapsVersion, setGapsVersion] = useState(0);
-
-    useEffect(() => {
-        fetch(`/api/admin/content-gaps?scope=${scope}`)
-            .then((response) => (response.ok ? (response.json() as Promise<ContentGaps>) : null))
-            .then(setGaps)
-            .catch(() => {
-                // POURQUOI : ce rappel est secondaire : son échec ne doit pas gêner la page.
-            });
-    }, [scope, gapsVersion]);
-
     const handleRun = async () => {
         const ok = await confirm({
             title: `Mettre à jour les images ${SCOPE_LABELS[scope]} ?`,
@@ -115,7 +82,6 @@ function ContentUpdatePanelInner({ scope }: { scope: ContentScope }) {
 
     const handleExit = (code: number | null) => {
         setIsRunning(false);
-        setGapsVersion((version) => version + 1);
         window.dispatchEvent(new Event(WEB_IMAGES_CHANGED_EVENT));
         if (code === 0) {
             toast.success('Pensez à committer les fichiers listés dans la console.', { title: 'Mise à jour terminée' });
@@ -124,17 +90,8 @@ function ContentUpdatePanelInner({ scope }: { scope: ContentScope }) {
         }
     };
 
-    const gapsMessage = gaps ? describeGaps(gaps) : '';
-    const commands = gaps
-        ? [
-              ...(gaps.missingSeo.length > 0 ? [`/generate-seo ${scope}`] : []),
-              ...(gaps.missingAltCount > 0 ? [`/generate-alts ${scope}`] : []),
-          ]
-        : [];
-
     return (
         <div className="mb-6 flex flex-col gap-3">
-            {gapsMessage && <ClaudeCodeNotice message={gapsMessage} commands={commands} />}
             <div className="flex justify-end">
                 <button
                     type="button"

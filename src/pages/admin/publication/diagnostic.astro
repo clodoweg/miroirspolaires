@@ -33,7 +33,12 @@ const diagnostic: RemoteAccessDiagnostic | null = isRemote
 const r2: R2Diagnostic | null = isRemote ? await diagnoseR2Access() : null;
 ---
 
-<AdminLayout title="Admin · Diagnostic" description="Accès de l'admin distant au dépôt et à R2." active="diagnostic">
+<AdminLayout
+    title="Admin · Diagnostic"
+    description="Accès de l'admin distant au dépôt et à R2."
+    active="diagnostic"
+    heading
+>
     {diagnostic ? (
         <section class="space-y-4">
             <p class="text-mp-text-body">

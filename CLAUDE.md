@@ -32,7 +32,7 @@ Scripts npm de données (écrivent dans Turso) : `update-exoplanets`, `update-va
 
 ## Carte des dossiers
 
-- `src/pages/` — routes publiques, `admin/` et `api/admin/**` (dev et Preview de `dev`), `api/auth/` (login admin)
+- `src/pages/` — routes publiques, `admin/` et `api/admin/**` (dev et Preview de `dev`), `api/auth/` (login admin). Pages de l'admin rangées par section (`donnees/`, `qualite/`, `infra/`, `publication/`) d'après le registre `src/config/admin-sections.ts`
 - `src/components/` — composants Astro/React par domaine (`Admin/`, `SkyMap/`, `Objects/`, `Gallery/`, `Shop/`, `UI/`…)
 - `src/layouts/` — `BaseLayout.astro` (thème, polices, ClientRouter), `AdminLayout.astro`
 - `src/lib/` — logique métier : `db.ts` (Turso), `photos.ts` (CSV astrophotos), `admin/`, `objects/`, `catalogues/`, `theme.ts`
@@ -64,7 +64,7 @@ Scripts npm de données (écrivent dans Turso) : `update-exoplanets`, `update-va
 - Les astrophotos ne sont pas une content collection : tout vient du CSV `data/…csv` (pages, années de dossier, SEO).
 - Plusieurs scripts R2 ou Turso sont destructifs : `delete-dirs.mjs`, `upload_local_to_r2.js --delete-first` (entrée `mirror-r2` de l'admin), les imports Turso. Lire `.claude/rules/scripts.md` avant d'en lancer un.
 - Catalogues du ciel profond : le site lit `src/data/catalogues/<slug>.json` et n'interroge le CDS (`fetchCatalogueEntriesLive`) que pour un catalogue sans instantané. Modifier une requête ou la normalisation dans `src/lib/catalogues/fetch.ts` ne change rien au site tant que `npm run update-catalogues` n'a pas été relancé et son résultat committé.
-- CDS (SIMBAD, VizieR, Sesame, hips2fits, Aladin) : toujours passer par les routes de `src/config/upstream-routes.ts` (`querySimbadTap`, `queryVizierTable` de `src/lib/upstream/clients.ts`, `withUpstreamFailover`), jamais par une URL en dur. L'ordre choisi dans `/admin/upstream` est écrit dans `src/data/upstream-priority.json` et n'atteint la production qu'une fois committé. Les miroirs VizieR passent par ASU : une colonne absente répond 200 sans données, d'où l'erreur levée par `parseAsuTsv`.
+- CDS (SIMBAD, VizieR, Sesame, hips2fits, Aladin) : toujours passer par les routes de `src/config/upstream-routes.ts` (`querySimbadTap`, `queryVizierTable` de `src/lib/upstream/clients.ts`, `withUpstreamFailover`), jamais par une URL en dur. L'ordre choisi dans `/admin/donnees/routes-cds` est écrit dans `src/data/upstream-priority.json` et n'atteint la production qu'une fois committé. Les miroirs VizieR passent par ASU : une colonne absente répond 200 sans données, d'où l'erreur levée par `parseAsuTsv`.
 - La CSP est posée par `src/integrations/security-headers.mjs` (pas par `vercel.json` ni `public/_headers`, ignorés avec l'adaptateur). Toute nouvelle ressource externe chargée par le navigateur doit être ajoutée à `CSP_DIRECTIVES`, sinon elle est bloquée en production. Pas de gestionnaire inline (`onerror="…"`, `onclick`) ni d'URL `javascript:` : le build échoue (`script-src` sans `'unsafe-inline'`, empreintes des scripts inline calculées au build, voir `docs/architecture.md`).
 
 ## Standards de code

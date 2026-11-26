@@ -1,10 +1,24 @@
+/**
+ * Astrophotos de l'admin : inventaire (CSV AstroBin croisé avec les métadonnées et les fichiers) et édition des
+ * métadonnées d'une photo.
+ *
+ * Lecture par `getContentReader()` et écriture par `getContentWriter()` : disque en `npm run dev`, branche dev
+ * (lecture par l'API GitHub, écriture par commit) sur l'admin distant. Les fichiers d'images viennent de
+ * `astro-asset-index.ts` (disque en local, R2 à distance).
+ *
+ * WARNING: le CSV n'est jamais écrit ici : il appartient au seul scrape AstroBin.
+ */
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import Papa from 'papaparse';
-import { fileExists, sanitizeFilename, createUniqueHeaderTransform } from './shared';
+import { sanitizeFilename, createUniqueHeaderTransform } from './shared';
+import { loadAstroAssetIndex, type AstroAssetIndex } from './astro-asset-index';
+import { getAdminAccessMode } from './auth/config';
+import { getContentReader, type ContentReader } from './stores/content-reader';
+import { getContentWriter, type ContentWriter, type FileChange } from './stores/content-writer';
 import { slugify } from '@/utils/normalize';
 
-const CSV_PATH = path.join(process.cwd(), 'data/astrobin_clodoweg_gallery_python.csv');
+const CSV_PATH = 'data/astrobin_clodoweg_gallery_python.csv';
 const ASTRO_ROOT = path.join(process.cwd(), 'src/assets/astrophotographies');
 
 export interface CsvPhoto {
@@ -42,43 +56,40 @@ export interface CsvPhoto {
     draft?: boolean;
 }
 
-const ALT_PATH = path.join(process.cwd(), 'src/data/alt.json');
-const WIKI_PATH = path.join(process.cwd(), 'src/data/wikipedia.json');
-const DETAILS_PATH = path.join(process.cwd(), 'src/data/astro_details.json');
-const SEO_PATH = path.join(process.cwd(), 'src/data/seo.json');
-const DRAFTS_PATH = path.join(process.cwd(), 'src/data/drafts.json');
+const ALT_PATH = 'src/data/alt.json';
+const WIKI_PATH = 'src/data/wikipedia.json';
+const DETAILS_PATH = 'src/data/astro_details.json';
+const SEO_PATH = 'src/data/seo.json';
+const DRAFTS_PATH = 'src/data/drafts.json';
 
-async function readJsonSafely<T>(filePath: string, defaultVal: T): Promise<T> {
+async function readJsonSafely<T>(reader: ContentReader, relativePath: string, defaultVal: T): Promise<T> {
     try {
-        const content = await fs.readFile(filePath, 'utf-8');
-        return JSON.parse(content) as T;
+        const content = await reader.readText(relativePath);
+        return content === null ? defaultVal : (JSON.parse(content) as T);
     } catch {
+        // POURQUOI : un JSON illisible ne doit pas bloquer l'inventaire ; ses entrées apparaissent manquantes.
         return defaultVal;
     }
 }
 
-async function findFileRecursive(dir: string, filename: string, skip: Set<string>): Promise<string | null> {
-    let entries: import('node:fs').Dirent[];
-    try {
-        entries = await fs.readdir(dir, { withFileTypes: true });
-    } catch {
-        return null;
-    }
-    for (const entry of entries) {
-        if (entry.isDirectory()) {
-            if (skip.has(entry.name)) continue;
-            const found = await findFileRecursive(path.join(dir, entry.name), filename, skip);
-            if (found) return found;
-        } else if (entry.name === filename) {
-            return path.join(dir, entry.name);
-        }
-    }
-    return null;
+export interface AstroPhotoSources {
+    /** Source du CSV et des JSON (défaut : `getContentReader()`). */
+    reader?: ContentReader;
+    /** Fichiers d'images (défaut : disque en local, R2 à distance). */
+    assets?: AstroAssetIndex;
 }
 
-export async function listRecentPhotos(limit = 25): Promise<CsvPhoto[]> {
-    if (!(await fileExists(CSV_PATH))) return [];
-    const content = await fs.readFile(CSV_PATH, 'utf-8');
+/**
+ * Inventaire des astrophotos, dans l'ordre du CSV.
+ *
+ * @param limit - Nombre maximal de photos.
+ * @param sources - Sources à utiliser à la place des sources par défaut (tests).
+ * @returns Les photos, avec leurs métadonnées et l'état de leurs fichiers.
+ */
+export async function listRecentPhotos(limit = 25, sources: AstroPhotoSources = {}): Promise<CsvPhoto[]> {
+    const reader = sources.reader ?? getContentReader();
+    const content = await reader.readText(CSV_PATH);
+    if (content === null) return [];
     const parsed = Papa.parse<Record<string, string>>(content, {
         header: true,
         skipEmptyLines: true,
@@ -87,27 +98,27 @@ export async function listRecentPhotos(limit = 25): Promise<CsvPhoto[]> {
 
     // Load metadata files in parallel for efficiency
     const [altData, wikiData, detailsData, seoData, draftsData] = await Promise.all([
-        readJsonSafely<Record<string, string>>(ALT_PATH, {}),
-        readJsonSafely<Record<string, any>>(WIKI_PATH, {}),
-        readJsonSafely<Record<string, any>>(DETAILS_PATH, {}),
-        readJsonSafely<Record<string, string>>(SEO_PATH, {}),
-        readJsonSafely<Record<string, boolean>>(DRAFTS_PATH, {}),
+        readJsonSafely<Record<string, string>>(reader, ALT_PATH, {}),
+        readJsonSafely<Record<string, any>>(reader, WIKI_PATH, {}),
+        readJsonSafely<Record<string, any>>(reader, DETAILS_PATH, {}),
+        readJsonSafely<Record<string, string>>(reader, SEO_PATH, {}),
+        readJsonSafely<Record<string, boolean>>(reader, DRAFTS_PATH, {}),
     ]);
+    const assets = sources.assets ?? (await loadAstroAssetIndex(getAdminAccessMode() === 'remote'));
 
     const rows = (parsed.data ?? []).slice(0, limit);
-    const skip = new Set(['mini', 'annotations', 'skyplots']);
     const out: CsvPhoto[] = [];
     for (const row of rows) {
         const id = String(row.ID ?? '').trim();
         if (!id) continue;
         const uploaded = String(row.Uploaded ?? '');
         const year = uploaded.slice(0, 4);
-        const rawName = `${id}_raw.jpg`;
-        const rawPath = await findFileRecursive(ASTRO_ROOT, rawName, skip);
-        const expectedMiniPath = path.join(ASTRO_ROOT, 'mini', year, `${id}_raw.jpg`);
-        const miniPath = (await fileExists(expectedMiniPath)) ? expectedMiniPath : null;
-        const expectedAnnotationPath = path.join(ASTRO_ROOT, 'annotations', year, `${id}_annotation.svg`);
-        const hasAnnotation = await fileExists(expectedAnnotationPath);
+        const rawKey = assets.findRaw(id);
+        const miniKey = `astrophotographies/mini/${year}/${id}_raw.jpg`;
+        const miniPath = assets.has(miniKey) ? assets.describe(miniKey) : null;
+        const annotationKey = `astrophotographies/annotations/${year}/${id}_annotation.svg`;
+        const hasAnnotation = assets.has(annotationKey);
+        const rawPath = rawKey ? assets.describe(rawKey) : null;
 
         // Compute flags & extract actual values
         const hasRaw = !!rawPath;
@@ -118,8 +129,9 @@ export async function listRecentPhotos(limit = 25): Promise<CsvPhoto[]> {
         const hasAlt = !!altText;
 
         const wikiObj = wikiData[id];
-        const hasWiki = !!wikiObj;
         const wikiDesc = wikiObj?.description || '';
+        // POURQUOI : une fiche vide (aucun article trouvé à l'import) compte comme manquante, comme dans « À faire ».
+        const hasWiki = Boolean(String(wikiDesc).trim());
         const wikiSource = wikiObj?.source || '';
 
         const techObj = detailsData[id];
@@ -161,15 +173,27 @@ export async function listRecentPhotos(limit = 25): Promise<CsvPhoto[]> {
                   }
                 : undefined,
             seoDesc,
-            rawPath: rawPath ? path.relative(process.cwd(), rawPath) : undefined,
-            miniPath: miniPath ? path.relative(process.cwd(), miniPath) : undefined,
-            annotationPath: hasAnnotation ? path.relative(process.cwd(), expectedAnnotationPath) : undefined,
+            rawPath: rawPath ?? undefined,
+            miniPath: miniPath ?? undefined,
+            annotationPath: hasAnnotation ? assets.describe(annotationKey) : undefined,
             draft: draftsData[id] === true,
         });
     }
     return out;
 }
 
+/**
+ * Met à jour les métadonnées d'une photo (alt, Wikipedia, fiche technique, SEO, brouillon).
+ *
+ * Seuls les champs fournis sont modifiés ; une valeur vide supprime l'entrée.
+ *
+ * @param id - ID AstroBin.
+ * @param year - Année du dossier (clé de l'alt).
+ * @param title - Titre de la photo (clé SEO).
+ * @param data - Champs à modifier.
+ * @param sources - Lecteur et écrivain à utiliser à la place de ceux du mode courant (tests).
+ * @returns Rien ; lève une erreur si l'ID ou l'année sont invalides, ou si l'écriture échoue.
+ */
 export async function updatePhotoMetadata(
     id: string,
     year: string,
@@ -190,25 +214,31 @@ export async function updatePhotoMetadata(
         seo?: string;
         draft?: boolean;
     },
+    sources: { reader?: ContentReader; writer?: ContentWriter } = {},
 ): Promise<void> {
+    const reader = sources.reader ?? getContentReader();
+    const changes: FileChange[] = [];
+    const stage = (relativePath: string, value: unknown) =>
+        changes.push({ path: relativePath, content: JSON.stringify(value, null, 2) });
+
     if (!/^\d+$/.test(id)) throw new Error('ID invalide');
     if (!/^\d{4}$/.test(year)) throw new Error('Année invalide');
 
     // 1. Update alt.json
     if (data.alt !== undefined) {
-        const altData = await readJsonSafely<Record<string, string>>(ALT_PATH, {});
+        const altData = await readJsonSafely<Record<string, string>>(reader, ALT_PATH, {});
         const altKey = `/assets/astrophotographies/${year}/${id}_raw.jpg`;
         if (data.alt.trim()) {
             altData[altKey] = data.alt.trim();
         } else {
             delete altData[altKey];
         }
-        await fs.writeFile(ALT_PATH, JSON.stringify(altData, null, 2), 'utf-8');
+        stage(ALT_PATH, altData);
     }
 
     // 2. Update wikipedia.json
     if (data.wiki !== undefined) {
-        const wikiData = await readJsonSafely<Record<string, any>>(WIKI_PATH, {});
+        const wikiData = await readJsonSafely<Record<string, any>>(reader, WIKI_PATH, {});
         const wikiDesc = String(data.wiki.description ?? '').trim();
         const wikiSrc = String(data.wiki.source ?? '').trim();
         if (wikiDesc || wikiSrc) {
@@ -220,12 +250,12 @@ export async function updatePhotoMetadata(
         } else {
             delete wikiData[id];
         }
-        await fs.writeFile(WIKI_PATH, JSON.stringify(wikiData, null, 2), 'utf-8');
+        stage(WIKI_PATH, wikiData);
     }
 
     // 3. Update astro_details.json
     if (data.tech !== undefined) {
-        const detailsData = await readJsonSafely<Record<string, any>>(DETAILS_PATH, {});
+        const detailsData = await readJsonSafely<Record<string, any>>(reader, DETAILS_PATH, {});
         if (data.tech) {
             detailsData[id] = {
                 id,
@@ -261,12 +291,12 @@ export async function updatePhotoMetadata(
         } else {
             delete detailsData[id];
         }
-        await fs.writeFile(DETAILS_PATH, JSON.stringify(detailsData, null, 2), 'utf-8');
+        stage(DETAILS_PATH, detailsData);
     }
 
     // 4. Update seo.json
     if (data.seo !== undefined) {
-        const seoData = await readJsonSafely<Record<string, string>>(SEO_PATH, {});
+        const seoData = await readJsonSafely<Record<string, string>>(reader, SEO_PATH, {});
         const slug = `${slugify(title)}-${id}`;
         const seoKey = `astrophotographies/${slug}`;
         if (data.seo.trim()) {
@@ -274,21 +304,33 @@ export async function updatePhotoMetadata(
         } else {
             delete seoData[seoKey];
         }
-        await fs.writeFile(SEO_PATH, JSON.stringify(seoData, null, 2), 'utf-8');
+        stage(SEO_PATH, seoData);
     }
 
     // 5. Update drafts.json
     if (data.draft !== undefined) {
-        const draftsData = await readJsonSafely<Record<string, boolean>>(DRAFTS_PATH, {});
+        const draftsData = await readJsonSafely<Record<string, boolean>>(reader, DRAFTS_PATH, {});
         if (data.draft) {
             draftsData[id] = true;
         } else {
             delete draftsData[id];
         }
-        await fs.writeFile(DRAFTS_PATH, JSON.stringify(draftsData, null, 2), 'utf-8');
+        stage(DRAFTS_PATH, draftsData);
     }
+
+    // POURQUOI : un seul commit pour toute la fiche sur l'admin distant (un fichier par JSON modifié).
+    if (changes.length === 0) return;
+    await (sources.writer ?? getContentWriter()).commit(changes, `Admin : fiche de l'astrophoto ${id}`);
 }
 
+/**
+ * Enregistre le raw d'une photo dans `src/assets/` (admin local seulement).
+ *
+ * @param id - ID AstroBin.
+ * @param year - Année du dossier.
+ * @param data - Contenu du fichier.
+ * @returns Le chemin écrit, relatif au dépôt.
+ */
 export async function uploadRaw(id: string, year: string, data: Uint8Array): Promise<{ path: string }> {
     if (!/^\d+$/.test(id)) throw new Error('Invalid ID');
     if (!/^\d{4}$/.test(year)) throw new Error('Invalid year');

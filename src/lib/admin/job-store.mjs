@@ -1,8 +1,8 @@
 /**
  * Stockage des jobs de l'admin distant (scripts lancés dans GitHub Actions), dans Turso.
  *
- * Responsabilité : SQL des tables `admin_jobs` (un job par lancement : script, état, auteur, dates, code
- * de sortie, run GitHub, commit produit) et `admin_job_logs` (lignes de sortie, dans l'ordre). Partagé
+ * Responsabilité : SQL des tables `admin_jobs` (un job par lancement : script, options choisies, état, auteur,
+ * dates, code de sortie, run GitHub, commit produit) et `admin_job_logs` (lignes de sortie, dans l'ordre). Partagé
  * par l'admin (routes `/api/admin/jobs/**`) et par le runner `scripts/admin/run-admin-job.mjs`, qui
  * passent chacun leur client libSQL.
  *
@@ -18,7 +18,7 @@ const MAX_LINE_LENGTH = 2000;
 
 /**
  * @typedef {{ execute(statement: string | { sql: string, args?: (string | number | null)[] }): Promise<{ rows: ArrayLike<Record<string, unknown>> }> }} JobDatabase
- * @typedef {{ id: string, scriptId: string, status: string, actor: string, createdAt: string, startedAt: string | null, finishedAt: string | null, exitCode: number | null, runId: string | null, commitSha: string | null }} AdminJob
+ * @typedef {{ id: string, scriptId: string, status: string, actor: string, createdAt: string, startedAt: string | null, finishedAt: string | null, exitCode: number | null, runId: string | null, commitSha: string | null, options: Record<string, unknown> | null }} AdminJob
  * @typedef {{ id: number, at: string, stream: string, line: string }} JobLogLine
  */
 
@@ -42,8 +42,14 @@ export async function ensureJobTables(database) {
         finished_at TEXT,
         exit_code INTEGER,
         run_id TEXT,
-        commit_sha TEXT
+        commit_sha TEXT,
+        options TEXT
     )`);
+    // POURQUOI : la colonne `options` est arrivée après la création de la table en production.
+    const columns = await database.execute('PRAGMA table_info(admin_jobs)');
+    if (!Array.from(columns.rows).some((column) => column.name === 'options')) {
+        await database.execute('ALTER TABLE admin_jobs ADD COLUMN options TEXT');
+    }
     await database.execute(`CREATE TABLE IF NOT EXISTS admin_job_logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         job_id TEXT NOT NULL,
@@ -53,6 +59,20 @@ export async function ensureJobTables(database) {
     )`);
     await database.execute('CREATE INDEX IF NOT EXISTS admin_job_logs_job ON admin_job_logs (job_id, id)');
     preparedDatabases.add(database);
+}
+
+/**
+ * @param {unknown} value - Colonne `options` (JSON ou `NULL`).
+ * @returns {Record<string, unknown> | null} Les options, ou `null` si absentes ou illisibles.
+ */
+function parseOptions(value) {
+    if (value === null || value === undefined || value === '') return null;
+    try {
+        const parsed = JSON.parse(String(value));
+        return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+    } catch {
+        return null;
+    }
 }
 
 /**
@@ -72,6 +92,7 @@ function toJob(row) {
         exitCode: row.exit_code === null || row.exit_code === undefined ? null : Number(row.exit_code),
         runId: optionalText(row.run_id),
         commitSha: optionalText(row.commit_sha),
+        options: parseOptions(row.options),
     };
 }
 
@@ -79,14 +100,22 @@ function toJob(row) {
  * Enregistre un job demandé.
  *
  * @param {JobDatabase} database - Client libSQL.
- * @param {{ id: string, scriptId: string, actor: string, createdAt: string }} job - Job à créer.
+ * @param {{ id: string, scriptId: string, actor: string, createdAt: string, options?: Record<string, unknown> | null }} job
+ *   Job à créer ; `options` sont les valeurs déjà validées par `buildScriptArgs`.
  * @returns {Promise<void>}
  */
 export async function insertJob(database, job) {
     await ensureJobTables(database);
     await database.execute({
-        sql: 'INSERT INTO admin_jobs (id, script_id, status, actor, created_at) VALUES (?, ?, ?, ?, ?)',
-        args: [job.id, job.scriptId, 'queued', job.actor, job.createdAt],
+        sql: 'INSERT INTO admin_jobs (id, script_id, status, actor, created_at, options) VALUES (?, ?, ?, ?, ?, ?)',
+        args: [
+            job.id,
+            job.scriptId,
+            'queued',
+            job.actor,
+            job.createdAt,
+            job.options && Object.keys(job.options).length > 0 ? JSON.stringify(job.options) : null,
+        ],
     });
 }
 
