@@ -1,7 +1,0 @@
-# Dépendances de scripts/annotations/annotate_astro.py
-astropy>=6.1
-numpy>=1.26
-requests>=2.31
-fonttools>=4.50
-brotli>=1.1
-pillow>=10.0

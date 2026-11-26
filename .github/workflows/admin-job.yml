@@ -73,10 +73,11 @@ jobs:
           path: _astrobin
           persist-credentials: false
 
-      # POURQUOI : apt plutôt que pip, que le Python système d'Ubuntu refuse (PEP 668).
-      - name: Install Pillow
+      # POURQUOI : apt plutôt que pip, que le Python système d'Ubuntu refuse (PEP 668). astropy, numpy, fonttools
+      # et brotli servent à annotate_astro.py (calques d'annotations, lancé en fin de scrape).
+      - name: Install Python packages
         if: env.IS_PHOTO_UPDATE == 'true'
-        run: sudo apt-get update -q && sudo apt-get install -y -q python3-pil
+        run: sudo apt-get update -q && sudo apt-get install -y -q python3-pil python3-numpy python3-astropy python3-fonttools python3-brotli
 
       - name: Run script
         # WARNING: les secrets R2 et du worker ne sont transmis qu'au script qui en a besoin.
