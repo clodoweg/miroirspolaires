@@ -10,6 +10,13 @@ vi.mock('@/data/upstream-priority.json', () => ({ default: { updatedAt: null, se
 // Mock Lucide icons globally
 vi.mock('lucide-react', () => ({
     Search: () => <div data-testid="search-icon" />,
+    Zap: () => <div data-testid="zap-icon" />,
+    RotateCw: () => <div data-testid="rotate-cw-icon" />,
+    Cpu: () => <div data-testid="cpu-icon" />,
+    Server: () => <div data-testid="server-icon" />,
+    Wifi: () => <div data-testid="wifi-icon" />,
+    ShieldCheck: () => <div data-testid="shield-check-icon" />,
+    Activity: () => <div data-testid="activity-icon" />,
     X: () => <div data-testid="x-icon" />,
     ChevronDown: () => <div data-testid="chevron-down-icon" />,
     Filter: () => <div data-testid="filter-icon" />,

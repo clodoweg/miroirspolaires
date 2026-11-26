@@ -7,7 +7,8 @@
  * - Superviser les variables de configuration critiques du CDN et de stockage R2.
  * - Expliquer visuellement les contraintes techniques du Worker (limites CPU, taille d'image, WebP).
  * - Offrir des boutons interactifs pour déclencher le préchauffage ou la purge complète du cache CDN.
- * - Streamer les logs des scripts en temps réel via la console intégrée ScriptConsole.
+ * - Streamer les logs des scripts en temps réel via la console intégrée ScriptConsole (local), ou lancer ces
+ *   actions comme jobs GitHub Actions (`warm-cache-ci`, `purge-cache-ci`) et les suivre (admin distant).
  */
 
 import { useCallback, useEffect, useId, useState } from 'react';
@@ -28,7 +29,9 @@ import {
 } from 'lucide-react';
 import AdminProviders from './AdminProviders';
 import PageHeader from './PageHeader';
+import RemoteJobHistory from './RemoteJobHistory';
 import ScriptConsole from './ScriptConsole';
+import { useRemoteJobs } from './useRemoteJobs';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmDialog';
 
@@ -55,16 +58,23 @@ interface CacheStatusPayload {
     cachePolicy: CachePolicy;
 }
 
+/** Dossiers proposés quand la liste des dossiers ne peut pas être lue (admin distant). */
+const DOMAIN_FOLDERS = ['astrophotographies', 'blog', 'voyages'];
+
+/** Jobs distants équivalents aux scripts locaux de la page. */
+const REMOTE_CACHE_JOBS = { 'warm-cache': 'warm-cache-ci', 'purge-cache': 'purge-cache-ci' } as const;
+
 /**
  * Composant enveloppe principal pour le panneau d'administration du cache.
  * Fournit les contextes d'administration (Toasts, Boîtes de confirmation).
  *
+ * @param props.remote - Admin distant : actions lancées dans GitHub Actions, dossiers limités aux trois domaines.
  * @returns {JSX.Element} Panneau de contrôle enveloppé dans ses fournisseurs de contexte.
  */
-export default function CachePanel() {
+export default function CachePanel({ remote = false }: { remote?: boolean }) {
     return (
         <AdminProviders>
-            <CachePanelInner />
+            <CachePanelInner remote={remote} />
         </AdminProviders>
     );
 }
@@ -74,9 +84,10 @@ export default function CachePanel() {
  *
  * @returns {JSX.Element} L'interface utilisateur du panneau de cache CDN.
  */
-function CachePanelInner() {
+function CachePanelInner({ remote }: { remote: boolean }) {
     const toast = useToast();
     const confirm = useConfirm();
+    const remoteJobs = useRemoteJobs(Object.values(REMOTE_CACHE_JOBS), { enabled: remote });
 
     const [status, setStatus] = useState<CacheStatusPayload | null>(null);
     const [loading, setLoading] = useState(true);
@@ -85,7 +96,7 @@ function CachePanelInner() {
     // États d'exécution de script en arrière-plan
     const [activeScriptId, setActiveScriptId] = useState<string | null>(null);
     const [runNonce, setRunNonce] = useState(0);
-    const [folders, setFolders] = useState<string[]>([]);
+    const [folders, setFolders] = useState<string[]>(DOMAIN_FOLDERS);
     // POURQUOI : chaque action porte sur un seul dossier, jamais sur tous les domaines à la fois.
     const [selectedFolder, setSelectedFolder] = useState<string>('astrophotographies');
     const folderSelectId = useId();
@@ -112,7 +123,7 @@ function CachePanelInner() {
     }, [toast]);
 
     useEffect(() => {
-        const saved = sessionStorage.getItem('script-console-cache');
+        const saved = remote ? null : sessionStorage.getItem('script-console-cache');
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
@@ -128,7 +139,7 @@ function CachePanelInner() {
             }
         }
         fetchStatus();
-    }, [fetchStatus]);
+    }, [fetchStatus, remote]);
 
     /**
      * Récupère la liste de tous les dossiers d'assets locaux et distants.
@@ -138,7 +149,11 @@ function CachePanelInner() {
             const res = await fetch('/api/admin/r2/status');
             if (res.ok) {
                 const data = await res.json();
-                const keys = new Set([...Object.keys(data.local.categories), ...Object.keys(data.r2.categories)]);
+                const keys = new Set([
+                    ...DOMAIN_FOLDERS,
+                    ...Object.keys(data.local.categories),
+                    ...Object.keys(data.r2.categories),
+                ]);
                 setFolders(Array.from(keys).sort());
             }
         } catch (e) {
@@ -147,14 +162,31 @@ function CachePanelInner() {
     }, []);
 
     useEffect(() => {
-        fetchFolders();
-    }, [fetchFolders]);
+        // POURQUOI : à distance, la route lit le disque local et répond 501 ; les trois domaines suffisent.
+        if (!remote) void fetchFolders();
+    }, [fetchFolders, remote]);
+
+    /**
+     * Admin distant : lance l'action comme job GitHub Actions sur le dossier choisi.
+     */
+    const launchRemote = async (scriptId: keyof typeof REMOTE_CACHE_JOBS) => {
+        try {
+            await remoteJobs.launch(REMOTE_CACHE_JOBS[scriptId], { prefix: [selectedFolder] });
+            toast.success('Job lancé : le run GitHub Actions démarre dans quelques secondes.');
+        } catch (error) {
+            toast.error(String((error as Error).message ?? error), { title: 'Lancement impossible' });
+        }
+    };
 
     /**
      * Déclenche le script de préchauffage du CDN (Warm).
      */
     const handleWarmCdn = () => {
         const folderLabel = `le dossier "${selectedFolder}"`;
+        if (remote) {
+            void launchRemote('warm-cache');
+            return;
+        }
         toast.info(`Lancement du préchauffage pour ${folderLabel}. Suivez la console pour voir la progression.`, {
             title: 'Préchauffage CDN',
         });
@@ -185,6 +217,10 @@ function CachePanelInner() {
         });
 
         if (!ok) return;
+        if (remote) {
+            await launchRemote('purge-cache');
+            return;
+        }
 
         toast.info(`Lancement de la purge pour ${folderLabel}...`, { title: 'Purge CDN' });
         setActiveScriptId('purge-cache');
@@ -372,7 +408,9 @@ function CachePanelInner() {
                                         <button
                                             type="button"
                                             onClick={handleWarmCdn}
-                                            disabled={!status.online || activeScriptId !== null}
+                                            disabled={
+                                                !status.online || activeScriptId !== null || remoteJobs.hasActiveJob
+                                            }
                                             className="flex items-center justify-center gap-2 rounded-md border border-mp-accent bg-mp-accent px-3 py-2 text-xs font-semibold text-mp-ui-black hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
                                             <Zap className="h-3.5 w-3.5" />
@@ -382,7 +420,10 @@ function CachePanelInner() {
                                             type="button"
                                             onClick={handlePurgeCache}
                                             disabled={
-                                                !status.online || !status.purgeKeyConfigured || activeScriptId !== null
+                                                !status.online ||
+                                                !status.purgeKeyConfigured ||
+                                                activeScriptId !== null ||
+                                                remoteJobs.hasActiveJob
                                             }
                                             className="flex items-center justify-center gap-2 rounded-md border border-red-500/30 bg-red-950/15 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
                                         >
@@ -464,7 +505,25 @@ function CachePanelInner() {
 
                 {/* COLONNE DROITE : Console de Script Interactive */}
                 <div className="flex flex-col gap-3 lg:sticky lg:top-16 lg:self-start">
-                    {activeScriptId ? (
+                    {remote ? (
+                        remoteJobs.data ? (
+                            <RemoteJobHistory
+                                title="Derniers jobs de cache"
+                                jobs={remoteJobs.data.jobs.slice(0, 5)}
+                                selectedJob={remoteJobs.selectedJob}
+                                logs={remoteJobs.logs}
+                                scriptLabel={(id) =>
+                                    remoteJobs.data?.scripts.find((script) => script.id === id)?.label ?? id
+                                }
+                                onSelect={remoteJobs.selectJob}
+                                onCancel={(job) => void remoteJobs.cancel(job)}
+                            />
+                        ) : (
+                            <p className="text-xs text-mp-text-muted">
+                                {remoteJobs.loadError ?? 'Chargement des jobs…'}
+                            </p>
+                        )
+                    ) : activeScriptId ? (
                         <>
                             <div className="flex flex-wrap items-center justify-between gap-2">
                                 <div className="min-w-0">
