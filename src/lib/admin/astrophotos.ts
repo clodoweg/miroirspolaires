@@ -129,8 +129,9 @@ export async function listRecentPhotos(limit = 25, sources: AstroPhotoSources = 
         const hasAlt = !!altText;
 
         const wikiObj = wikiData[id];
-        const hasWiki = !!wikiObj;
         const wikiDesc = wikiObj?.description || '';
+        // POURQUOI : une fiche vide (aucun article trouvé à l'import) compte comme manquante, comme dans « À faire ».
+        const hasWiki = Boolean(String(wikiDesc).trim());
         const wikiSource = wikiObj?.source || '';
 
         const techObj = detailsData[id];
