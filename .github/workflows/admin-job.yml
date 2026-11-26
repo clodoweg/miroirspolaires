@@ -28,8 +28,9 @@ permissions:
 
 # POURQUOI : deux runs du même script écriraient en même temps dans Turso ou dans les mêmes fichiers.
 # Les deux variantes de la mise à jour des photos partagent un groupe : elles écrivent les mêmes fichiers et sur R2.
+# L'import VSX reprend le groupe du workflow dédié (update-variable-stars.yml) : une seule écriture de la table à la fois.
 concurrency:
-  group: admin-job-${{ startsWith(inputs.script_id, 'update-photos-ci') && 'update-photos-ci' || inputs.script_id }}
+  group: ${{ inputs.script_id == 'update-variable-stars-ci' && 'Update Variable Stars Database' || format('admin-job-{0}', startsWith(inputs.script_id, 'update-photos-ci') && 'update-photos-ci' || inputs.script_id) }}
   cancel-in-progress: false
 
 jobs:
@@ -38,7 +39,8 @@ jobs:
     if: github.ref_name == 'dev'
     runs-on: ubuntu-latest
     # POURQUOI 180 : update-photos-ci-force retélécharge et retraite toute la galerie (2,8 Go).
-    timeout-minutes: 180
+    # 350 pour l'import VSX complet, comme son workflow dédié (proche du plafond de 6 h de GitHub).
+    timeout-minutes: ${{ inputs.script_id == 'update-variable-stars-ci' && 350 || 180 }}
     env:
       TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
       TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}

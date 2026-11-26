@@ -388,6 +388,41 @@ export const SCRIPTS: ScriptDef[] = [
         writes: true,
     },
     {
+        // WARNING: écrit dans la table Turso de production ; `--fresh` la vide avant de tout réimporter.
+        // POURQUOI `--no-clean` d'office : le fichier de progression ne survit pas au run GitHub Actions, et sans lui
+        // le script viderait la table par défaut. `--fresh` reste prioritaire si la case est cochée.
+        id: 'update-variable-stars-ci',
+        label: 'Étoiles variables : importer le catalogue VSX (GitHub Actions)',
+        description:
+            'Télécharge le catalogue AAVSO VSX par tranches de magnitude et complète la table Turso sans l’effacer. Cocher « Tout réimporter » pour la vider d’abord. Long : jusqu’à plusieurs heures.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/pipeline/update-variable-stars.mjs', '--no-clean'],
+        writes: true,
+        remote: true,
+        remoteOnly: true,
+        options: [
+            {
+                id: 'fresh',
+                kind: 'flag',
+                flag: '--fresh',
+                label: 'Tout réimporter',
+                help: 'Vide la table des étoiles variables puis réimporte tout le catalogue (sinon : complète sans effacer).',
+                destructive: true,
+            },
+            {
+                id: 'maxMag',
+                kind: 'number',
+                flag: '--max-mag',
+                label: 'Magnitude limite',
+                help: 'Magnitude (au maximum d’éclat) de la dernière tranche importée.',
+                min: 1,
+                max: 30,
+                defaultValue: 25,
+            },
+        ],
+    },
+    {
         id: 'check-variable-stars',
         label: 'Audit des Étoiles Variables',
         description: 'Vérifie la complétude des étoiles variables par magnitude et mesure la couverture Gaia DR3.',
