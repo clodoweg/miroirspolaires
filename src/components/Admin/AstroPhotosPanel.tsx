@@ -72,7 +72,10 @@ function AstroPhotosPanelInner() {
 
     // Filter states
     const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    // POURQUOI : la liste « À faire » du tableau de bord ouvre la vue déjà filtrée (`?filtre=missing-wiki`).
+    const [statusFilter, setStatusFilter] = useState(() =>
+        typeof window === 'undefined' ? 'all' : (new URLSearchParams(window.location.search).get('filtre') ?? 'all'),
+    );
 
     const load = useCallback(async () => {
         setLoading(true);

@@ -127,7 +127,7 @@ async function wikipediaTodos(reader: ContentReader): Promise<AdminTodo[]> {
             section: 'Astrophotographies',
             title: `${plural(missing, 'photo')} sans description Wikipedia`,
             detail: 'Aucun article trouvé à l’import : à compléter dans la fiche de la photo.',
-            href: '/admin/astrophotos',
+            href: '/admin/astrophotos?filtre=missing-wiki',
         },
     ];
 }

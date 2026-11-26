@@ -112,7 +112,7 @@ describe('listRecentPhotos', () => {
             hasRaw: false,
             hasMini: false,
             hasAlt: false,
-            hasWiki: true,
+            hasWiki: false,
             wikiDesc: '',
             hasDetails: false,
             techDetails: undefined,
