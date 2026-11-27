@@ -20,11 +20,13 @@
  * getLocalImageDimensions in src/utils/imageService.ts looks up.
  *
  * Usage:
- *   node scripts/build/compute-image-dimensions.mjs            # local first, R2 fallback
+ *   node scripts/build/compute-image-dimensions.mjs            # local first, then cache, then R2
  *   node scripts/build/compute-image-dimensions.mjs --force-r2 # ignore local, probe R2 only
  *   node scripts/build/compute-image-dimensions.mjs --only=voyages,blog  # subset
  *
  * Re-run after adding photos or new voyage/blog posts. ~2s per missing photo via R2.
+ * Un fichier local est toujours relu (une image remplacée met sa taille à jour) ; une image absente du disque
+ * garde sa taille en cache, sauf avec --force-r2 qui relit tout sur R2.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -184,12 +186,26 @@ function collectFromVideos() {
     });
 }
 
+const HEAD_BYTES = 1024 * 1024;
+
+function readHead(file, bytes) {
+    const fd = fs.openSync(file, 'r');
+    try {
+        const buffer = Buffer.alloc(bytes);
+        const read = fs.readSync(fd, buffer, 0, bytes, 0);
+        return buffer.subarray(0, read);
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
 async function probeLocal(key) {
     const local = path.join(ASSETS_DIR, key);
     if (!fs.existsSync(local)) return null;
     try {
-        const buf = fs.readFileSync(local);
-        const d = probe.sync(buf);
+        // POURQUOI : les raws pèsent jusqu'à 110 Mo et ce fichier est relu à chaque passage ; l'en-tête suffit
+        // presque toujours. Le fichier entier ne sert qu'en secours (métadonnées EXIF ou ICC très longues).
+        const d = probe.sync(readHead(local, HEAD_BYTES)) ?? probe.sync(fs.readFileSync(local));
         return d?.width && d?.height ? { width: d.width, height: d.height } : null;
     } catch {
         return null;
@@ -253,16 +269,19 @@ async function main() {
         errors = 0;
 
     const results = await pool(keys, CONCURRENCY, async (k) => {
-        if (!forceR2 && existing[k]?.width) {
-            cached++;
-            return existing[k];
-        }
-
+        // POURQUOI : un fichier présent en local est relu avant le cache. Sinon, une photo retraitée et
+        // réimportée (update-photos.mjs --ci --force-media ou --refresh-ids) gardait la taille de l'ancienne
+        // version : 13 astrophotos fausses le 27/11/2026. Lire l'en-tête d'un fichier local est quasi gratuit.
         let d = null;
         if (!forceR2) d = await probeLocal(k);
         if (d) {
             local++;
             return d;
+        }
+
+        if (!forceR2 && existing[k]?.width) {
+            cached++;
+            return existing[k];
         }
 
         d = await probeRemote(k);
