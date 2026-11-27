@@ -150,6 +150,28 @@ export const SCRIPTS: ScriptDef[] = [
         ],
     },
     {
+        // WARNING: écrit sur le R2 de production (calques d'annotations, après envoi complet sous incoming/astro/).
+        id: 'update-annotations-ci',
+        label: 'Astrophotos : redessiner les annotations (GitHub Actions)',
+        description:
+            'Redessine les calques d’annotations absents ou pas encore dessinés par annotate_astro.py (style InstaSlice), à partir de la résolution astrométrique d’AstroBin et des dimensions connues des photos, sans retélécharger les images. Envoie les calques sur R2, purge le CDN et committe l’historique des annotations sur dev. Quelques minutes.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/pipeline/update-annotations.mjs'],
+        writes: true,
+        remote: true,
+        remoteOnly: true,
+        options: [
+            {
+                id: 'all',
+                kind: 'flag',
+                flag: '--all',
+                label: 'Tout redessiner',
+                help: 'Redessine aussi les calques déjà dessinés par annotate_astro.py.',
+            },
+        ],
+    },
+    {
         id: 'sync-r2',
         label: 'Sync R2 (assets → bucket)',
         description: 'Envoie vers Cloudflare R2 les fichiers de src/assets absents du bucket, sans rien supprimer.',

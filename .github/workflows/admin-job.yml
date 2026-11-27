@@ -47,7 +47,8 @@ jobs:
       TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
       JOB_ID: ${{ inputs.job_id }}
       SCRIPT_ID: ${{ inputs.script_id }}
-      IS_PHOTO_UPDATE: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' }}
+      # POURQUOI : ces jobs lisent le dépôt astrobin, lancent Python et écrivent sur R2.
+      IS_PHOTO_UPDATE: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' || inputs.script_id == 'update-annotations-ci' }}
 
     steps:
       - name: Checkout repository

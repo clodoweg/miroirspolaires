@@ -86,7 +86,7 @@ import {
     planAltYearMigration,
     planAstrobinImport,
 } from '../lib/astrobin-import.mjs';
-import { mergeAnnotationReport, summarizeAnnotationReport } from '../lib/annotation-runs.mjs';
+import { importAnnotationReportFile } from '../lib/annotation-runs.mjs';
 import { parseCliArgs } from '../lib/args.mjs';
 import { PROJECT_ROOT, loadEnv } from '../lib/env.mjs';
 import { exitIfStopped, isStopRequested, runCommand, runScript, runSteps } from '../lib/pipeline-runner.mjs';
@@ -215,32 +215,11 @@ function importDataFiles(dryRun) {
  * @returns {void}
  */
 function importAnnotationReport(dryRun) {
-    const reportPath = path.join(ASTROBIN_DIR, 'annotations-report.json');
-    if (!fs.existsSync(reportPath)) {
-        console.log('Aucun rapport d’annotations (scrape sans annotate_astro.py ou sans photo à traiter).');
-        return;
-    }
-    let report;
-    try {
-        report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
-    } catch (error) {
-        // POURQUOI : l'historique n'est qu'un affichage ; un rapport illisible ne doit pas arrêter l'import.
-        console.warn(`⚠️  Rapport d’annotations illisible : ${error.message}`);
-        return;
-    }
-    const counts = summarizeAnnotationReport(report);
-    console.log(`Annotations : ${counts.ok} réussie(s), ${counts.skipped} ignorée(s), ${counts.failed} en échec.`);
-    const historyPath = path.join(PROJECT_ROOT, 'src/data/annotation-runs.json');
-    const history = fs.existsSync(historyPath) ? JSON.parse(fs.readFileSync(historyPath, 'utf8')) : {};
-    const { history: next, added } = mergeAnnotationReport(history, report);
-    if (added === 0) {
-        console.log('Historique des annotations déjà à jour.');
-        return;
-    }
-    console.log(
-        `${dryRun ? '[dry-run] Serait ajouté' : 'Ajouté'} : ${added} passage(s) à src/data/annotation-runs.json`,
-    );
-    if (!dryRun) fs.writeFileSync(historyPath, `${JSON.stringify(next, null, 2)}\n`);
+    importAnnotationReportFile({
+        reportPath: path.join(ASTROBIN_DIR, 'annotations-report.json'),
+        historyPath: path.join(PROJECT_ROOT, 'src/data/annotation-runs.json'),
+        dryRun,
+    });
 }
 
 /**

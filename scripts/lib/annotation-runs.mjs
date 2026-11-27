@@ -3,8 +3,10 @@
  *
  * Responsabilité : fusionner le rapport d'un passage (`<astrobin>/annotations-report.json`) dans
  * `src/data/annotation-runs.json`, que l'admin affiche dans la liste des astrophotos (réussite, photo ignorée,
- * échec et sa raison). Logique pure, sans accès disque.
+ * échec et sa raison), et choisir les photos à redessiner (`update-annotations.mjs`). Seule
+ * `importAnnotationReportFile` lit et écrit sur le disque.
  */
+import fs from 'node:fs';
 
 /** Passages gardés par photo : assez pour voir un échec suivi d'une reprise. */
 export const MAX_ATTEMPTS_PER_PHOTO = 5;
@@ -53,4 +55,63 @@ export function summarizeAnnotationReport(report) {
         if (entry && STATUSES.has(entry.status)) counts[entry.status]++;
     }
     return counts;
+}
+
+/**
+ * Lit le rapport d'annotate_astro.py et l'ajoute à l'historique.
+ *
+ * Un rapport absent ou illisible est seulement signalé : l'historique n'est qu'un affichage.
+ *
+ * @param {{ reportPath: string, historyPath: string, dryRun?: boolean, log?: (message: string) => void }} options -
+ *   Chemins du rapport et de l'historique ; `dryRun` n'écrit rien.
+ * @returns {{ ok: number, skipped: number, failed: number } | null} Le bilan du rapport, ou `null` sans rapport lisible.
+ */
+export function importAnnotationReportFile({ reportPath, historyPath, dryRun = false, log = console.log }) {
+    if (!fs.existsSync(reportPath)) {
+        log('Aucun rapport d’annotations (scrape sans annotate_astro.py ou sans photo à traiter).');
+        return null;
+    }
+    let report;
+    try {
+        report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+    } catch (error) {
+        log(`⚠️  Rapport d’annotations illisible : ${error.message}`);
+        return null;
+    }
+    const counts = summarizeAnnotationReport(report);
+    log(`Annotations : ${counts.ok} réussie(s), ${counts.skipped} ignorée(s), ${counts.failed} en échec.`);
+    const history = fs.existsSync(historyPath) ? JSON.parse(fs.readFileSync(historyPath, 'utf8')) : {};
+    const { history: next, added } = mergeAnnotationReport(history, report);
+    if (added === 0) {
+        log('Historique des annotations déjà à jour.');
+        return counts;
+    }
+    log(`${dryRun ? '[dry-run] Serait ajouté' : 'Ajouté'} : ${added} passage(s) à l’historique des annotations.`);
+    if (!dryRun) fs.writeFileSync(historyPath, `${JSON.stringify(next, null, 2)}\n`);
+    return counts;
+}
+
+/**
+ * Clé R2 du calque d'une photo, sous l'année du CSV (comme `photos.ts`).
+ *
+ * @param {{ ID: string, Uploaded?: string }} row - Ligne du CSV.
+ * @returns {string} La clé.
+ */
+export function annotationKeyForRow(row) {
+    return `astrophotographies/annotations/${String(row.Uploaded ?? '').slice(0, 4)}/${String(row.ID).trim()}_annotation.svg`;
+}
+
+/**
+ * Photos dont le calque est à redessiner : absent, ou pas encore dessiné par annotate_astro.py.
+ *
+ * @param {{ ID: string, Uploaded?: string }[]} rows - Lignes du CSV.
+ * @param {Map<string, string>} kindByKey - Origine des calques présents sur R2 (`classifyAnnotationSvg().kind`).
+ * @param {{ all?: boolean }} [options] - `all` : toutes les photos, même celles déjà dessinées par le script.
+ * @returns {string[]} Les ID AstroBin, dans l'ordre du CSV.
+ */
+export function planAnnotationTargets(rows, kindByKey, { all = false } = {}) {
+    return rows
+        .filter((row) => /^\d{1,12}$/.test(String(row.ID ?? '').trim()))
+        .filter((row) => all || kindByKey.get(annotationKeyForRow(row)) !== 'miroirs')
+        .map((row) => String(row.ID).trim());
 }

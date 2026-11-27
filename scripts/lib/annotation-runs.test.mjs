@@ -1,5 +1,15 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { MAX_ATTEMPTS_PER_PHOTO, mergeAnnotationReport, summarizeAnnotationReport } from './annotation-runs.mjs';
+import {
+    MAX_ATTEMPTS_PER_PHOTO,
+    annotationKeyForRow,
+    importAnnotationReportFile,
+    mergeAnnotationReport,
+    planAnnotationTargets,
+    summarizeAnnotationReport,
+} from './annotation-runs.mjs';
 
 const REPORT = {
     runAt: '2026-11-27T10:00:00Z',
@@ -64,5 +74,71 @@ describe('summarizeAnnotationReport', () => {
     it('compte les photos par statut', () => {
         expect(summarizeAnnotationReport(REPORT)).toEqual({ ok: 1, skipped: 1, failed: 1 });
         expect(summarizeAnnotationReport(undefined)).toEqual({ ok: 0, skipped: 0, failed: 0 });
+    });
+});
+
+describe('importAnnotationReportFile', () => {
+    const withDir = (run) => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'mp-annot-runs-'));
+        try {
+            return run(dir);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    };
+
+    it('ajoute le rapport à l’historique, une seule fois', () =>
+        withDir((dir) => {
+            const reportPath = path.join(dir, 'report.json');
+            const historyPath = path.join(dir, 'history.json');
+            fs.writeFileSync(reportPath, JSON.stringify(REPORT));
+            const logs = [];
+            const options = { reportPath, historyPath, log: (message) => logs.push(message) };
+            expect(importAnnotationReportFile(options)).toEqual({ ok: 1, skipped: 1, failed: 1 });
+            expect(Object.keys(JSON.parse(fs.readFileSync(historyPath, 'utf8')))).toEqual(['123', '456', '789']);
+            importAnnotationReportFile(options);
+            expect(logs.at(-1)).toBe('Historique des annotations déjà à jour.');
+        }));
+
+    it('n’écrit rien en dry-run et tolère un rapport absent ou illisible', () =>
+        withDir((dir) => {
+            const reportPath = path.join(dir, 'report.json');
+            const historyPath = path.join(dir, 'history.json');
+            const log = () => {};
+            expect(importAnnotationReportFile({ reportPath, historyPath, log })).toBeNull();
+            fs.writeFileSync(reportPath, '{ cassé');
+            expect(importAnnotationReportFile({ reportPath, historyPath, log })).toBeNull();
+            fs.writeFileSync(reportPath, JSON.stringify(REPORT));
+            expect(importAnnotationReportFile({ reportPath, historyPath, dryRun: true, log })).toEqual({
+                ok: 1,
+                skipped: 1,
+                failed: 1,
+            });
+            expect(fs.existsSync(historyPath)).toBe(false);
+        }));
+});
+
+describe('planAnnotationTargets', () => {
+    const rows = [
+        { ID: '1', Uploaded: '2024-01-05' },
+        { ID: '2', Uploaded: '2023-11-02' },
+        { ID: '3', Uploaded: '2025-06-01' },
+        { ID: '', Uploaded: '2025-06-01' },
+    ];
+    const kinds = new Map([
+        ['astrophotographies/annotations/2024/1_annotation.svg', 'miroirs'],
+        ['astrophotographies/annotations/2023/2_annotation.svg', 'astrobin'],
+    ]);
+
+    it('range la clé sous l’année du CSV', () => {
+        expect(annotationKeyForRow(rows[0])).toBe('astrophotographies/annotations/2024/1_annotation.svg');
+    });
+
+    it('retient les calques absents ou d’une autre origine', () => {
+        expect(planAnnotationTargets(rows, kinds)).toEqual(['2', '3']);
+    });
+
+    it('retient toutes les photos avec all', () => {
+        expect(planAnnotationTargets(rows, kinds, { all: true })).toEqual(['1', '2', '3']);
     });
 });
