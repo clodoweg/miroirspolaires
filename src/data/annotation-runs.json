@@ -799,6 +799,11 @@
   ],
   "521877": [
     {
+      "at": "2026-11-27T10:32:16Z",
+      "status": "skipped",
+      "reason": "aucune solution astrométrique"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
@@ -889,6 +894,11 @@
     }
   ],
   "666560": [
+    {
+      "at": "2026-11-27T10:32:16Z",
+      "status": "skipped",
+      "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
