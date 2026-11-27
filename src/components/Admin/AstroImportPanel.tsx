@@ -6,7 +6,8 @@
  *  - En local (`npm run dev`) : `update-photos.mjs`, case `--dry-run`, sortie en direct (`ScriptConsole`).
  *    Le scrape AstroBin se lance d'abord à la main dans le dépôt `astrobin`.
  *  - À distance : job GitHub Actions `update-photos-ci`, case `--force-media` (entrée `update-photos-ci-force`),
- *    suivi du job et de son journal (`useRemoteJobs`). Le scrape fait partie du job.
+ *    suivi du job et de son journal (`useRemoteJobs`). Le scrape fait partie du job. Un second bouton redessine
+ *    seulement les calques d'annotations (`update-annotations-ci`, case `--all`), sans retélécharger les photos.
  *
  * POURQUOI une case plutôt que deux boutons : « Tout recopier » n'est que la même mise à jour avec une option,
  * à cocher après avoir retraité des photos sur AstroBin ; deux boutons laissaient croire à deux workflows.
@@ -22,7 +23,7 @@ import { useRemoteJobs } from './useRemoteJobs';
 import { WEB_IMAGES_CHANGED_EVENT } from './WebImagesReminder';
 
 /** Entrées de `SCRIPTS` lancées par ce panneau à distance. */
-export const ASTRO_IMPORT_JOB_IDS = ['update-photos-ci', 'update-photos-ci-force'] as const;
+export const ASTRO_IMPORT_JOB_IDS = ['update-photos-ci', 'update-photos-ci-force', 'update-annotations-ci'] as const;
 
 const LOCAL_SCRIPT_ID = 'update-photos';
 const PANEL_ID = 'astro-import';
@@ -240,6 +241,8 @@ function RemoteImport() {
     const { data, loadError, selectedJob, logs, selectJob, launch, cancel, hasActiveJob } =
         useRemoteJobs(ASTRO_IMPORT_JOB_IDS);
     const [forceMedia, setForceMedia] = useState(false);
+    const [astrobinAnnotations, setAstrobinAnnotations] = useState(false);
+    const [redrawAll, setRedrawAll] = useState(false);
     // POURQUOI : la fiche d'une photo renvoie ici avec ?refresh=<ID> pour la reprendre après retraitement.
     const [refreshInput, setRefreshInput] = useState(() =>
         typeof window === 'undefined' ? '' : (new URLSearchParams(window.location.search).get('refresh') ?? ''),
@@ -261,7 +264,31 @@ function RemoteImport() {
         if (!accepted) return;
         setBusy(true);
         try {
-            await launch(scriptId, !forceMedia && refreshIds && refreshIds.length > 0 ? { refreshIds } : undefined);
+            await launch(scriptId, {
+                ...(!forceMedia && refreshIds && refreshIds.length > 0 ? { refreshIds } : {}),
+                ...(astrobinAnnotations ? { astrobinAnnotations: true } : {}),
+            });
+            toast.success('Job lancé : le run GitHub Actions démarre dans quelques secondes.');
+        } catch (error) {
+            toast.error(String((error as Error).message ?? error), { title: 'Lancement impossible' });
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const startAnnotations = async () => {
+        const accepted = await confirm({
+            title: redrawAll ? 'Redessiner toutes les annotations ?' : 'Redessiner les annotations manquantes ?',
+            message: redrawAll
+                ? 'Le job redessine le calque de chaque photo, l’envoie sur R2 et purge le CDN. Quelques minutes.'
+                : 'Le job redessine les calques absents ou venant encore d’AstroBin, les envoie sur R2 et purge le CDN. Quelques minutes.',
+            tone: 'danger',
+            confirmLabel: 'Lancer',
+        });
+        if (!accepted) return;
+        setBusy(true);
+        try {
+            await launch('update-annotations-ci', redrawAll ? { all: true } : undefined);
             toast.success('Job lancé : le run GitHub Actions démarre dans quelques secondes.');
         } catch (error) {
             toast.error(String((error as Error).message ?? error), { title: 'Lancement impossible' });
@@ -307,6 +334,13 @@ function RemoteImport() {
                 {!forceMedia && (
                     <RefreshIdsField value={refreshInput} onChange={setRefreshInput} invalid={hasInvalidIds} />
                 )}
+                <OptionCheckbox
+                    flag="--astrobin-annotations"
+                    label="Garder les annotations d’AstroBin"
+                    help="Sans cette case, le job dessine les calques d’annotations (anneaux et étiquettes, style InstaSlice) à partir de la résolution astrométrique d’AstroBin. Cochée : il télécharge les SVG PixInsight d’AstroBin, comme avant. Avec « Tout recopier », toute la galerie passe dans le style choisi."
+                    checked={astrobinAnnotations}
+                    onChange={setAstrobinAnnotations}
+                />
                 {data.error && <p className="text-sm text-red-700 dark:text-red-400">{data.error}</p>}
                 <div className="flex flex-wrap items-center gap-3">
                     <button
@@ -323,8 +357,43 @@ function RemoteImport() {
                         {!forceMedia && refreshIds && refreshIds.length > 0
                             ? ` --refresh-ids=${refreshIds.join(',')}`
                             : ''}
+                        {astrobinAnnotations ? ' --astrobin-annotations' : ''}
                     </code>
                     {hasActiveJob && <span className="text-sm text-mp-text-muted">Un import est déjà en cours.</span>}
+                </div>
+            </section>
+            <section className="flex flex-col gap-4 rounded-xl border border-mp-glass-border p-5">
+                <h2 className="font-serif text-xl font-light text-mp-text-heading">Redessiner les annotations</h2>
+                <p className="text-sm text-mp-text-secondary">
+                    Seulement les calques d’annotations, sans retélécharger les photos : utile après un import où
+                    nova.astrometry.net a refusé des requêtes. Le résultat de chaque photo apparaît dans la colonne «
+                    Annotation » de la{' '}
+                    <a href="/admin/astrophotos?filtre=annotation-not-miroirs" className="text-mp-accent underline">
+                        liste des astrophotos
+                    </a>
+                    .
+                </p>
+                <OptionCheckbox
+                    flag="--all"
+                    label="Tout redessiner"
+                    help="Sans cette case, seuls les calques absents ou venant encore d’AstroBin sont refaits. Cochée : toutes les photos, même celles déjà dessinées par Miroirs Polaires."
+                    checked={redrawAll}
+                    onChange={setRedrawAll}
+                />
+                <div className="flex flex-wrap items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => void startAnnotations()}
+                        disabled={busy || hasActiveJob || Boolean(data.error)}
+                        className={primaryButtonClass}
+                    >
+                        <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                        {redrawAll ? 'Redessiner toutes les annotations' : 'Redessiner les annotations manquantes'}
+                    </button>
+                    <code className="font-mono text-xs text-mp-text-muted">
+                        update-annotations.mjs{redrawAll ? ' --all' : ''}
+                    </code>
+                    {hasActiveJob && <span className="text-sm text-mp-text-muted">Un job est déjà en cours.</span>}
                 </div>
             </section>
             <RemoteJobHistory

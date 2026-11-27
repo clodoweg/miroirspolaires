@@ -53,10 +53,22 @@ describe('listRecentPhotos', () => {
         await write('src/assets/astrophotographies/mini/2024/456_raw.jpg');
         await write('src/assets/astrophotographies/2024/orion/123_raw.jpg');
         await write('src/assets/astrophotographies/mini/2024/123_raw.jpg');
-        await write('src/assets/astrophotographies/annotations/2024/123_annotation.svg');
+        await write(
+            'src/assets/astrophotographies/annotations/2024/123_annotation.svg',
+            '<svg data-generator="annotate_astro" data-wcs-source="astrobin" data-objects="2" role="img">',
+        );
         await write(
             'src/data/alt.json',
             JSON.stringify({ '/assets/astrophotographies/2024/123_raw.jpg': 'Orion en couleurs' }),
+        );
+        await write(
+            'src/data/annotation-runs.json',
+            JSON.stringify({
+                '123': [
+                    { at: '2026-11-27T10:00:00Z', status: 'ok', objects: 2 },
+                    { at: '2026-11-26T16:07:58Z', status: 'failed', reason: 'HTTP Error 429' },
+                ],
+            }),
         );
         await write(
             'src/data/wikipedia.json',
@@ -104,6 +116,14 @@ describe('listRecentPhotos', () => {
             rawPath: path.join('src/assets/astrophotographies/2024/orion/123_raw.jpg'),
             miniPath: path.join('src/assets/astrophotographies/mini/2024/123_raw.jpg'),
             annotationPath: path.join('src/assets/astrophotographies/annotations/2024/123_annotation.svg'),
+            annotation: {
+                kind: 'miroirs',
+                wcsSource: 'astrobin',
+                objectCount: 2,
+                updatedAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+            },
+            annotationRun: { at: '2026-11-27T10:00:00Z', status: 'ok', objects: 2 },
+            annotationRunCount: 2,
             draft: false,
         });
         expect(photos[1]).toMatchObject({
@@ -121,6 +141,8 @@ describe('listRecentPhotos', () => {
             rawPath: undefined,
             miniPath: undefined,
             annotationPath: undefined,
+            annotation: undefined,
+            annotationRun: undefined,
             draft: true,
         });
     });
@@ -251,6 +273,35 @@ describe('sources de l’admin distant', () => {
             draft: true,
         });
         expect(photos[1]).toMatchObject({ ID: '456', hasRaw: false, hasMini: true });
+    });
+
+    it('lit l’origine des calques sur R2 une seule fois tant que l’objet ne change pas', async () => {
+        const { buildAstroAssetIndex } = await import('./astro-asset-index');
+        const key = 'astrophotographies/annotations/2024/123_annotation.svg';
+        const readHead = vi.fn().mockResolvedValue({ text: '<svg><desc>Generated with PixInsight Core</desc>' });
+        const sources = {
+            reader: memoryReader({ 'data/astrobin_clodoweg_gallery_python.csv': CSV }),
+            assets: buildAstroAssetIndex([key], 'r2', {
+                modifiedAt: new Map([[key, '2026-11-26T16:10:00.000Z']]),
+                readHead,
+            }),
+        };
+        const first = await lib.listRecentPhotos(10, sources);
+        const second = await lib.listRecentPhotos(10, sources);
+        expect(first[0].annotation).toEqual({ kind: 'astrobin', updatedAt: '2026-11-26T16:10:00.000Z' });
+        expect(second[0].annotation).toEqual(first[0].annotation);
+        expect(readHead).toHaveBeenCalledTimes(1);
+        expect(first[1].annotation).toBeUndefined();
+    });
+
+    it('laisse l’origine vide quand un calque est illisible', async () => {
+        const { buildAstroAssetIndex } = await import('./astro-asset-index');
+        const key = 'astrophotographies/annotations/2024/123_annotation.svg';
+        const photos = await lib.listRecentPhotos(10, {
+            reader: memoryReader({ 'data/astrobin_clodoweg_gallery_python.csv': CSV }),
+            assets: buildAstroAssetIndex([key], 'r2', { readHead: vi.fn().mockResolvedValue(null) }),
+        });
+        expect(photos[0]).toMatchObject({ hasAnnotation: true, annotation: undefined });
     });
 
     it('enregistre toute la fiche en un seul commit, sans toucher au CSV', async () => {

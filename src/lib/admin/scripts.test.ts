@@ -86,10 +86,15 @@ describe('SCRIPTS (console de scripts de l’admin)', () => {
         expect(remoteOnly.map((script) => script.id)).toEqual([
             'update-photos-ci',
             'update-photos-ci-force',
+            'update-annotations-ci',
             'warm-cache-ci',
             'purge-cache-ci',
             'update-variable-stars-ci',
         ]);
+        expect(getScript('update-annotations-ci')).toMatchObject({
+            remote: true,
+            args: ['scripts/pipeline/update-annotations.mjs'],
+        });
         expect(getScript('update-photos-ci')).toMatchObject({
             remote: true,
             args: ['scripts/pipeline/update-photos.mjs', '--ci'],

@@ -48,9 +48,10 @@ jobs:
       TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
       JOB_ID: ${{ inputs.job_id }}
       SCRIPT_ID: ${{ inputs.script_id }}
-      IS_PHOTO_UPDATE: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' }}
-      # POURQUOI : seuls ces jobs reçoivent les secrets R2 et du worker (photos, préchauffage et purge du cache).
-      NEEDS_IMAGE_SECRETS: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' || inputs.script_id == 'warm-cache-ci' || inputs.script_id == 'purge-cache-ci' }}
+      # POURQUOI : ces jobs lisent le dépôt astrobin, lancent Python et écrivent sur R2.
+      IS_PHOTO_UPDATE: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' || inputs.script_id == 'update-annotations-ci' }}
+      # POURQUOI : seuls ces jobs reçoivent les secrets R2 et du worker (photos, annotations, préchauffage et purge du cache).
+      NEEDS_IMAGE_SECRETS: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' || inputs.script_id == 'update-annotations-ci' || inputs.script_id == 'warm-cache-ci' || inputs.script_id == 'purge-cache-ci' }}
 
     steps:
       - name: Checkout repository
@@ -76,10 +77,11 @@ jobs:
           path: _astrobin
           persist-credentials: false
 
-      # POURQUOI : apt plutôt que pip, que le Python système d'Ubuntu refuse (PEP 668).
-      - name: Install Pillow
+      # POURQUOI : apt plutôt que pip, que le Python système d'Ubuntu refuse (PEP 668). astropy, numpy, fonttools
+      # et brotli servent à annotate_astro.py (calques d'annotations, lancé en fin de scrape).
+      - name: Install Python packages
         if: env.IS_PHOTO_UPDATE == 'true'
-        run: sudo apt-get update -q && sudo apt-get install -y -q python3-pil
+        run: sudo apt-get update -q && sudo apt-get install -y -q python3-pil python3-numpy python3-astropy python3-fonttools python3-brotli
 
       - name: Run script
         # WARNING: les secrets R2 et du worker ne sont transmis qu'au script qui en a besoin.

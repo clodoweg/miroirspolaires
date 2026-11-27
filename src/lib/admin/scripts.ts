@@ -115,7 +115,7 @@ export const SCRIPTS: ScriptDef[] = [
         id: 'update-photos-ci',
         label: 'Astrophotos : mettre à jour les photos (GitHub Actions)',
         description:
-            'Lance le scrape AstroBin (nouvelles photos seulement), génère miniatures, alts, descriptions Wikipedia, versions web et dimensions, envoie tout sur R2 sous un préfixe temporaire puis le copie vers les clés définitives si tout a réussi, et committe le CSV et les manifestes sur dev. Ne supprime rien sur R2. Les descriptions SEO restent à écrire via Claude Code.',
+            'Lance le scrape AstroBin (nouvelles photos seulement), dessine les calques d’annotations, génère miniatures, alts, descriptions Wikipedia, versions web et dimensions, envoie tout sur R2 sous un préfixe temporaire puis le copie vers les clés définitives si tout a réussi, et committe le CSV et les manifestes sur dev. Ne supprime rien sur R2. Les descriptions SEO restent à écrire via Claude Code.',
         category: 'pipeline',
         command: 'node',
         args: ['scripts/pipeline/update-photos.mjs', '--ci'],
@@ -132,6 +132,13 @@ export const SCRIPTS: ScriptDef[] = [
                 pattern: '\\d{1,12}',
                 maxItems: 50,
             },
+            {
+                id: 'astrobinAnnotations',
+                kind: 'flag',
+                flag: '--astrobin-annotations',
+                label: 'Garder les annotations d’AstroBin',
+                help: 'Télécharge les SVG PixInsight d’AstroBin au lieu de dessiner les calques (style InstaSlice).',
+            },
         ],
     },
     {
@@ -139,13 +146,44 @@ export const SCRIPTS: ScriptDef[] = [
         id: 'update-photos-ci-force',
         label: 'Astrophotos : tout recopier depuis AstroBin (GitHub Actions)',
         description:
-            'Comme la mise à jour des photos, mais retélécharge tous les médias d’AstroBin (raws, annotations, skyplots) et régénère miniatures et versions web, même s’ils sont déjà sur R2. Seuls les fichiers dont le contenu a changé remplacent ceux de R2 (cache du worker purgé) ; rien n’est supprimé. Long : de 30 min à 1 h.',
+            'Comme la mise à jour des photos, mais retélécharge tous les médias d’AstroBin (raws, skyplots), redessine tous les calques d’annotations et régénère miniatures et versions web, même s’ils sont déjà sur R2. Seuls les fichiers dont le contenu a changé remplacent ceux de R2 (cache du worker purgé) ; rien n’est supprimé. Long : de 30 min à 1 h.',
         category: 'pipeline',
         command: 'node',
         args: ['scripts/pipeline/update-photos.mjs', '--ci', '--force-media'],
         writes: true,
         remote: true,
         remoteOnly: true,
+        options: [
+            {
+                id: 'astrobinAnnotations',
+                kind: 'flag',
+                flag: '--astrobin-annotations',
+                label: 'Garder les annotations d’AstroBin',
+                help: 'Télécharge les SVG PixInsight d’AstroBin au lieu de dessiner les calques (style InstaSlice).',
+            },
+        ],
+    },
+    {
+        // WARNING: écrit sur le R2 de production (calques d'annotations, après envoi complet sous incoming/astro/).
+        id: 'update-annotations-ci',
+        label: 'Astrophotos : redessiner les annotations (GitHub Actions)',
+        description:
+            'Redessine les calques d’annotations absents ou pas encore dessinés par annotate_astro.py (style InstaSlice), à partir de la résolution astrométrique d’AstroBin et des dimensions connues des photos, sans retélécharger les images. Envoie les calques sur R2, purge le CDN et committe l’historique des annotations sur dev. Quelques minutes.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/pipeline/update-annotations.mjs'],
+        writes: true,
+        remote: true,
+        remoteOnly: true,
+        options: [
+            {
+                id: 'all',
+                kind: 'flag',
+                flag: '--all',
+                label: 'Tout redessiner',
+                help: 'Redessine aussi les calques déjà dessinés par annotate_astro.py.',
+            },
+        ],
     },
     {
         id: 'sync-r2',

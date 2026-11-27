@@ -117,6 +117,62 @@ describe('AstroImportPanel à distance', () => {
         );
     });
 
+    it('garde les annotations d’AstroBin quand la case est cochée', async () => {
+        const fetchMock = mockJobsApi();
+        render(<AstroImportPanel remote />);
+        fireEvent.click(await screen.findByRole('checkbox', { name: /Tout recopier/ }));
+        fireEvent.click(screen.getByRole('checkbox', { name: /Garder les annotations d’AstroBin/ }));
+        expect(screen.getByText(/--force-media --astrobin-annotations/)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /Tout recopier \(30 min/ }));
+        await confirmLaunch();
+        await waitFor(() =>
+            expect(fetchMock).toHaveBeenCalledWith(
+                '/api/admin/jobs',
+                expect.objectContaining({
+                    body: JSON.stringify({
+                        scriptId: 'update-photos-ci-force',
+                        options: { astrobinAnnotations: true },
+                    }),
+                }),
+            ),
+        );
+    });
+
+    it('redessine seulement les annotations manquantes, ou toutes avec la case', async () => {
+        const fetchMock = mockJobsApi();
+        render(<AstroImportPanel remote />);
+        fireEvent.click(await screen.findByRole('button', { name: /Redessiner les annotations manquantes/ }));
+        await confirmLaunch();
+        await waitFor(() =>
+            expect(fetchMock).toHaveBeenCalledWith(
+                '/api/admin/jobs',
+                expect.objectContaining({ body: JSON.stringify({ scriptId: 'update-annotations-ci' }) }),
+            ),
+        );
+        fireEvent.click(screen.getByRole('checkbox', { name: /Tout redessiner/ }));
+        expect(screen.getByText('update-annotations.mjs --all')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'liste des astrophotos' })).toHaveAttribute(
+            'href',
+            '/admin/astrophotos?filtre=annotation-not-miroirs',
+        );
+    });
+
+    it('lance le redessin complet avec --all', async () => {
+        const fetchMock = mockJobsApi();
+        render(<AstroImportPanel remote />);
+        fireEvent.click(await screen.findByRole('checkbox', { name: /Tout redessiner/ }));
+        fireEvent.click(screen.getByRole('button', { name: /Redessiner toutes les annotations/ }));
+        await confirmLaunch();
+        await waitFor(() =>
+            expect(fetchMock).toHaveBeenCalledWith(
+                '/api/admin/jobs',
+                expect.objectContaining({
+                    body: JSON.stringify({ scriptId: 'update-annotations-ci', options: { all: true } }),
+                }),
+            ),
+        );
+    });
+
     it('bloque le lancement sur une saisie qui n’est pas une liste d’ID', async () => {
         mockJobsApi();
         render(<AstroImportPanel remote />);
