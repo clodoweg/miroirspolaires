@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import AdminProviders from './AdminProviders';
 import AstroAnnotationCell from './AstroAnnotationCell';
+import AstroRefreshButton from './AstroRefreshButton';
 import ClaudeCodeNotice from './ClaudeCodeNotice';
 import { useToast } from './Toast';
 import { WEB_IMAGES_CHANGED_EVENT } from './WebImagesReminder';
@@ -69,15 +70,15 @@ function isAnnotationFilter(value: string): value is AnnotationFilter {
     return value in ANNOTATION_FILTERS;
 }
 
-export default function AstroPhotosPanel() {
+export default function AstroPhotosPanel({ remote = false }: { remote?: boolean }) {
     return (
         <AdminProviders>
-            <AstroPhotosPanelInner />
+            <AstroPhotosPanelInner remote={remote} />
         </AdminProviders>
     );
 }
 
-function AstroPhotosPanelInner() {
+function AstroPhotosPanelInner({ remote }: { remote: boolean }) {
     const toast = useToast();
     const [photos, setPhotos] = useState<CsvPhoto[]>([]);
     const [loading, setLoading] = useState(false);
@@ -427,14 +428,7 @@ function AstroPhotosPanelInner() {
                                                     <ExternalLink className="h-3 w-3 shrink-0" />
                                                 </a>
                                             )}
-                                            <a
-                                                href={`/admin/astrophotos/importer?refresh=${encodeURIComponent(p.ID)}`}
-                                                className="inline-flex items-center gap-1 text-mp-text-muted transition-colors hover:text-mp-accent"
-                                                title="Photo retraitée sur AstroBin : la reprendre"
-                                                aria-label={`Reprendre la photo ${p.ID} depuis AstroBin`}
-                                            >
-                                                <RefreshCw className="h-3 w-3 shrink-0" aria-hidden="true" />
-                                            </a>
+                                            <AstroRefreshButton photoId={p.ID} title={p.Title} remote={remote} />
                                         </div>
                                     </td>
                                 </tr>

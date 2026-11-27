@@ -1,5 +1,5 @@
 ---
-import { isAdminGranted } from "@/lib/admin/auth/access";
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import AstroPhotosPanel from "@/components/Admin/AstroPhotosPanel";
 
@@ -8,8 +8,9 @@ export const prerender = false;
 if (!isAdminGranted(Astro.locals)) {
     return new Response("Not Found", { status: 404 });
 }
+const isLocal = isLocalAdmin(Astro.locals);
 ---
 
 <AdminLayout title="Admin · Astrophotos" description="Catalogue et complétude des astrophotos." active="astrophotos">
-    <AstroPhotosPanel client:only="react" />
+    <AstroPhotosPanel client:only="react" remote={!isLocal} />
 </AdminLayout>
