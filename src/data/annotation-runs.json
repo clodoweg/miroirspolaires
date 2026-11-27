@@ -1040,6 +1040,12 @@
   ],
   "851253": [
     {
+      "at": "2026-11-27T12:46:00Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
