@@ -2,7 +2,8 @@
  * Mise à jour complète des astrophotos (bouton « Mettre à jour les photos » de /admin/astrophotos/importer)
  *
  * Responsabilité principale, dans l'ordre :
- *  1. Importer depuis le dépôt voisin `astrobin` le CSV et le HTML (s'ils sont plus récents).
+ *  1. Importer depuis le dépôt voisin `astrobin` le CSV et le HTML (s'ils sont plus récents), et ajouter le
+ *     rapport du dernier passage d'annotate_astro.py à src/data/annotation-runs.json (historique de l'admin).
  *  2. Déplacer les fichiers dont l'année a changé dans le CSV (migrate-asset-years.mjs).
  *  3. Importer les raws, annotations et skyplots absents ou modifiés, pour l'année du CSV seulement.
  *  4. Générer les miniatures manquantes (generate-mini.mjs).
@@ -85,6 +86,7 @@ import {
     planAltYearMigration,
     planAstrobinImport,
 } from '../lib/astrobin-import.mjs';
+import { mergeAnnotationReport, summarizeAnnotationReport } from '../lib/annotation-runs.mjs';
 import { parseCliArgs } from '../lib/args.mjs';
 import { PROJECT_ROOT, loadEnv } from '../lib/env.mjs';
 import { exitIfStopped, isStopRequested, runCommand, runScript, runSteps } from '../lib/pipeline-runner.mjs';
@@ -203,6 +205,42 @@ function importDataFiles(dryRun) {
             console.log(`À jour : ${fileName}`);
         }
     }
+}
+
+/**
+ * Ajoute le rapport du dernier passage d'annotate_astro.py (dépôt astrobin) à l'historique des annotations,
+ * affiché dans la liste des astrophotos de l'admin.
+ *
+ * @param {boolean} dryRun - N'écrit rien.
+ * @returns {void}
+ */
+function importAnnotationReport(dryRun) {
+    const reportPath = path.join(ASTROBIN_DIR, 'annotations-report.json');
+    if (!fs.existsSync(reportPath)) {
+        console.log('Aucun rapport d’annotations (scrape sans annotate_astro.py ou sans photo à traiter).');
+        return;
+    }
+    let report;
+    try {
+        report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+    } catch (error) {
+        // POURQUOI : l'historique n'est qu'un affichage ; un rapport illisible ne doit pas arrêter l'import.
+        console.warn(`⚠️  Rapport d’annotations illisible : ${error.message}`);
+        return;
+    }
+    const counts = summarizeAnnotationReport(report);
+    console.log(`Annotations : ${counts.ok} réussie(s), ${counts.skipped} ignorée(s), ${counts.failed} en échec.`);
+    const historyPath = path.join(PROJECT_ROOT, 'src/data/annotation-runs.json');
+    const history = fs.existsSync(historyPath) ? JSON.parse(fs.readFileSync(historyPath, 'utf8')) : {};
+    const { history: next, added } = mergeAnnotationReport(history, report);
+    if (added === 0) {
+        console.log('Historique des annotations déjà à jour.');
+        return;
+    }
+    console.log(
+        `${dryRun ? '[dry-run] Serait ajouté' : 'Ajouté'} : ${added} passage(s) à src/data/annotation-runs.json`,
+    );
+    if (!dryRun) fs.writeFileSync(historyPath, `${JSON.stringify(next, null, 2)}\n`);
 }
 
 /**
@@ -411,6 +449,7 @@ async function runCiPipeline({ forceMedia = false, refreshIds = [], astrobinAnno
     console.log(`\n=== Import du CSV depuis ${ASTROBIN_DIR} ===`);
     const previousRows = readCsvRows();
     importDataFiles(false);
+    importAnnotationReport(false);
 
     console.log('\n=== Années modifiées dans le CSV (alts) ===');
     migrateAltYears(previousRows);
@@ -566,8 +605,10 @@ async function main() {
     const hasAstrobin = fs.existsSync(ASTROBIN_DIR);
 
     console.log(`\n=== Import du CSV depuis ${ASTROBIN_DIR} ===`);
-    if (hasAstrobin) importDataFiles(dryRun);
-    else console.warn('⚠️  Dépôt astrobin introuvable : imports sautés (voir ASTROBIN_DIR).');
+    if (hasAstrobin) {
+        importDataFiles(dryRun);
+        importAnnotationReport(dryRun);
+    } else console.warn('⚠️  Dépôt astrobin introuvable : imports sautés (voir ASTROBIN_DIR).');
 
     console.log('\n=== Années modifiées dans le CSV ===');
     const migrationArgs = ['scripts/pipeline/migrate-asset-years.mjs', ...(dryRun ? ['--dry-run'] : [])];

@@ -15,9 +15,17 @@ import {
     X,
 } from 'lucide-react';
 import AdminProviders from './AdminProviders';
+import AstroAnnotationCell from './AstroAnnotationCell';
 import ClaudeCodeNotice from './ClaudeCodeNotice';
 import { useToast } from './Toast';
 import { WEB_IMAGES_CHANGED_EVENT } from './WebImagesReminder';
+import {
+    ANNOTATION_FILTERS,
+    matchesAnnotationFilter,
+    type AnnotationAttempt,
+    type AnnotationFilter,
+    type AnnotationInfo,
+} from '@/lib/admin/annotation-source';
 
 interface CsvPhoto {
     ID: string;
@@ -51,7 +59,14 @@ interface CsvPhoto {
     rawPath?: string;
     miniPath?: string;
     annotationPath?: string;
+    annotation?: AnnotationInfo;
+    annotationRun?: AnnotationAttempt;
+    annotationRunCount?: number;
     draft?: boolean;
+}
+
+function isAnnotationFilter(value: string): value is AnnotationFilter {
+    return value in ANNOTATION_FILTERS;
 }
 
 export default function AstroPhotosPanel() {
@@ -107,6 +122,13 @@ function AstroPhotosPanelInner() {
     const detailsCount = photos.filter((p) => p.hasDetails).length;
     const seoCount = photos.filter((p) => p.hasSeo).length;
     const annotationCount = photos.filter((p) => p.hasAnnotation).length;
+    const annotationFilterCounts = Object.fromEntries(
+        (Object.keys(ANNOTATION_FILTERS) as AnnotationFilter[]).map((filter) => [
+            filter,
+            photos.filter((p) => matchesAnnotationFilter(p, filter)).length,
+        ]),
+    ) as Record<AnnotationFilter, number>;
+    const miroirsAnnotationCount = annotationFilterCounts['annotation-miroirs'];
 
     // Filtered data calculation
     const filteredPhotos = photos.filter((p) => {
@@ -129,6 +151,7 @@ function AstroPhotosPanelInner() {
         if (statusFilter === 'missing-wiki') return !p.hasWiki;
         if (statusFilter === 'missing-details') return !p.hasDetails;
         if (statusFilter === 'missing-seo') return !p.hasSeo;
+        if (isAnnotationFilter(statusFilter)) return matchesAnnotationFilter(p, statusFilter);
 
         return true;
     });
@@ -157,7 +180,7 @@ function AstroPhotosPanelInner() {
             </div>
 
             {/* Coverage Statistics Cards Grid */}
-            <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-8">
+            <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-9">
                 <PipelineStat
                     label="Entrées CSV"
                     value={totalCount}
@@ -191,6 +214,15 @@ function AstroPhotosPanelInner() {
                     icon={FileCode}
                     active={statusFilter === 'missing-annotation'}
                     onClick={() => handleStatClick('missing-annotation')}
+                    accentColor="emerald"
+                />
+                <PipelineStat
+                    label="Calques Miroirs"
+                    value={miroirsAnnotationCount}
+                    total={totalCount}
+                    icon={FileCode}
+                    active={statusFilter === 'annotation-not-miroirs'}
+                    onClick={() => handleStatClick('annotation-not-miroirs')}
                     accentColor="emerald"
                 />
                 <PipelineStat
@@ -263,6 +295,11 @@ function AstroPhotosPanelInner() {
                         <option value="missing-annotation">
                             🎨 Annotations manquantes ({totalCount - annotationCount})
                         </option>
+                        {(Object.keys(ANNOTATION_FILTERS) as AnnotationFilter[]).map((filter) => (
+                            <option key={filter} value={filter}>
+                                🎨 {ANNOTATION_FILTERS[filter]} ({annotationFilterCounts[filter]})
+                            </option>
+                        ))}
                         <option value="missing-alt">✍️ Alts manquants ({totalCount - altCount})</option>
                         <option value="missing-wiki">🌐 Wikis manquants ({totalCount - wikiCount})</option>
                         <option value="missing-details">
@@ -305,7 +342,7 @@ function AstroPhotosPanelInner() {
                                 <th className="px-4 py-3">Téléversé</th>
                                 <th className="px-3 py-3 text-center">Raw</th>
                                 <th className="px-3 py-3 text-center">Mini</th>
-                                <th className="px-3 py-3 text-center">Annot.</th>
+                                <th className="px-3 py-3">Annotation</th>
                                 <th className="px-3 py-3 text-center">Alt</th>
                                 <th className="px-3 py-3 text-center">Wiki</th>
                                 <th className="px-3 py-3 text-center">Tech</th>
@@ -347,11 +384,13 @@ function AstroPhotosPanelInner() {
                                     <td className="px-3 py-2.5 text-center">
                                         <StatusDot ok={p.hasMini} title={p.miniPath} label="Mini" />
                                     </td>
-                                    <td className="px-3 py-2.5 text-center">
-                                        <StatusDot
-                                            ok={p.hasAnnotation}
-                                            title={p.annotationPath}
-                                            label="Annotation SVG"
+                                    <td className="px-3 py-2.5">
+                                        <AstroAnnotationCell
+                                            hasAnnotation={p.hasAnnotation}
+                                            annotation={p.annotation}
+                                            annotationRun={p.annotationRun}
+                                            annotationRunCount={p.annotationRunCount}
+                                            annotationPath={p.annotationPath}
                                         />
                                     </td>
                                     <td className="px-3 py-2.5 text-center">
