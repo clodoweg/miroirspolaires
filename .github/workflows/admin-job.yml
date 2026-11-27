@@ -7,7 +7,8 @@ name: Admin job
 # Secrets requis : TURSO_DATABASE_URL, TURSO_AUTH_TOKEN (jeton en écriture).
 # Pour `update-photos-ci` et `update-photos-ci-force` seulement : ASTROBIN_DEPLOY_KEY (clé SSH privée d'une deploy key en lecture seule
 # du dépôt privé clodoweg/astrobin), R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME ;
-# facultatifs : IMAGE_WORKER_URL, IMAGE_WORKER_PURGE_KEY (purge du cache du worker des images remplacées),
+# Pour `warm-cache-ci` et `purge-cache-ci` : les mêmes secrets R2 et IMAGE_WORKER_URL (plus IMAGE_WORKER_PURGE_KEY pour la purge).
+# Pour la mise à jour des photos, facultatifs : IMAGE_WORKER_URL, IMAGE_WORKER_PURGE_KEY (purge du cache du worker des images remplacées),
 # CLOUDFLARE_ZONE_ID, CLOUDFLARE_API_TOKEN (jeton « Zone › Cache Purge » ; purge du CDN de R2).
 # POURQUOI le workflow doit exister sur main : GitHub ne déclenche un workflow_dispatch que pour un
 # fichier présent sur la branche par défaut, même quand le run cible dev.
@@ -49,6 +50,8 @@ jobs:
       SCRIPT_ID: ${{ inputs.script_id }}
       # POURQUOI : ces jobs lisent le dépôt astrobin, lancent Python et écrivent sur R2.
       IS_PHOTO_UPDATE: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' || inputs.script_id == 'update-annotations-ci' }}
+      # POURQUOI : seuls ces jobs reçoivent les secrets R2 et du worker (photos, annotations, préchauffage et purge du cache).
+      NEEDS_IMAGE_SECRETS: ${{ inputs.script_id == 'update-photos-ci' || inputs.script_id == 'update-photos-ci-force' || inputs.script_id == 'update-annotations-ci' || inputs.script_id == 'warm-cache-ci' || inputs.script_id == 'purge-cache-ci' }}
 
     steps:
       - name: Checkout repository
@@ -87,12 +90,12 @@ jobs:
           # POURQUOI : sans lui, Python garde sa sortie en tampon (stdout n'est pas un terminal) et le
           # journal de l'admin reste figé pendant tout le scrape.
           PYTHONUNBUFFERED: '1'
-          R2_ACCOUNT_ID: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_ACCOUNT_ID || '' }}
-          R2_ACCESS_KEY_ID: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_ACCESS_KEY_ID || '' }}
-          R2_SECRET_ACCESS_KEY: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_SECRET_ACCESS_KEY || '' }}
-          R2_BUCKET_NAME: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.R2_BUCKET_NAME || '' }}
-          IMAGE_WORKER_URL: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.IMAGE_WORKER_URL || '' }}
-          IMAGE_WORKER_PURGE_KEY: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.IMAGE_WORKER_PURGE_KEY || '' }}
+          R2_ACCOUNT_ID: ${{ env.NEEDS_IMAGE_SECRETS == 'true' && secrets.R2_ACCOUNT_ID || '' }}
+          R2_ACCESS_KEY_ID: ${{ env.NEEDS_IMAGE_SECRETS == 'true' && secrets.R2_ACCESS_KEY_ID || '' }}
+          R2_SECRET_ACCESS_KEY: ${{ env.NEEDS_IMAGE_SECRETS == 'true' && secrets.R2_SECRET_ACCESS_KEY || '' }}
+          R2_BUCKET_NAME: ${{ env.NEEDS_IMAGE_SECRETS == 'true' && secrets.R2_BUCKET_NAME || '' }}
+          IMAGE_WORKER_URL: ${{ env.NEEDS_IMAGE_SECRETS == 'true' && secrets.IMAGE_WORKER_URL || '' }}
+          IMAGE_WORKER_PURGE_KEY: ${{ env.NEEDS_IMAGE_SECRETS == 'true' && secrets.IMAGE_WORKER_PURGE_KEY || '' }}
           CLOUDFLARE_ZONE_ID: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.CLOUDFLARE_ZONE_ID || '' }}
           CLOUDFLARE_API_TOKEN: ${{ env.IS_PHOTO_UPDATE == 'true' && secrets.CLOUDFLARE_API_TOKEN || '' }}
           # POURQUOI : adresse publique, pas un secret ; une variable de dépôt PUBLIC_R2_URL la remplace au besoin.

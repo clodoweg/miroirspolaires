@@ -23,7 +23,7 @@ paths:
 | `pipeline/update-content.mjs --scope=blog\|voyages` | Boutons de `/admin/blog/images` et `/admin/voyages/images`. Pour ce seul domaine : temps de lecture (blog), envoi R2 (`--changed`), dimensions, versions web et signalement des alts et SEO manquants. Ne supprime rien sur R2. `--dry-run` disponible. |
 | `r2/upload_local_to_r2.js [dir]` | Par défaut : n'envoie que les fichiers absents de R2 (`-f` : réécrit aussi les existants ; `--changed` : réécrit ceux dont le contenu diffère). **`--delete-first` : vide le préfixe R2 puis réenvoie** (refusé si le dossier local manque). Sans dossier, touche `astrophotographies/`, `blog/` et `voyages/`. `--dry-run` disponible ; option inconnue = refus. |
 | `r2/delete-dirs.mjs [préfixes…]` | Supprime des préfixes R2, sans confirmation (`--dry-run` pour lister d'abord). |
-| `r2/purge-cache.mjs [dir\|all]` | Purge le cache du worker (défaut `astrophotographies`), seulement pour les fichiers présents en local, variantes `IMAGE_CONFIG.CACHED_VARIANTS`. |
+| `r2/purge-cache.mjs [dir\|all]` | Purge le cache du worker (défaut `astrophotographies`, ou `--prefix=<dossier>`), pour les fichiers présents en local, ou listés sur R2 avec `--from-r2` (entrée `purge-cache-ci` de l'admin distant), variantes `IMAGE_CONFIG.CACHED_VARIANTS`. |
 | `r2/download_r2_to_local.js [préfixe] [-s] [-f]` | Écrase les fichiers locaux de taille différente. |
 | `build/regen-thumbs.mjs --upload` | Réécrit les miniatures sur R2. |
 | `build/generate-web-images.mjs --upload` | Envoie sur R2 (préfixe `web/` seulement) les versions web absentes (`--force` : les réécrit) et réécrit `src/data/web-images.json`. Sans `--upload` : local seulement (`temp/web-images/`). `--dry-run`, `--only=astro,blog,voyages`, `--prefix=<dossier>` (un seul article ou voyage ; seules ses entrées du manifeste sont remplacées), `--purge` (cache du worker et CDN de R2 des sources traitées). Entrée `refresh-web-images` de l'admin : `--force --upload --purge` sur un dossier. |
@@ -38,7 +38,7 @@ paths:
 
 Sans effet distant : `pipeline/check-variable-stars.mjs`, `audit/seo-coverage.mjs`, `build/compute-image-dimensions.mjs` (écrit seulement le JSON local), `pipeline/migrate-asset-years.mjs --dry-run`, `db/create-indexes.mjs --check`.
 
-Écrivent des fichiers versionnés ou locaux : `build/update-catalogue-snapshots.mjs` (`src/data/catalogues/`, lit le CDS ou ses miroirs selon `src/data/upstream-priority.json` ; boutons dans `/admin/donnees/catalogues`), `audit/lighthouse-runner.mjs` (`src/data/lighthouse-results.json`), `pipeline/migrate-asset-years.mjs` (déplace des fichiers, réécrit `alt.json`), `pipeline/generate-mini.mjs`, `stellarium/build.sh` (`public/js`, `public/data`). Réseau seulement : `r2/warm-cache.mjs`.
+Écrivent des fichiers versionnés ou locaux : `build/update-catalogue-snapshots.mjs` (`src/data/catalogues/`, lit le CDS ou ses miroirs selon `src/data/upstream-priority.json` ; boutons dans `/admin/donnees/catalogues`), `audit/lighthouse-runner.mjs` (`src/data/lighthouse-results.json`), `pipeline/migrate-asset-years.mjs` (déplace des fichiers, réécrit `alt.json`), `pipeline/generate-mini.mjs`, `stellarium/build.sh` (`public/js`, `public/data`). Réseau seulement : `r2/warm-cache.mjs` (`[préfixe]` ou `--prefix=<dossier>` ; entrée `warm-cache-ci` de l'admin distant).
 
 ## Pièges connus
 

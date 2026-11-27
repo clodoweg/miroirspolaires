@@ -18,7 +18,9 @@
  *   [préfixe|all] : premier argument qui ne commence pas par `-`. Préfixe de clé R2 à préchauffer
  *                   (ex. astrophotographies/2026, blog/2025), comparaison `startsWith` sensible à la
  *                   casse et sans `/` ajouté (`blog` couvre aussi `blog-…`). Absent ou `all` : toutes
- *                   les images. Les arguments commençant par `-` sont ignorés.
+ *                   les images. Les autres arguments commençant par `-` sont ignorés.
+ *   --prefix=<préfixe> : même chose sous forme d'option (jobs de l'admin distant, entrée `warm-cache-ci`) ;
+ *                   prioritaire sur l'argument positionnel.
  *
  * Code de sortie : 1 si une requête échoue ou si une variable d'environnement manque.
  *
@@ -26,6 +28,7 @@
  *   node scripts/r2/warm-cache.mjs                            # toutes les images
  *   node scripts/r2/warm-cache.mjs astrophotographies/2026
  *   node scripts/r2/warm-cache.mjs all
+ *   node scripts/r2/warm-cache.mjs --prefix=blog
  */
 
 import { fileURLToPath } from 'url';
@@ -101,7 +104,8 @@ async function fetchR2ObjectKeys() {
  */
 async function runCacheWarmer() {
     const args = process.argv.slice(2);
-    const targetFilter = args.find((arg) => !arg.startsWith('-'));
+    const prefixOption = args.find((arg) => arg.startsWith('--prefix='))?.slice('--prefix='.length);
+    const targetFilter = prefixOption || args.find((arg) => !arg.startsWith('-'));
 
     let allKeys = await fetchR2ObjectKeys();
 

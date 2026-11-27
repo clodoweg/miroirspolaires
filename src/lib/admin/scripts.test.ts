@@ -33,6 +33,11 @@ describe('SCRIPTS (console de scripts de l’admin)', () => {
         const targetedScripts = ['r2/', 'build/generate-web-images.mjs'];
         for (const script of SCRIPTS.filter((entry) => !entry.needsTarget)) {
             const file = script.args[0];
+            // POURQUOI : un dossier obligatoire (option `required`) donne au script une cible à chaque lancement.
+            const hasRequiredTarget = (script.options ?? []).some(
+                (option) => option.kind === 'list' && option.required,
+            );
+            if (hasRequiredTarget) continue;
             if (sharedScripts.some((name) => file.endsWith(name))) {
                 expect(
                     script.args.some((arg) => arg.startsWith('--only=')),
@@ -82,6 +87,8 @@ describe('SCRIPTS (console de scripts de l’admin)', () => {
             'update-photos-ci',
             'update-photos-ci-force',
             'update-annotations-ci',
+            'warm-cache-ci',
+            'purge-cache-ci',
             'update-variable-stars-ci',
         ]);
         expect(getScript('update-annotations-ci')).toMatchObject({
@@ -101,6 +108,23 @@ describe('SCRIPTS (console de scripts de l’admin)', () => {
             devOnly: true,
             args: ['scripts/pipeline/update-photos.mjs'],
         });
+    });
+});
+
+describe('cache du worker à distance', () => {
+    it.each(['warm-cache-ci', 'purge-cache-ci'])('%s n’accepte qu’un dossier du bucket', (id) => {
+        const script = getScript(id)!;
+        expect(buildScriptArgs(script, { prefix: ['blog/2026'] })).toEqual(['--prefix=blog/2026']);
+        for (const values of [undefined, {}, { prefix: [] }]) {
+            expect(() => buildScriptArgs(script, values)).toThrow(ScriptOptionsError);
+        }
+        for (const prefix of [['../x'], ['incoming'], ['blog/../../x'], ['blog', 'voyages'], ['blog;rm']]) {
+            expect(() => buildScriptArgs(script, { prefix })).toThrow(ScriptOptionsError);
+        }
+    });
+
+    it('purge d’après le bucket, sans les images locales absentes de GitHub Actions', () => {
+        expect(getScript('purge-cache-ci')?.args).toEqual(['scripts/r2/purge-cache.mjs', '--from-r2']);
     });
 });
 
