@@ -32,6 +32,7 @@ vi.mock('lucide-react', () => ({
     Settings: () => <div data-testid="settings-icon" />,
     Film: () => <div data-testid="film-icon" />,
     MapPin: () => <div data-testid="map-pin-icon" />,
+    Mail: () => <div data-testid="mail-icon" />,
     Check: () => <div data-testid="check-icon" />,
     LayoutGrid: () => <div data-testid="layout-grid-icon" />,
     LayoutList: () => <div data-testid="layout-list-icon" />,

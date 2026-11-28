@@ -12,8 +12,13 @@
  * OPTIONS ET EXEMPLES :
  * - `POST /api/shop/create-checkout-session`
  *   Body JSON : `{ carrierId: "mondial_relay", quantity: 1, relayPoint: { ... } }`
- *   ou `{ carrierId: "remise_main_propre", quantity: 1, priorAgreementConfirmed: true }`
+ *   ou `{ carrierId: "remise_main_propre", quantity: 1, pickupCode: "MP-7K4Q-X9RT" }`
  *   Réponse JSON : `{ url: "https://checkout.stripe.com/c/pay/..." }`
+ *
+ * REMISE EN MAIN PROPRE : le code, délivré par l'auteur depuis `/admin/boutique`, est vérifié dans Turso
+ * (`findUsablePickupCode`). La session Checkout impose l'e-mail de la demande. Une session précédente
+ * encore ouverte pour ce code est expirée, une session déjà payée le rend inutilisable : le code ne sert
+ * qu'à une commande, même sans webhook Stripe (`stripe-webhook.ts` le marque `used` en plus).
  */
 
 import type { APIRoute } from 'astro';
@@ -26,6 +31,14 @@ import {
     validateRelayPoint,
     type ValidatedRelayPoint,
 } from '../../../lib/shop/checkout-validation';
+import {
+    attachCheckoutSession,
+    findUsablePickupCode,
+    markPickupCodeUsed,
+    normalizePickupCode,
+    resolvePickupDatabase,
+    type PickupRequest,
+} from '../../../lib/shop/pickup-codes';
 
 export const prerender = false;
 
@@ -45,7 +58,7 @@ export const POST: APIRoute = async ({ request, url }) => {
     if (!body || typeof body !== 'object') {
         return errorResponse(400, 'Corps de requête JSON manquant ou invalide.');
     }
-    const { carrierId, quantity, relayPoint, priorAgreementConfirmed } = body as Record<string, unknown>;
+    const { carrierId, quantity, relayPoint, pickupCode } = body as Record<string, unknown>;
 
     const safeQuantity = parseQuantity(quantity);
     if (safeQuantity === null) {
@@ -65,9 +78,30 @@ export const POST: APIRoute = async ({ request, url }) => {
         }
     }
 
-    // WARNING: simple déclaration de l'acheteur : l'accord réel reste à vérifier avant d'honorer la commande.
-    if (carrier.requiresPriorAgreement && priorAgreementConfirmed !== true) {
-        return errorResponse(400, "Ce mode de livraison nécessite l'accord préalable de l'auteur.");
+    const stripe = new Stripe(stripeSecretKey);
+
+    let pickupRequest: PickupRequest | null = null;
+    if (carrier.requiresPriorAgreement) {
+        const code = normalizePickupCode(pickupCode);
+        if (!code) {
+            return errorResponse(400, "Ce mode de livraison nécessite le code remis par l'auteur.");
+        }
+        if (!(await resolvePickupDatabase())) {
+            console.error('[api] create-checkout-session: Turso indisponible pour vérifier un code');
+            return errorResponse(503, 'La remise en main propre est momentanément indisponible.');
+        }
+        try {
+            pickupRequest = await findUsablePickupCode(code, new Date());
+            if (pickupRequest && !(await releasePreviousSession(stripe, pickupRequest))) {
+                pickupRequest = null;
+            }
+        } catch (error) {
+            console.error('[api] create-checkout-session: vérification du code impossible', error);
+            return errorResponse(503, 'La remise en main propre est momentanément indisponible.');
+        }
+        if (!pickupRequest) {
+            return errorResponse(400, 'Ce code est invalide, expiré ou a déjà servi.');
+        }
     }
 
     const book = SHOP_CONFIG.book;
@@ -82,8 +116,9 @@ export const POST: APIRoute = async ({ request, url }) => {
         quantity: String(safeQuantity),
     };
 
-    if (carrier.requiresPriorAgreement) {
-        metadata.prior_agreement_confirmed = 'true';
+    if (pickupRequest) {
+        metadata.pickup_request_id = pickupRequest.id;
+        metadata.pickup_code = pickupRequest.code ?? '';
     }
 
     if (validatedRelay) {
@@ -139,13 +174,15 @@ export const POST: APIRoute = async ({ request, url }) => {
             enabled: true,
         },
         metadata,
+        // POURQUOI : l'accord porte sur une personne ; Checkout reprend l'e-mail de la demande.
+        ...(pickupRequest && { customer_email: pickupRequest.email, client_reference_id: pickupRequest.id }),
         success_url: `${origin}/boutique/confirmation?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/boutique`,
     };
 
     try {
-        const stripe = new Stripe(stripeSecretKey);
         const session = await stripe.checkout.sessions.create(sessionParams);
+        if (pickupRequest) await attachCheckoutSession(pickupRequest.id, session.id);
         return jsonResponse({ url: session.url });
     } catch (error) {
         // WARNING: le message Stripe peut décrire la configuration du compte : il reste dans les logs.
@@ -154,3 +191,25 @@ export const POST: APIRoute = async ({ request, url }) => {
         return errorResponse(502, 'Impossible de créer la session de paiement. Réessayez dans quelques instants.');
     }
 };
+
+/**
+ * Neutralise la session Checkout déjà rattachée au code, s'il y en a une.
+ *
+ * WARNING: sans cela, deux onglets ouverts avec le même code pourraient être payés tous les deux.
+ *
+ * @param stripe - Client Stripe.
+ * @param request - Demande acceptée.
+ * @returns `false` si la session précédente est déjà payée (code consommé), `true` sinon.
+ */
+async function releasePreviousSession(stripe: Stripe, request: PickupRequest): Promise<boolean> {
+    if (!request.stripeSessionId) return true;
+    const previous = await stripe.checkout.sessions.retrieve(request.stripeSessionId);
+    if (previous.status === 'complete') {
+        await markPickupCodeUsed(request.id, previous.id, new Date());
+        return false;
+    }
+    if (previous.status === 'open') {
+        await stripe.checkout.sessions.expire(previous.id);
+    }
+    return true;
+}

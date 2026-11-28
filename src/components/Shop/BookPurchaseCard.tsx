@@ -2,7 +2,8 @@
  * @file src/components/Shop/BookPurchaseCard.tsx
  * @description Carte interactive de commande du livre d'art.
  * Gère le choix du mode de livraison (Mondial Relay / remise en main propre), la quantité,
- * la sélection du point relais, et la redirection vers Stripe Checkout.
+ * la sélection du point relais, le code de remise en main propre (`PickupCodeSection`)
+ * et la redirection vers Stripe Checkout.
  *
  * POURQUOI :
  * Offre un tunnel d'achat instantané et sans rechargement de page, avec vérification
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 import { SHOP_CONFIG, type ShippingCarrier } from '../../config/shop';
 import { MondialRelayModal, type RelayPoint } from './MondialRelayModal';
+import { PickupCodeSection } from './PickupCodeSection';
 
 interface BookPurchaseCardProps {
     brandId?: string;
@@ -35,7 +37,7 @@ export const BookPurchaseCard: React.FC<BookPurchaseCardProps> = ({ brandId = 'B
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [hasPriorAgreement, setHasPriorAgreement] = useState<boolean>(false);
+    const [pickupCode, setPickupCode] = useState<string>('');
 
     const selectedCarrier = activeCarriers.find((c) => c.id === selectedCarrierId);
     const unitPrice = SHOP_CONFIG.book.price;
@@ -53,8 +55,8 @@ export const BookPurchaseCard: React.FC<BookPurchaseCardProps> = ({ brandId = 'B
             return;
         }
 
-        if (selectedCarrier?.requiresPriorAgreement && !hasPriorAgreement) {
-            setErrorMessage("Veuillez confirmer avoir obtenu l'accord de l'auteur pour une remise en main propre.");
+        if (selectedCarrier?.requiresPriorAgreement && pickupCode.trim() === '') {
+            setErrorMessage("Saisissez le code envoyé par l'auteur, ou demandez-en un ci-dessous.");
             return;
         }
 
@@ -70,7 +72,7 @@ export const BookPurchaseCard: React.FC<BookPurchaseCardProps> = ({ brandId = 'B
                     carrierId: selectedCarrierId,
                     quantity,
                     relayPoint: selectedCarrier?.type === 'relay' ? selectedRelay : null,
-                    priorAgreementConfirmed: hasPriorAgreement,
+                    pickupCode: selectedCarrier?.requiresPriorAgreement ? pickupCode : undefined,
                 }),
             });
 
@@ -223,20 +225,15 @@ export const BookPurchaseCard: React.FC<BookPurchaseCardProps> = ({ brandId = 'B
                     })}
                 </div>
 
-                {/* POURQUOI hors du label du transporteur : deux labels imbriqués sont invalides en HTML. */}
+                {/* POURQUOI hors du label du transporteur : le bloc a ses propres champs et labels, qu'on ne peut pas imbriquer. */}
                 {selectedCarrier?.requiresPriorAgreement && (
-                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-mp-accent/30 bg-mp-accent/5 p-4 text-xs leading-relaxed text-mp-text-body">
-                        <input
-                            type="checkbox"
-                            checked={hasPriorAgreement}
-                            onChange={(event) => {
-                                setHasPriorAgreement(event.target.checked);
-                                setErrorMessage(null);
-                            }}
-                            className="mt-0.5 accent-[#D4B483]"
-                        />
-                        <span>J'ai obtenu l'accord de l'auteur pour une remise en main propre.</span>
-                    </label>
+                    <PickupCodeSection
+                        code={pickupCode}
+                        onCodeChange={(code) => {
+                            setPickupCode(code);
+                            setErrorMessage(null);
+                        }}
+                    />
                 )}
             </div>
 

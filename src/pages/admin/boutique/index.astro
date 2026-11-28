@@ -1,0 +1,23 @@
+---
+/**
+ * Demandes de remise en main propre : liste lue dans Turso, acceptation (code envoyé à l'acheteur), refus,
+ * révocation. Fonctionne en local et sur l'admin distant.
+ */
+import { isAdminGranted } from "@/lib/admin/auth/access";
+import AdminLayout from "@/layouts/AdminLayout.astro";
+import PickupRequestsPanel from "@/components/Admin/PickupRequestsPanel";
+
+export const prerender = false;
+
+if (!isAdminGranted(Astro.locals)) {
+    return new Response("Not Found", { status: 404 });
+}
+---
+
+<AdminLayout
+    title="Admin · Remises en main propre"
+    description="Demandes de remise en main propre du livre."
+    active="shop-pickup"
+>
+    <PickupRequestsPanel client:only="react" />
+</AdminLayout>

@@ -65,6 +65,7 @@ export type AdminPageId =
     | 'r2'
     | 'cache'
     | 'scripts'
+    | 'shop-pickup'
     | 'publication'
     | 'journal'
     | 'diagnostic';
@@ -260,6 +261,20 @@ export const ADMIN_SECTIONS: AdminSection[] = [
                 description: 'Tous les scripts, avec leurs options.',
                 availability: 'both',
                 legacyHrefs: ['/admin/scripts'],
+            },
+        ],
+    },
+    {
+        id: 'boutique',
+        label: 'Boutique',
+        pages: [
+            {
+                id: 'shop-pickup',
+                label: 'Remises en main propre',
+                href: '/admin/boutique',
+                description: 'Demandes de remise en main propre : accepter, refuser, codes envoyés.',
+                availability: 'both',
+                inNavbar: true,
             },
         ],
     },

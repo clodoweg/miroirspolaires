@@ -31,7 +31,7 @@ export interface ShippingCarrier {
     enabled: boolean;
     /** Type de livraison : point relais interactif ou remise en main propre */
     type: 'relay' | 'pickup';
-    /** L'acheteur doit confirmer avoir obtenu l'accord préalable de l'auteur avant de payer */
+    /** Réservé aux acheteurs munis d'un code délivré par l'auteur (`/admin/boutique`, vérifié au paiement) */
     requiresPriorAgreement?: boolean;
     /** Délai indicatif en jours ouvrés */
     estimatedDays?: string;
@@ -118,7 +118,8 @@ export const SHOP_CONFIG: ShopConfig = {
         {
             id: 'remise_main_propre',
             name: 'Remise en main propre',
-            description: "Uniquement après accord préalable de l'auteur. Lieu et date à convenir ensemble.",
+            description:
+                "Sur demande, avec le code envoyé par l'auteur une fois la demande acceptée. Lieu et date à convenir ensemble.",
             price: 0,
             enabled: true,
             type: 'pickup',
