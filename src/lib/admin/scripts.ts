@@ -27,6 +27,8 @@ export type ScriptOption =
           /** Motif que chaque valeur doit respecter (source d'expression régulière, ancrée). */
           pattern: string;
           maxItems: number;
+          /** Au moins une valeur exigée : le script ne se lance jamais sur tout le périmètre. */
+          required?: boolean;
       }
     | {
           id: string;
@@ -84,6 +86,18 @@ export interface ScriptDef {
  * Registry of scripts exposed in the admin runner.
  * `command`/`args` are passed to child_process.spawn with cwd = project root.
  */
+/** Dossier du bucket visé par le préchauffage ou la purge du cache, à distance. */
+export const CACHE_FOLDER_OPTION: ScriptOption = {
+    id: 'prefix',
+    kind: 'list',
+    flag: '--prefix=',
+    label: 'Dossier',
+    help: 'Dossier du bucket (astrophotographies, blog, voyages, ou un sous-dossier comme blog/2026).',
+    pattern: '(?:astrophotographies|blog|voyages)(?:/[A-Za-z0-9_-]{1,80}){0,3}',
+    maxItems: 1,
+    required: true,
+};
+
 export const SCRIPTS: ScriptDef[] = [
     {
         id: 'update-photos',
@@ -101,7 +115,7 @@ export const SCRIPTS: ScriptDef[] = [
         id: 'update-photos-ci',
         label: 'Astrophotos : mettre à jour les photos (GitHub Actions)',
         description:
-            'Lance le scrape AstroBin (nouvelles photos seulement), génère miniatures, alts, descriptions Wikipedia, versions web et dimensions, envoie tout sur R2 sous un préfixe temporaire puis le copie vers les clés définitives si tout a réussi, et committe le CSV et les manifestes sur dev. Ne supprime rien sur R2. Les descriptions SEO restent à écrire via Claude Code.',
+            'Lance le scrape AstroBin (nouvelles photos seulement), dessine les calques d’annotations, génère miniatures, alts, descriptions Wikipedia, versions web et dimensions, envoie tout sur R2 sous un préfixe temporaire puis le copie vers les clés définitives si tout a réussi, et committe le CSV et les manifestes sur dev. Ne supprime rien sur R2. Les descriptions SEO restent à écrire via Claude Code.',
         category: 'pipeline',
         command: 'node',
         args: ['scripts/pipeline/update-photos.mjs', '--ci'],
@@ -118,6 +132,13 @@ export const SCRIPTS: ScriptDef[] = [
                 pattern: '\\d{1,12}',
                 maxItems: 50,
             },
+            {
+                id: 'astrobinAnnotations',
+                kind: 'flag',
+                flag: '--astrobin-annotations',
+                label: 'Garder les annotations d’AstroBin',
+                help: 'Télécharge les SVG PixInsight d’AstroBin au lieu de dessiner les calques (style InstaSlice).',
+            },
         ],
     },
     {
@@ -125,13 +146,44 @@ export const SCRIPTS: ScriptDef[] = [
         id: 'update-photos-ci-force',
         label: 'Astrophotos : tout recopier depuis AstroBin (GitHub Actions)',
         description:
-            'Comme la mise à jour des photos, mais retélécharge tous les médias d’AstroBin (raws, annotations, skyplots) et régénère miniatures et versions web, même s’ils sont déjà sur R2. Seuls les fichiers dont le contenu a changé remplacent ceux de R2 (cache du worker purgé) ; rien n’est supprimé. Long : de 30 min à 1 h.',
+            'Comme la mise à jour des photos, mais retélécharge tous les médias d’AstroBin (raws, skyplots), redessine tous les calques d’annotations et régénère miniatures et versions web, même s’ils sont déjà sur R2. Seuls les fichiers dont le contenu a changé remplacent ceux de R2 (cache du worker purgé) ; rien n’est supprimé. Long : de 30 min à 1 h.',
         category: 'pipeline',
         command: 'node',
         args: ['scripts/pipeline/update-photos.mjs', '--ci', '--force-media'],
         writes: true,
         remote: true,
         remoteOnly: true,
+        options: [
+            {
+                id: 'astrobinAnnotations',
+                kind: 'flag',
+                flag: '--astrobin-annotations',
+                label: 'Garder les annotations d’AstroBin',
+                help: 'Télécharge les SVG PixInsight d’AstroBin au lieu de dessiner les calques (style InstaSlice).',
+            },
+        ],
+    },
+    {
+        // WARNING: écrit sur le R2 de production (calques d'annotations, après envoi complet sous incoming/astro/).
+        id: 'update-annotations-ci',
+        label: 'Astrophotos : redessiner les annotations (GitHub Actions)',
+        description:
+            'Redessine les calques d’annotations absents ou pas encore dessinés par annotate_astro.py (style InstaSlice), à partir de la résolution astrométrique d’AstroBin et des dimensions connues des photos, sans retélécharger les images. Envoie les calques sur R2, purge le CDN et committe l’historique des annotations sur dev. Quelques minutes.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/pipeline/update-annotations.mjs'],
+        writes: true,
+        remote: true,
+        remoteOnly: true,
+        options: [
+            {
+                id: 'all',
+                kind: 'flag',
+                flag: '--all',
+                label: 'Tout redessiner',
+                help: 'Redessine aussi les calques déjà dessinés par annotate_astro.py.',
+            },
+        ],
     },
     {
         id: 'sync-r2',
@@ -321,6 +373,33 @@ export const SCRIPTS: ScriptDef[] = [
         args: ['scripts/r2/purge-cache.mjs'],
         writes: true,
         needsTarget: true,
+    },
+    {
+        // POURQUOI : à distance, le dossier est une option validée (jamais un argument libre) ; la page Cache le fixe.
+        id: 'warm-cache-ci',
+        label: 'Cache du worker : préchauffer un dossier (GitHub Actions)',
+        description:
+            'Liste les images du dossier sur R2 et demande au worker chacune de leurs variantes pour remplir son cache. Aucune écriture.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/r2/warm-cache.mjs'],
+        writes: false,
+        remote: true,
+        remoteOnly: true,
+        options: [CACHE_FOLDER_OPTION],
+    },
+    {
+        id: 'purge-cache-ci',
+        label: 'Cache du worker : purger un dossier (GitHub Actions)',
+        description:
+            'Liste les images du dossier sur R2 et vide le cache du worker pour chacune de leurs variantes. Les images sont ensuite ré-encodées à la demande.',
+        category: 'pipeline',
+        command: 'node',
+        args: ['scripts/r2/purge-cache.mjs', '--from-r2'],
+        writes: true,
+        remote: true,
+        remoteOnly: true,
+        options: [CACHE_FOLDER_OPTION],
     },
     {
         id: 'update-catalogues',
@@ -538,7 +617,7 @@ export class ScriptOptionsError extends Error {
  * @throws ScriptOptionsError si une option est inconnue, mal typée ou hors bornes.
  */
 export function buildScriptArgs(script: ScriptDef, values: unknown): string[] {
-    if (values === undefined || values === null) return [];
+    if (values === undefined || values === null) values = {};
     if (typeof values !== 'object' || Array.isArray(values)) throw new ScriptOptionsError('Options invalides.');
     const declared = new Map((script.options ?? []).map((option) => [option.id, option]));
     const record = values as Record<string, unknown>;
@@ -548,6 +627,9 @@ export function buildScriptArgs(script: ScriptDef, values: unknown): string[] {
     const args: string[] = [];
     for (const option of script.options ?? []) {
         const value = record[option.id];
+        if (option.kind === 'list' && option.required && (!Array.isArray(value) || value.length === 0)) {
+            throw new ScriptOptionsError(`${option.label} : valeur obligatoire.`);
+        }
         if (value === undefined || value === null) continue;
         if (option.kind === 'flag') {
             if (typeof value !== 'boolean') throw new ScriptOptionsError(`${option.label} : oui ou non attendu.`);

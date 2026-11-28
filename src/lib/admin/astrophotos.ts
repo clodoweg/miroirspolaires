@@ -13,6 +13,14 @@ import path from 'node:path';
 import Papa from 'papaparse';
 import { sanitizeFilename, createUniqueHeaderTransform } from './shared';
 import { loadAstroAssetIndex, type AstroAssetIndex } from './astro-asset-index';
+import {
+    ANNOTATION_HEAD_BYTES,
+    classifyAnnotationSvg,
+    latestAnnotationAttempt,
+    type AnnotationAttempt,
+    type AnnotationInfo,
+    type AnnotationRuns,
+} from './annotation-source';
 import { getAdminAccessMode } from './auth/config';
 import { getContentReader, type ContentReader } from './stores/content-reader';
 import { getContentWriter, type ContentWriter, type FileChange } from './stores/content-writer';
@@ -53,6 +61,12 @@ export interface CsvPhoto {
     rawPath?: string;
     miniPath?: string;
     annotationPath?: string;
+    /** Origine du calque d'annotations en ligne (lue dans le fichier). */
+    annotation?: AnnotationInfo;
+    /** Dernier passage du script d'annotation (`annotation-runs.json`). */
+    annotationRun?: AnnotationAttempt;
+    /** Nombre de passages connus du script d'annotation (5 au plus sont gardés). */
+    annotationRunCount?: number;
     draft?: boolean;
 }
 
@@ -61,6 +75,44 @@ const WIKI_PATH = 'src/data/wikipedia.json';
 const DETAILS_PATH = 'src/data/astro_details.json';
 const SEO_PATH = 'src/data/seo.json';
 const DRAFTS_PATH = 'src/data/drafts.json';
+const ANNOTATION_RUNS_PATH = 'src/data/annotation-runs.json';
+const ANNOTATION_READ_CONCURRENCY = 12;
+
+// POURQUOI : à distance, chaque lecture est une requête R2 ; tant que la date de l'objet ne change pas, son
+// origine non plus. Le cache vit le temps de l'instance Vercel.
+const annotationCache = new Map<string, { modifiedAt: string; info: AnnotationInfo }>();
+
+/**
+ * Origine du calque d'annotations de chaque clé, lue en tête de fichier (12 lectures en parallèle au plus).
+ *
+ * @param keys - Clés des SVG existants.
+ * @param assets - Index des fichiers.
+ * @returns L'origine par clé ; une clé illisible est absente.
+ */
+async function describeAnnotations(keys: string[], assets: AstroAssetIndex): Promise<Map<string, AnnotationInfo>> {
+    const result = new Map<string, AnnotationInfo>();
+    let next = 0;
+    const worker = async () => {
+        while (next < keys.length) {
+            const key = keys[next++];
+            const knownDate = assets.modifiedAt(key);
+            const cached = annotationCache.get(key);
+            if (knownDate && cached && cached.modifiedAt === knownDate) {
+                result.set(key, cached.info);
+                continue;
+            }
+            const head = await assets.readHead(key, ANNOTATION_HEAD_BYTES);
+            if (!head) continue;
+            const info: AnnotationInfo = { ...classifyAnnotationSvg(head.text) };
+            const updatedAt = head.modifiedAt ?? knownDate ?? undefined;
+            if (updatedAt) info.updatedAt = updatedAt;
+            if (knownDate) annotationCache.set(key, { modifiedAt: knownDate, info });
+            result.set(key, info);
+        }
+    };
+    await Promise.all(Array.from({ length: Math.min(ANNOTATION_READ_CONCURRENCY, keys.length) }, worker));
+    return result;
+}
 
 async function readJsonSafely<T>(reader: ContentReader, relativePath: string, defaultVal: T): Promise<T> {
     try {
@@ -97,16 +149,24 @@ export async function listRecentPhotos(limit = 25, sources: AstroPhotoSources = 
     });
 
     // Load metadata files in parallel for efficiency
-    const [altData, wikiData, detailsData, seoData, draftsData] = await Promise.all([
+    const [altData, wikiData, detailsData, seoData, draftsData, annotationRuns] = await Promise.all([
         readJsonSafely<Record<string, string>>(reader, ALT_PATH, {}),
         readJsonSafely<Record<string, any>>(reader, WIKI_PATH, {}),
         readJsonSafely<Record<string, any>>(reader, DETAILS_PATH, {}),
         readJsonSafely<Record<string, string>>(reader, SEO_PATH, {}),
         readJsonSafely<Record<string, boolean>>(reader, DRAFTS_PATH, {}),
+        readJsonSafely<AnnotationRuns>(reader, ANNOTATION_RUNS_PATH, {}),
     ]);
     const assets = sources.assets ?? (await loadAstroAssetIndex(getAdminAccessMode() === 'remote'));
 
     const rows = (parsed.data ?? []).slice(0, limit);
+    const annotationKeys = rows
+        .map((row) => {
+            const rowId = String(row.ID ?? '').trim();
+            return `astrophotographies/annotations/${String(row.Uploaded ?? '').slice(0, 4)}/${rowId}_annotation.svg`;
+        })
+        .filter((key) => assets.has(key));
+    const annotations = await describeAnnotations(annotationKeys, assets);
     const out: CsvPhoto[] = [];
     for (const row of rows) {
         const id = String(row.ID ?? '').trim();
@@ -176,6 +236,9 @@ export async function listRecentPhotos(limit = 25, sources: AstroPhotoSources = 
             rawPath: rawPath ?? undefined,
             miniPath: miniPath ?? undefined,
             annotationPath: hasAnnotation ? assets.describe(annotationKey) : undefined,
+            annotation: annotations.get(annotationKey),
+            annotationRun: latestAnnotationAttempt(annotationRuns, id),
+            annotationRunCount: Array.isArray(annotationRuns[id]) ? annotationRuns[id].length : undefined,
             draft: draftsData[id] === true,
         });
     }

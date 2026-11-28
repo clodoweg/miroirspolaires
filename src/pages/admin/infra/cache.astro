@@ -1,15 +1,15 @@
 ---
-import { isAdminGranted } from "@/lib/admin/auth/access";
+import { isAdminGranted, isLocalAdmin } from "@/lib/admin/auth/access";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import CachePanel from "@/components/Admin/CachePanel";
 
 export const prerender = false;
 
-// POURQUOI: Limiter l'accès aux interfaces d'administration en mode développement local uniquement
-// pour empêcher l'accès non autorisé sur la version de production.
+// POURQUOI : admin en local ou sur la Preview de dev seulement ; la production répond toujours 404.
 if (!isAdminGranted(Astro.locals)) {
     return new Response("Not Found", { status: 404 });
 }
+const isLocal = isLocalAdmin(Astro.locals);
 ---
 
 <AdminLayout
@@ -17,5 +17,5 @@ if (!isAdminGranted(Astro.locals)) {
     description="Supervision de l'état de santé du Cloudflare Worker CDN, préchauffage du cache Edge et purge globale du stockage."
     active="cache"
 >
-    <CachePanel client:only="react" />
+    <CachePanel client:only="react" remote={!isLocal} />
 </AdminLayout>
