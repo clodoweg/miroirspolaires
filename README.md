@@ -52,7 +52,7 @@ Pour travailler hors ligne avec les images en local : les télécharger une fois
 | Images | `PUBLIC_R2_URL`, `IMAGE_WORKER_URL`, `FORCE_LOCAL_IMAGES` / `PUBLIC_FORCE_LOCAL_IMAGES`, `PUBLIC_EAGER_LOAD_COUNT`, `PUBLIC_GALLERY_FULL_RENDER_COUNT` |
 | R2 (scripts et admin) | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_URL` (repli historique) |
 | Worker | `IMAGE_WORKER_PURGE_KEY` (purge et préchauffage). Le worker lui-même utilise le secret `PURGE_KEY` et le binding `BUCKET`. |
-| Boutique | `ENABLE_BOUTIQUE` / `PUBLIC_ENABLE_BOUTIQUE` (`true` pour l'activer), `STRIPE_SECRET_KEY`, `PUBLIC_MONDIAL_RELAY_BRAND_ID` (marque de test `BDTEST13` par défaut) |
+| Boutique | `ENABLE_BOUTIQUE` / `PUBLIC_ENABLE_BOUTIQUE` (`true` pour l'activer), `STRIPE_SECRET_KEY`, `PUBLIC_MONDIAL_RELAY_BRAND_ID` (marque de test `BDTEST13` par défaut) ; remise en main propre : `RESEND_API_KEY`, `SHOP_NOTIFY_EMAIL`, `SHOP_EMAIL_FROM`, `SHOP_ADMIN_URL`, `STRIPE_WEBHOOK_SECRET` (`docs/conception-boutique.md`) |
 | Services | `PUBLIC_UMAMI_WEBSITE_ID`, `PUBLIC_UMAMI_SCRIPT_URL`, `PUBLIC_WEB3FORMS_ACCESS_KEY`, `PUBLIC_TURNSTILE_SITE_KEY` |
 
 `VERCEL_ENV` est fourni par Vercel : les déploiements de preview sont en `noindex`.

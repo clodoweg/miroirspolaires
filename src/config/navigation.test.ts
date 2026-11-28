@@ -12,7 +12,13 @@ describe('getAdminNavItem', () => {
 
     it('en local, propose les raccourcis locaux sans ceux propres à l’admin distant', () => {
         expect(getAdminNavItem('local')?.label).toBe('Admin');
-        expect(hrefs('local')).toEqual(['/admin', '/admin/astrophotos', '/admin/blog', '/admin/voyages']);
+        expect(hrefs('local')).toEqual([
+            '/admin',
+            '/admin/astrophotos',
+            '/admin/blog',
+            '/admin/voyages',
+            '/admin/boutique',
+        ]);
     });
 
     it('à distance, ne propose que des pages servies par l’admin distant', () => {
@@ -21,6 +27,7 @@ describe('getAdminNavItem', () => {
             '/admin/astrophotos',
             '/admin/blog',
             '/admin/voyages',
+            '/admin/boutique',
             '/admin/publication',
         ]);
     });

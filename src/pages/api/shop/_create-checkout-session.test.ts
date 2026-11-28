@@ -1,13 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const { createSession } = vi.hoisted(() => ({ createSession: vi.fn() }));
+const { createSession, retrieveSession, expireSession, pickup } = vi.hoisted(() => ({
+    createSession: vi.fn(),
+    retrieveSession: vi.fn(),
+    expireSession: vi.fn(),
+    pickup: {
+        resolvePickupDatabase: vi.fn(),
+        findUsablePickupCode: vi.fn(),
+        attachCheckoutSession: vi.fn(),
+        markPickupCodeUsed: vi.fn(),
+    },
+}));
+
+vi.mock('../../../lib/shop/pickup-codes', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('../../../lib/shop/pickup-codes')>()),
+    ...pickup,
+}));
 
 vi.mock('stripe', () => {
     class StripeError extends Error {
         requestId = 'req_test';
     }
     function Stripe() {
-        return { checkout: { sessions: { create: createSession } } };
+        return { checkout: { sessions: { create: createSession, retrieve: retrieveSession, expire: expireSession } } };
     }
     Stripe.errors = { StripeError };
     return { default: Stripe };
@@ -25,6 +40,21 @@ const VALID_RELAY = {
     country: 'FR',
 };
 
+const APPROVED = {
+    id: '00000000-0000-4000-8000-000000000001',
+    createdAt: '2026-11-28T10:00:00.000Z',
+    name: 'Camille',
+    email: 'camille@example.org',
+    place: 'Lyon',
+    message: '',
+    status: 'approved',
+    code: 'MP-7K4Q-X9RT',
+    decidedAt: '2026-11-28T11:00:00.000Z',
+    expiresAt: '2026-12-28T11:00:00.000Z',
+    stripeSessionId: null as string | null,
+    usedAt: null,
+};
+
 function callRoute(body: unknown) {
     const request = new Request('https://www.miroirspolaires.fr/api/shop/create-checkout-session', {
         method: 'POST',
@@ -40,7 +70,12 @@ describe('POST /api/shop/create-checkout-session', () => {
         vi.stubEnv('ENABLE_BOUTIQUE', 'true');
         vi.stubEnv('STRIPE_SECRET_KEY', 'sk_test_dummy');
         createSession.mockReset();
-        createSession.mockResolvedValue({ url: 'https://checkout.stripe.com/c/pay/test' });
+        createSession.mockResolvedValue({ id: 'cs_test_new', url: 'https://checkout.stripe.com/c/pay/test' });
+        retrieveSession.mockReset();
+        expireSession.mockReset();
+        Object.values(pickup).forEach((mock) => mock.mockReset());
+        pickup.resolvePickupDatabase.mockResolvedValue({});
+        pickup.findUsablePickupCode.mockResolvedValue(APPROVED);
         vi.spyOn(console, 'error').mockImplementation(() => {});
     });
 
@@ -122,30 +157,69 @@ describe('POST /api/shop/create-checkout-session', () => {
 
     it.each([
         ['absent', undefined],
-        ['refusé', false],
-        ['non booléen', 'true'],
-    ])('refuse la remise en main propre si l’accord est %s', async (_label, priorAgreementConfirmed) => {
-        const response = await callRoute({ carrierId: 'remise_main_propre', priorAgreementConfirmed });
+        ['mal formé', 'pas-un-code'],
+        ['non textuel', true],
+    ])('refuse la remise en main propre si le code est %s', async (_label, pickupCode) => {
+        const response = await callRoute({ carrierId: 'remise_main_propre', pickupCode });
         expect(response.status).toBe(400);
+        expect(pickup.findUsablePickupCode).not.toHaveBeenCalled();
         expect(createSession).not.toHaveBeenCalled();
     });
 
-    it('crée une remise en main propre gratuite, sans adresse ni délai, avec accord tracé', async () => {
-        const response = await callRoute({ carrierId: 'remise_main_propre', priorAgreementConfirmed: true });
+    it('refuse un code inconnu, expiré ou révoqué', async () => {
+        pickup.findUsablePickupCode.mockResolvedValue(null);
+        const response = await callRoute({ carrierId: 'remise_main_propre', pickupCode: 'mp-7k4q-x9rt' });
+        expect(response.status).toBe(400);
+        expect(pickup.findUsablePickupCode.mock.calls[0][0]).toBe('MP-7K4Q-X9RT');
+        expect(createSession).not.toHaveBeenCalled();
+    });
+
+    it('crée une remise en main propre gratuite, liée à l’e-mail de la demande', async () => {
+        const response = await callRoute({ carrierId: 'remise_main_propre', pickupCode: 'MP-7K4Q-X9RT' });
         expect(response.status).toBe(200);
         const params = createSession.mock.calls[0][0];
         const { shipping_rate_data: shippingRate } = params.shipping_options[0];
         expect(shippingRate.fixed_amount.amount).toBe(0);
         expect(shippingRate.delivery_estimate).toBeUndefined();
         expect(params.shipping_address_collection).toBeUndefined();
-        expect(params.metadata.prior_agreement_confirmed).toBe('true');
+        expect(params.customer_email).toBe('camille@example.org');
+        expect(params.metadata).toMatchObject({ pickup_request_id: APPROVED.id, pickup_code: 'MP-7K4Q-X9RT' });
+        expect(pickup.attachCheckoutSession).toHaveBeenCalledWith(APPROVED.id, 'cs_test_new');
     });
 
-    it('n’impose pas la confirmation d’accord à Mondial Relay', async () => {
+    it('expire la session précédente encore ouverte avant d’en créer une autre', async () => {
+        pickup.findUsablePickupCode.mockResolvedValue({ ...APPROVED, stripeSessionId: 'cs_test_old' });
+        retrieveSession.mockResolvedValue({ id: 'cs_test_old', status: 'open' });
+        const response = await callRoute({ carrierId: 'remise_main_propre', pickupCode: 'MP-7K4Q-X9RT' });
+        expect(response.status).toBe(200);
+        expect(expireSession).toHaveBeenCalledWith('cs_test_old');
+    });
+
+    it('refuse un code dont la session précédente est déjà payée', async () => {
+        pickup.findUsablePickupCode.mockResolvedValue({ ...APPROVED, stripeSessionId: 'cs_test_paid' });
+        retrieveSession.mockResolvedValue({ id: 'cs_test_paid', status: 'complete' });
+        const response = await callRoute({ carrierId: 'remise_main_propre', pickupCode: 'MP-7K4Q-X9RT' });
+        expect(response.status).toBe(400);
+        expect(pickup.markPickupCodeUsed).toHaveBeenCalledWith(APPROVED.id, 'cs_test_paid', expect.any(Date));
+        expect(createSession).not.toHaveBeenCalled();
+    });
+
+    it('renvoie 503 sans Turso ou si la vérification échoue', async () => {
+        pickup.resolvePickupDatabase.mockResolvedValueOnce(null);
+        expect((await callRoute({ carrierId: 'remise_main_propre', pickupCode: 'MP-7K4Q-X9RT' })).status).toBe(503);
+        pickup.findUsablePickupCode.mockRejectedValueOnce(new Error('libsql: secret'));
+        const response = await callRoute({ carrierId: 'remise_main_propre', pickupCode: 'MP-7K4Q-X9RT' });
+        expect(response.status).toBe(503);
+        expect(JSON.stringify(await response.json())).not.toContain('secret');
+    });
+
+    it('n’impose pas de code à Mondial Relay', async () => {
         const response = await callRoute({ carrierId: 'mondial_relay', relayPoint: VALID_RELAY });
         expect(response.status).toBe(200);
         const params = createSession.mock.calls[0][0];
-        expect(params.metadata.prior_agreement_confirmed).toBeUndefined();
+        expect(params.metadata.pickup_request_id).toBeUndefined();
+        expect(params.customer_email).toBeUndefined();
+        expect(pickup.findUsablePickupCode).not.toHaveBeenCalled();
         expect(params.shipping_options[0].shipping_rate_data.fixed_amount.amount).toBe(1);
         expect(params.shipping_options[0].shipping_rate_data.delivery_estimate).toBeDefined();
     });

@@ -6,6 +6,7 @@ paths:
   - "src/pages/boutique.astro"
   - "src/pages/boutique/**"
   - "src/pages/api/shop/**"
+  - "src/lib/shop/**"
   - "src/pages/cgv.astro"
 ---
 
@@ -18,5 +19,6 @@ paths:
 - Désactiver un transporteur = `enabled: false` dans `shippingCarriers`, sans toucher à l'UI.
 - Le widget Mondial Relay charge jQuery, Leaflet et des tuiles OSM depuis des domaines externes : toute nouvelle ressource doit être ajoutée à `CSP_DIRECTIVES` dans `src/integrations/security-headers.mjs`, sinon elle est bloquée en production.
 - Clés : `STRIPE_SECRET_KEY` (serveur uniquement), `PUBLIC_MONDIAL_RELAY_BRAND_ID` (`BDTEST13` en test). `PUBLIC_STRIPE_PUBLISHABLE_KEY` figure dans `docs/conception-boutique.md` mais n'est lue par aucun code (redirection vers Stripe Checkout). Ne jamais exposer la clé secrète côté client.
+- Remise en main propre (`requiresPriorAgreement`) : jamais sur simple déclaration de l'acheteur. Le code vient de `/admin/boutique` et se vérifie côté serveur par `findUsablePickupCode()` (`src/lib/shop/pickup-codes.ts`) ; la session Checkout impose l'e-mail de la demande et une session précédente ouverte est expirée (un code = une commande). E-mails : `src/lib/shop/pickup-mailer.ts` (Resend, `escapeHtml()` sur tout champ du formulaire). Variables : `RESEND_API_KEY`, `SHOP_NOTIFY_EMAIL`, `SHOP_EMAIL_FROM`, `SHOP_ADMIN_URL`, `STRIPE_WEBHOOK_SECRET` (voir `docs/conception-boutique.md` § 4.5 et 7).
 - Après modification de `shop.ts` : `npx vitest run src/config/shop.test.ts`.
 - Conception, coûts et checklist de lancement : `docs/conception-boutique.md`.
