@@ -900,6 +900,11 @@
   ],
   "666560": [
     {
+      "at": "2026-11-28T07:53:44Z",
+      "status": "skipped",
+      "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
+    },
+    {
       "at": "2026-11-27T17:08:59Z",
       "status": "skipped",
       "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
