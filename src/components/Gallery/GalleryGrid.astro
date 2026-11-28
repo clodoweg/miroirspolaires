@@ -23,6 +23,7 @@ import ActionButtons from "@/components/astrophotography/ActionButtons.astro";
 
 import wikipediaDataJson from "@/data/wikipedia.json";
 import astroDetailsDataJson from "@/data/astro_details.json";
+import { getAnnotationVersion } from "@/lib/annotation-version";
 
 const wikipediaData = wikipediaDataJson as Record<string, any>;
 const astroDetailsData = astroDetailsDataJson as Record<string, any>;
@@ -167,7 +168,7 @@ const getSrcUrl = (resolved: ImageMetadata | string | undefined | null) => {
                 ? `../../assets/astrophotographies/${photo.annotationPath}`
                 : null;
             const resolvedAnnotation = annotationRelativePath
-                ? resolveImage(annotationRelativePath, false, photo.version)
+                ? resolveImage(annotationRelativePath, false, getAnnotationVersion(photo.id) ?? photo.version)
                 : null;
             const annotationUrl = getSrcUrl(resolvedAnnotation);
 
@@ -429,16 +430,18 @@ const getSrcUrl = (resolved: ImageMetadata | string | undefined | null) => {
                                                     )}
 
                                                     {/* Annotation Overlay Layer */}
+                                                    {/* POURQUOI <img> : SVG servi depuis R2 avec sa version (?v=),
+                                                        sans worker ni srcset (voir la page de la photo). */}
                                                     {annotationUrl && (
-                                                        <AppImage
+                                                        <img
                                                             src={annotationUrl}
                                                             alt={`Annotation pour ${photo.title}`}
                                                             class="annotation-layer absolute inset-0 w-full h-full object-contain pointer-events-none opacity-0 transition-opacity duration-300 z-10"
                                                             width={1920}
                                                             height={1280}
-                                                            isOverlay={true}
-                                                            priority={false}
-                                                            quality={90}
+                                                            loading="lazy"
+                                                            decoding="async"
+                                                            fetchpriority="low"
                                                         />
                                                     )}
                                                 </div>
