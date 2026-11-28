@@ -274,6 +274,10 @@ En France, les frais de transaction Stripe standard sont de **1,5 % + 0,25 €**
 4. **Conditions Générales de Vente (CGV) :**
    - Mise en ligne d'une page `/cgv` sur le site rappelant les délais de livraison, l'adresse de contact et le délai légal de rétractation de 14 jours.
 
+### 6.3 Configuration technique restant à faire
+
+- [ ] **Webhook Stripe** (facultatif, remise en main propre) : dans Stripe › Développeurs › Webhooks, ajouter l'endpoint `https://www.miroirspolaires.fr/api/shop/stripe-webhook` avec l'événement `checkout.session.completed`, puis recopier le secret de signature `whsec_…` dans la variable Vercel `STRIPE_WEBHOOK_SECRET` (Production). À refaire avec les clés live au passage en production. Sans lui, un code payé n'est pas réutilisable (vérifié au paiement suivant) mais reste affiché « Code envoyé » au lieu de « Commandé » dans `/admin/boutique`. Voir § 4.5.
+
 ---
 
 ## 7. Variables d'Environnement Requises (`.env`)
