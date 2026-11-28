@@ -78,3 +78,38 @@ export function parseQuantity(raw: unknown): number | null {
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) return null;
     return quantity;
 }
+
+/** Demande de remise en main propre telle que validée côté serveur. */
+export interface ValidatedPickupRequestInput {
+    name: string;
+    /** E-mail en minuscules : la clé de la limite de débit et l'adresse imposée dans Stripe Checkout. */
+    email: string;
+    place: string;
+    message: string;
+}
+
+const PICKUP_FIELD_LIMITS = { name: 100, email: 254, place: 150, message: 1000 } as const;
+// POURQUOI un motif simple : la vraie vérification est la réception du code ; on écarte seulement les
+// saisies qui ne peuvent pas être une adresse (espaces, absence de domaine).
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/**
+ * Valide le formulaire de demande de remise en main propre.
+ *
+ * @param raw - Corps JSON brut.
+ * @returns Les champs nettoyés, ou `null` si le nom, l'e-mail ou le lieu manque ou est invalide.
+ */
+export function validatePickupRequestInput(raw: unknown): ValidatedPickupRequestInput | null {
+    if (!raw || typeof raw !== 'object') return null;
+    const candidate = raw as Record<string, unknown>;
+    const name = cleanString(candidate.name, PICKUP_FIELD_LIMITS.name);
+    const email = cleanString(candidate.email, PICKUP_FIELD_LIMITS.email)?.toLowerCase() ?? null;
+    const place = cleanString(candidate.place, PICKUP_FIELD_LIMITS.place);
+    if (!name || !email || !place || !EMAIL_PATTERN.test(email)) return null;
+    const message =
+        candidate.message == null || candidate.message === ''
+            ? ''
+            : cleanString(candidate.message, PICKUP_FIELD_LIMITS.message);
+    if (message === null) return null;
+    return { name, email, place, message };
+}

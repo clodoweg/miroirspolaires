@@ -1,12 +1,24 @@
 {
   "150785": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 9,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "151660": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -15,12 +27,24 @@
   ],
   "154365": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "154381": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -29,12 +53,24 @@
   ],
   "154856": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "160338": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 4,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -43,12 +79,24 @@
   ],
   "160653": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 9,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "161805": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -57,12 +105,24 @@
   ],
   "168455": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "174783": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -71,12 +131,24 @@
   ],
   "174974": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 9,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "175155": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -85,12 +157,24 @@
   ],
   "175502": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "185391": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -99,12 +183,24 @@
   ],
   "185653": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "196516": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -113,12 +209,24 @@
   ],
   "200419": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "201279": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -127,12 +235,24 @@
   ],
   "204602": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "210073": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -141,12 +261,24 @@
   ],
   "225741": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "228347": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -155,12 +287,24 @@
   ],
   "230165": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 9,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "230935": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 13,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -169,12 +313,24 @@
   ],
   "231484": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 4,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "236283": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -183,12 +339,24 @@
   ],
   "236350": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "236394": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 6,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -197,12 +365,24 @@
   ],
   "244471": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "245749": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 16,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -211,12 +391,24 @@
   ],
   "245879": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "246985": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -225,12 +417,24 @@
   ],
   "247373": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 14,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "247444": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 6,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -239,12 +443,24 @@
   ],
   "247601": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "255448": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 12,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -253,12 +469,24 @@
   ],
   "255465": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "255551": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -267,12 +495,24 @@
   ],
   "255845": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "259425": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -281,12 +521,24 @@
   ],
   "261256": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "263546": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 16,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -295,12 +547,24 @@
   ],
   "264389": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 10,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "266734": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -309,12 +573,24 @@
   ],
   "267421": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "267427": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 15,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -323,12 +599,24 @@
   ],
   "270330": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "270331": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 12,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -337,12 +625,24 @@
   ],
   "270334": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "270335": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -351,12 +651,24 @@
   ],
   "270336": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "274289": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -365,12 +677,24 @@
   ],
   "275086": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "280757": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -379,12 +703,24 @@
   ],
   "287632": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "288995": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -393,12 +729,24 @@
   ],
   "289465": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 19,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "296772": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -407,12 +755,24 @@
   ],
   "301579": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "313523": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 15,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -421,12 +781,24 @@
   ],
   "314493": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 11,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "314524": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -435,12 +807,24 @@
   ],
   "314736": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 6,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "316730": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 8,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -449,12 +833,24 @@
   ],
   "316775": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "318054": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -463,12 +859,24 @@
   ],
   "318761": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 15,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "320002": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 17,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -477,12 +885,24 @@
   ],
   "331321": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "332901": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 15,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -491,12 +911,24 @@
   ],
   "334045": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "334521": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 11,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -505,12 +937,24 @@
   ],
   "335893": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "338975": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -519,12 +963,24 @@
   ],
   "343141": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 12,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "351415": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 19,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -533,12 +989,24 @@
   ],
   "352953": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "362792": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -547,12 +1015,24 @@
   ],
   "363067": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "368846": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -561,12 +1041,24 @@
   ],
   "371475": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "374528": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -575,12 +1067,24 @@
   ],
   "376203": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "378538": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -589,12 +1093,24 @@
   ],
   "382434": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "389658": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -603,12 +1119,24 @@
   ],
   "390682": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "394518": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 12,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -617,12 +1145,24 @@
   ],
   "395029": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "396692": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -631,12 +1171,24 @@
   ],
   "403773": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "404777": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -645,12 +1197,24 @@
   ],
   "404839": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "406403": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -659,12 +1223,24 @@
   ],
   "410891": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "418325": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -673,12 +1249,24 @@
   ],
   "420977": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "425944": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -687,12 +1275,24 @@
   ],
   "431176": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "431828": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -701,12 +1301,24 @@
   ],
   "433653": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "447346": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -715,12 +1327,24 @@
   ],
   "452843": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 15,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "454579": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -729,12 +1353,24 @@
   ],
   "455448": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "465233": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 12,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -743,12 +1379,24 @@
   ],
   "466447": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "470674": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 10,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -757,12 +1405,24 @@
   ],
   "498655": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "503658": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 4,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -771,12 +1431,24 @@
   ],
   "506428": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "508738": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -785,6 +1457,12 @@
   ],
   "514518": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
@@ -792,12 +1470,23 @@
   ],
   "520848": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "521877": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "skipped",
+      "reason": "aucune solution astrométrique"
+    },
     {
       "at": "2026-11-27T17:08:59Z",
       "status": "skipped",
@@ -816,12 +1505,24 @@
   ],
   "522567": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "528886": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 4,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -830,12 +1531,24 @@
   ],
   "540820": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "547048": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 15,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -844,12 +1557,24 @@
   ],
   "577467": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 11,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "587531": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 9,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -858,12 +1583,24 @@
   ],
   "592207": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "644098": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 15,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -872,12 +1609,24 @@
   ],
   "645602": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 6,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "651198": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 6,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -886,6 +1635,12 @@
   ],
   "651801": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 9,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
@@ -893,12 +1648,23 @@
   ],
   "656229": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "666560": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "skipped",
+      "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
+    },
     {
       "at": "2026-11-28T07:53:44Z",
       "status": "skipped",
@@ -922,12 +1688,24 @@
   ],
   "684855": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "686847": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 4,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -936,12 +1714,24 @@
   ],
   "691867": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 6,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "717090": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -950,12 +1740,24 @@
   ],
   "729242": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "731171": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -964,12 +1766,24 @@
   ],
   "747358": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "750633": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 18,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -978,12 +1792,24 @@
   ],
   "751825": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 10,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "761013": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -992,12 +1818,24 @@
   ],
   "761574": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "762215": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -1006,12 +1844,24 @@
   ],
   "762302": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "781467": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 9,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -1020,12 +1870,24 @@
   ],
   "800744": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 4,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "804293": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -1034,12 +1896,24 @@
   ],
   "809557": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "811751": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
@@ -1048,12 +1922,24 @@
   ],
   "849487": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 17,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "failed",
       "reason": "HTTP Error 429: Too Many Requests"
     }
   ],
   "851253": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-27T12:46:00Z",
       "status": "ok",
@@ -1068,12 +1954,24 @@
   ],
   "860444": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 14,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "861116": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1082,12 +1980,24 @@
   ],
   "861364": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 8,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "863191": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1096,12 +2006,24 @@
   ],
   "864922": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "865487": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1110,12 +2032,24 @@
   ],
   "884440": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 4,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "888617": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1124,12 +2058,24 @@
   ],
   "889390": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "906317": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 20,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1138,12 +2084,24 @@
   ],
   "906345": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "913583": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 10,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1152,12 +2110,24 @@
   ],
   "915784": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 11,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "947301": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 0,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1166,12 +2136,23 @@
   ],
   "949210": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "954054": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "skipped",
+      "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1180,12 +2161,24 @@
   ],
   "976396": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 0,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "982295": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1194,12 +2187,24 @@
   ],
   "985158": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "997026": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 6,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1208,12 +2213,24 @@
   ],
   "1012835": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1018432": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1222,12 +2239,24 @@
   ],
   "1027036": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 14,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1037734": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1236,12 +2265,23 @@
   ],
   "1038570": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 19,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1038945": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "skipped",
+      "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1250,12 +2290,23 @@
   ],
   "1043288": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "skipped",
+      "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1051264": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 7,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1264,12 +2315,24 @@
   ],
   "1051559": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1060789": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1278,12 +2341,24 @@
   ],
   "1064401": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1064769": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 1,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1292,12 +2367,24 @@
   ],
   "1092164": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 3,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1121951": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 8,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1306,12 +2393,23 @@
   ],
   "1124458": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "skipped",
+      "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1142059": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 5,
+      "wcsSource": "astrobin"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
@@ -1320,6 +2418,12 @@
   ],
   "1176455": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 2,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
@@ -1327,12 +2431,23 @@
   ],
   "1213620": [
     {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "ok",
+      "objects": 8,
+      "wcsSource": "astrobin"
+    },
+    {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",
       "wcsSource": "astrobin"
     }
   ],
   "1279982": [
+    {
+      "at": "2026-11-28T09:07:36Z",
+      "status": "skipped",
+      "reason": "résolution AstroBin décalée de l’image (recadrage ?)"
+    },
     {
       "at": "2026-11-26T16:07:40Z",
       "status": "ok",

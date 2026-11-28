@@ -13,7 +13,7 @@ Mettre en place une expérience d'achat directe, élégante et sans friction pou
 
 ### 1.2 Principes directeurs de conception
 1. **Légèreté & Zéro maintenance d'infrastructure :** Pas de base de données dédiée obligatoire pour démarrer. Les transactions, le suivi des commandes, les coordonnées clients et le stock sont administrés directement via le tableau de bord et l'application mobile **Stripe**.
-2. **Choix du transporteur & Flexibilité totale :** Proposer à l'acheteur le choix entre **Mondial Relay** (sélection du point relais sur carte interactive avant paiement) et la **remise en main propre** (gratuite, uniquement après accord préalable de l'auteur). Tous les transporteurs et leurs tarifs sont centralisés dans un fichier de configuration et peuvent être activés/désactivés en modifiant un simple booléen.
+2. **Choix du transporteur & Flexibilité totale :** Proposer à l'acheteur le choix entre **Mondial Relay** (sélection du point relais sur carte interactive avant paiement) et la **remise en main propre** (gratuite, sur demande : l'auteur accepte depuis l'admin et l'acheteur reçoit un code à usage unique, voir § 4.5). Tous les transporteurs et leurs tarifs sont centralisés dans un fichier de configuration et peuvent être activés/désactivés en modifiant un simple booléen.
 3. **Paiement unifié & Sécurisé :** Utilisation de **Stripe Checkout** hébergé, permettant d'accepter simultanément la Carte Bancaire, Apple Pay, Google Pay et **PayPal** sous un même tunnel certifié PCI-DSS.
 4. **Évolutivité :** L'architecture est pensée dès le départ pour accueillir ultérieurement des tirages photos d'art (formats, supports, séries limitées).
 
@@ -176,8 +176,9 @@ export const SHOP_CONFIG: {
     - Un bouton bien visible apparaît : *« Choisir mon point relais »*.
     - Un clic ouvre la carte modale officielle Mondial Relay.
     - Une fois le relais sélectionné, son nom et son adresse complète s'affichent avec une pastille verte de confirmation.
-  - Si l'utilisateur clique sur **Remise en main propre** :
-    - Une case obligatoire lui fait confirmer qu'il a obtenu l'accord de l'auteur.
+  - Si l'utilisateur clique sur **Remise en main propre** (`PickupCodeSection.tsx`) :
+    - Un champ lui demande le code reçu par e-mail (`MP-XXXX-XXXX`).
+    - Sans code, un lien ouvre le formulaire de demande (nom, e-mail, lieu souhaité, message), voir § 4.5.
   - Bouton d'action principal (CTA avec le composant de style du site) :
     - Libellé dynamique : **« Commander · [Total] € »** (ex: *39 € + 4,50 € = 43,50 €*).
     - État de chargement (spinner) lors de la redirection vers Stripe.
@@ -211,7 +212,7 @@ Le widget utilise l'API de sélection officielle Mondial Relay (Parcelshop Picke
   - `metadata` Stripe enregistrées :
     - `carrier_id`: `mondial_relay` ou `remise_main_propre`
     - `relay_id`, `relay_name`, `relay_address`, `relay_city`, `relay_zipcode` (si Mondial Relay).
-  - `prior_agreement_confirmed`: `true` (si remise en main propre).
+  - `pickup_request_id`, `pickup_code` (si remise en main propre) ; `customer_email` est imposé à l'e-mail de la demande.
   - URLs de redirection :
     - Succès : `https://www.miroirspolaires.fr/boutique/confirmation?session_id={CHECKOUT_SESSION_ID}`
     - Annulation : `https://www.miroirspolaires.fr/boutique`
@@ -221,6 +222,16 @@ Le widget utilise l'API de sélection officielle Mondial Relay (Parcelshop Picke
 - Récapitulatif : confirmation que la commande est enregistrée et sera expédiée sous 48h à 72h.
 - Rappel du mode de livraison choisi.
 - Invitation à explorer la galerie d'astrophotographies en attendant la réception.
+
+### 4.5 Remise en main propre sur demande (codes à usage unique)
+
+1. **Demande** : le formulaire de `/boutique` envoie `POST /api/shop/pickup-request`. La demande est rangée dans Turso (table `shop_pickup_requests`, créée au premier usage, `src/lib/shop/pickup-codes.ts`). Anti-spam : champ piège `website`, 3 demandes par e-mail sur 24 h, 5 par client (empreinte SHA-256 de l'IP, jamais l'IP) par heure.
+2. **Notification** : un e-mail part vers `SHOP_NOTIFY_EMAIL` par l'API Resend (`src/lib/shop/pickup-mailer.ts`), avec un lien vers `SHOP_ADMIN_URL` + `/admin/boutique`. Sans Resend configuré, la demande reste visible dans l'admin.
+3. **Décision** : `/admin/boutique` (section « Boutique », admin local et distant) liste les demandes. « Accepter » tire un code `MP-XXXX-XXXX` (alphabet sans 0/O/1/I/L, environ 40 bits), valable 30 jours, et l'envoie automatiquement à l'acheteur. « Refuser » n'envoie rien. « Révoquer » annule un code non utilisé, « Renvoyer le code » le renvoie.
+4. **Paiement** : `create-checkout-session` vérifie le code dans Turso (accepté, non expiré), impose l'e-mail de la demande dans Stripe Checkout et rattache la session au code. Si une session précédente du même code est encore ouverte, elle est expirée ; si elle est déjà payée, le code est refusé. Le code ne sert donc qu'à une commande, même sans webhook.
+5. **Suivi** : le webhook `POST /api/shop/stripe-webhook` (`checkout.session.completed`, signature vérifiée par `STRIPE_WEBHOOK_SECRET`) passe le code en « Commandé ». Facultatif.
+
+Prérequis : en production, le jeton Turso (`TURSO_AUTH_TOKEN`) doit autoriser l'écriture, puisque les demandes et les sessions sont enregistrées depuis le site public.
 
 ---
 
@@ -263,6 +274,26 @@ En France, les frais de transaction Stripe standard sont de **1,5 % + 0,25 €**
 4. **Conditions Générales de Vente (CGV) :**
    - Mise en ligne d'une page `/cgv` sur le site rappelant les délais de livraison, l'adresse de contact et le délai légal de rétractation de 14 jours.
 
+### 6.3 Configuration technique restant à faire
+
+Tant que la boutique est en test, tout se fait en **mode test Stripe** (`sk_test_…`, cartes de test `4242 4242 4242 4242`, `4000 0000 0000 0002` refusée, `4000 0027 6000 3184` 3D Secure).
+
+**Pendant les tests**
+
+- [ ] **Webhook Stripe de test** (facultatif, remise en main propre) : Stripe (mode test) › Développeurs › Webhooks, endpoint `<URL du déploiement testé>/api/shop/stripe-webhook`, événement `checkout.session.completed` ; secret `whsec_…` dans `STRIPE_WEBHOOK_SECRET` de l'environnement Vercel correspondant (Production si le test se fait sur www, Preview pour la Preview de `dev`, qui doit alors laisser passer Stripe malgré la Deployment Protection). En local : `stripe listen --forward-to localhost:4321/api/shop/stripe-webhook`. Sans webhook, un code payé reste refusé au paiement suivant, mais `/admin/boutique` l'affiche « Code envoyé » au lieu de « Commandé ». Voir § 4.5.
+- [ ] **Resend** : domaine `miroirspolaires.fr` « Verified », clé `Sending access` limitée au domaine, variables `RESEND_API_KEY`, `SHOP_EMAIL_FROM` (Production + Preview), `SHOP_NOTIFY_EMAIL`, `SHOP_ADMIN_URL` (Production).
+- [ ] **Turso** : jeton en écriture pour la Production (le site public enregistre les demandes de remise en main propre).
+
+**Au passage en production (paiements réels)**
+
+1. [ ] Activer le compte Stripe (identité, SIRET ou statut, IBAN) et les moyens de paiement (*Paramètres › Moyens de paiement*).
+2. [ ] Remplacer dans Vercel (Production) `STRIPE_SECRET_KEY` par `sk_live_…` (et `PUBLIC_STRIPE_PUBLISHABLE_KEY` par `pk_live_…`).
+3. [ ] Créer un **nouveau webhook en mode live** (les webhooks de test ne reçoivent rien en live) vers `https://www.miroirspolaires.fr/api/shop/stripe-webhook`, événement `checkout.session.completed`, et remplacer `STRIPE_WEBHOOK_SECRET` par son `whsec_…`.
+4. [ ] Remplacer `PUBLIC_MONDIAL_RELAY_BRAND_ID` (`BDTEST13`) par le code enseigne réel.
+5. [ ] Vérifier `ENABLE_BOUTIQUE=true` en Production, puis redéployer.
+6. [ ] Révoquer dans `/admin/boutique` les codes de remise en main propre émis pendant les tests (la table Turso est partagée entre test et production).
+7. [ ] Faire **un achat réel** avec sa propre carte, si possible en remise en main propre avec un code : vérifier le reçu Stripe, l'e-mail du code, le passage en « Commandé » ; puis rembourser depuis Stripe (les frais, environ 0,85 €, ne sont pas rendus).
+
 ---
 
 ## 7. Variables d'Environnement Requises (`.env`)
@@ -276,7 +307,22 @@ PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 # Identifiant Enseigne Mondial Relay pour le widget
 # En test, utiliser le code officiel : BDTEST13
 PUBLIC_MONDIAL_RELAY_BRAND_ID=BDTEST13
+
+# Remise en main propre (§ 4.5)
+# Resend (resend.com) : clé d'API. Sans elle, aucun e-mail ne part.
+RESEND_API_KEY=re_...
+# Adresse qui reçoit les demandes (production)
+SHOP_NOTIFY_EMAIL=vous@example.org
+# Expéditeur sur un domaine vérifié dans Resend. Absent : onboarding@resend.dev, qui n'écrit
+# qu'à l'adresse du compte Resend (suffisant pour tester la notification, pas l'envoi du code).
+SHOP_EMAIL_FROM="Miroirs Polaires <boutique@miroirspolaires.fr>"
+# URL de l'admin distant (Preview de dev), pour le lien de l'e-mail
+SHOP_ADMIN_URL=https://<preview-dev>.vercel.app
+# Secret de signature du webhook Stripe (facultatif)
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
+
+Où les définir : `SHOP_NOTIFY_EMAIL`, `SHOP_ADMIN_URL` et `STRIPE_WEBHOOK_SECRET` en **Production** (demande et webhook) ; `RESEND_API_KEY` et `SHOP_EMAIL_FROM` en **Production** et en **Preview** (l'envoi du code part de l'admin distant).
 
 ---
 
@@ -305,7 +351,10 @@ PUBLIC_MONDIAL_RELAY_BRAND_ID=BDTEST13
    - [src/pages/boutique/confirmation.astro](../src/pages/boutique/confirmation.astro) : Page de succès et d'instructions post-commande.
    - [src/pages/cgv.astro](../src/pages/cgv.astro) : Conditions Générales de Vente conformes au droit français.
 3. **Backend & Paiement :**
-   - [src/pages/api/shop/create-checkout-session.ts](../src/pages/api/shop/create-checkout-session.ts) : Endpoint serverless créant la session Stripe avec validation côté serveur et conservation des métadonnées du relais.
+   - [src/pages/api/shop/create-checkout-session.ts](../src/pages/api/shop/create-checkout-session.ts) : Endpoint serverless créant la session Stripe avec validation côté serveur, conservation des métadonnées du relais et vérification du code de remise en main propre.
+   - [src/pages/api/shop/pickup-request.ts](../src/pages/api/shop/pickup-request.ts), [src/pages/api/shop/stripe-webhook.ts](../src/pages/api/shop/stripe-webhook.ts) : demande de remise en main propre et webhook Stripe.
+   - [src/lib/shop/pickup-codes.ts](../src/lib/shop/pickup-codes.ts), [src/lib/shop/pickup-mailer.ts](../src/lib/shop/pickup-mailer.ts) : stockage Turso des demandes et des codes, e-mails Resend.
+   - [src/pages/admin/boutique/index.astro](../src/pages/admin/boutique/index.astro), [src/components/Admin/PickupRequestsPanel.tsx](../src/components/Admin/PickupRequestsPanel.tsx), `src/pages/api/admin/shop/pickup-requests/` : tableau de bord des demandes.
 4. **Actifs visuels :**
    - `public/images/shop/livre-miroirs-polaires.jpg` : Mockup haute définition du livre avec couverture rigide et dorure or à chaud.
 
@@ -318,8 +367,10 @@ PUBLIC_MONDIAL_RELAY_BRAND_ID=BDTEST13
    ```
 2. Ouvrir la boutique : [`http://localhost:4321/boutique`](http://localhost:4321/boutique).
 3. Sélectionner un mode de livraison (tester Mondial Relay et le sélecteur de point relais).
+4. Remise en main propre : envoyer une demande depuis `/boutique`, l'accepter dans [`http://localhost:4321/admin/boutique`](http://localhost:4321/admin/boutique), puis saisir le code (affiché dans l'admin si l'e-mail ne part pas). Pour le webhook : `stripe listen --forward-to localhost:4321/api/shop/stripe-webhook`.
 
 #### B. Activer les paiements réels
+Checklist complète : § 6.3 « Au passage en production ».
 1. Se connecter sur [dashboard.stripe.com](https://dashboard.stripe.com/).
 2. Activer les moyens de paiement souhaités dans les paramètres (*Paramètres > Moyens de paiement* : Carte bancaire, Apple Pay, Google Pay, PayPal).
 3. Renseigner vos clés de production dans les variables d'environnement de votre projet sur **Vercel** :

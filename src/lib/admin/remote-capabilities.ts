@@ -53,6 +53,9 @@ export const REMOTE_ADMIN_API_ROUTES: readonly RemoteRoute[] = [
     { method: 'POST', pattern: /^\/api\/admin\/release\/merge\/?$/ },
     { method: 'GET', pattern: /^\/api\/admin\/release\/redeploy\/?$/ },
     { method: 'POST', pattern: /^\/api\/admin\/release\/redeploy\/?$/ },
+    { method: 'GET', pattern: /^\/api\/admin\/shop\/pickup-requests\/?$/ },
+    // POURQUOI ouvert à distance : ces routes n'écrivent que dans Turso, partagé avec la production.
+    { method: 'POST', pattern: /^\/api\/admin\/shop\/pickup-requests\/[0-9a-f-]{36}\/?$/ },
     { method: 'GET', pattern: /^\/api\/admin\/jobs\/?$/ },
     { method: 'POST', pattern: /^\/api\/admin\/jobs\/?$/ },
     { method: 'GET', pattern: /^\/api\/admin\/jobs\/[0-9a-f-]{36}\/?$/ },
