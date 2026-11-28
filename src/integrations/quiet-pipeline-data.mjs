@@ -14,6 +14,7 @@
 const QUIET_FILES = [
     '/data/astrobin_clodoweg_gallery_python.csv',
     '/src/data/alt.json',
+    '/src/data/annotation-runs.json',
     '/src/data/astro_details.json',
     '/src/data/blog.json',
     '/src/data/image-dimensions.json',
