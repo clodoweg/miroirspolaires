@@ -276,7 +276,23 @@ En France, les frais de transaction Stripe standard sont de **1,5 % + 0,25 €**
 
 ### 6.3 Configuration technique restant à faire
 
-- [ ] **Webhook Stripe** (facultatif, remise en main propre) : dans Stripe › Développeurs › Webhooks, ajouter l'endpoint `https://www.miroirspolaires.fr/api/shop/stripe-webhook` avec l'événement `checkout.session.completed`, puis recopier le secret de signature `whsec_…` dans la variable Vercel `STRIPE_WEBHOOK_SECRET` (Production). À refaire avec les clés live au passage en production. Sans lui, un code payé n'est pas réutilisable (vérifié au paiement suivant) mais reste affiché « Code envoyé » au lieu de « Commandé » dans `/admin/boutique`. Voir § 4.5.
+Tant que la boutique est en test, tout se fait en **mode test Stripe** (`sk_test_…`, cartes de test `4242 4242 4242 4242`, `4000 0000 0000 0002` refusée, `4000 0027 6000 3184` 3D Secure).
+
+**Pendant les tests**
+
+- [ ] **Webhook Stripe de test** (facultatif, remise en main propre) : Stripe (mode test) › Développeurs › Webhooks, endpoint `<URL du déploiement testé>/api/shop/stripe-webhook`, événement `checkout.session.completed` ; secret `whsec_…` dans `STRIPE_WEBHOOK_SECRET` de l'environnement Vercel correspondant (Production si le test se fait sur www, Preview pour la Preview de `dev`, qui doit alors laisser passer Stripe malgré la Deployment Protection). En local : `stripe listen --forward-to localhost:4321/api/shop/stripe-webhook`. Sans webhook, un code payé reste refusé au paiement suivant, mais `/admin/boutique` l'affiche « Code envoyé » au lieu de « Commandé ». Voir § 4.5.
+- [ ] **Resend** : domaine `miroirspolaires.fr` « Verified », clé `Sending access` limitée au domaine, variables `RESEND_API_KEY`, `SHOP_EMAIL_FROM` (Production + Preview), `SHOP_NOTIFY_EMAIL`, `SHOP_ADMIN_URL` (Production).
+- [ ] **Turso** : jeton en écriture pour la Production (le site public enregistre les demandes de remise en main propre).
+
+**Au passage en production (paiements réels)**
+
+1. [ ] Activer le compte Stripe (identité, SIRET ou statut, IBAN) et les moyens de paiement (*Paramètres › Moyens de paiement*).
+2. [ ] Remplacer dans Vercel (Production) `STRIPE_SECRET_KEY` par `sk_live_…` (et `PUBLIC_STRIPE_PUBLISHABLE_KEY` par `pk_live_…`).
+3. [ ] Créer un **nouveau webhook en mode live** (les webhooks de test ne reçoivent rien en live) vers `https://www.miroirspolaires.fr/api/shop/stripe-webhook`, événement `checkout.session.completed`, et remplacer `STRIPE_WEBHOOK_SECRET` par son `whsec_…`.
+4. [ ] Remplacer `PUBLIC_MONDIAL_RELAY_BRAND_ID` (`BDTEST13`) par le code enseigne réel.
+5. [ ] Vérifier `ENABLE_BOUTIQUE=true` en Production, puis redéployer.
+6. [ ] Révoquer dans `/admin/boutique` les codes de remise en main propre émis pendant les tests (la table Turso est partagée entre test et production).
+7. [ ] Faire **un achat réel** avec sa propre carte, si possible en remise en main propre avec un code : vérifier le reçu Stripe, l'e-mail du code, le passage en « Commandé » ; puis rembourser depuis Stripe (les frais, environ 0,85 €, ne sont pas rendus).
 
 ---
 
@@ -354,6 +370,7 @@ Où les définir : `SHOP_NOTIFY_EMAIL`, `SHOP_ADMIN_URL` et `STRIPE_WEBHOOK_SECR
 4. Remise en main propre : envoyer une demande depuis `/boutique`, l'accepter dans [`http://localhost:4321/admin/boutique`](http://localhost:4321/admin/boutique), puis saisir le code (affiché dans l'admin si l'e-mail ne part pas). Pour le webhook : `stripe listen --forward-to localhost:4321/api/shop/stripe-webhook`.
 
 #### B. Activer les paiements réels
+Checklist complète : § 6.3 « Au passage en production ».
 1. Se connecter sur [dashboard.stripe.com](https://dashboard.stripe.com/).
 2. Activer les moyens de paiement souhaités dans les paramètres (*Paramètres > Moyens de paiement* : Carte bancaire, Apple Pay, Google Pay, PayPal).
 3. Renseigner vos clés de production dans les variables d'environnement de votre projet sur **Vercel** :
